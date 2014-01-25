@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+  <object class="wxBitmap" name="add">..\..\codelite\icons\add.png</object>
+  <object class="wxBitmap" name="clean">..\codelite-icons-fresh-farm\toolbars\16\build\clean.png</object>
+  <object class="wxBitmap" name="play">..\codelite-icons-fresh-farm\toolbars\16\debugger\play.png</object>
+  <object class="wxBitmap" name="project-active">..\codelite-icons-fresh-farm\workspace\16\project-active.png</object>
+</resource>

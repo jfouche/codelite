@@ -38,11 +38,13 @@
   <Project Name="ZoomNavigator" Path="ZoomNavigator/ZoomNavigator.project" Active="No"/>
   <Project Name="CodeBeautifier" Path="CodeBeautifier/CodeBeautifier.project" Active="No"/>
   <Project Name="SFTP" Path="SFTP/SFTP.project" Active="No"/>
+  <Project Name="Tweaks" Path="Tweaks/Tweaks.project" Active="No"/>
+  <Project Name="CMakePlugin" Path="CMakePlugin/CMakePlugin.project" Active="No"/>
+  <Project Name="LuaScript" Path="LuaScript/LuaScript.project" Active="No"/>
   <Environment>
     <![CDATA[]]>
   </Environment>
-  <Project Name="Tweaks" Path="Tweaks/Tweaks.project" Active="No"/>
-  <Project Name="CMakePlugin" Path="CMakePlugin/CMakePlugin.project" Active="No"/>
+  <Project Name="lua" Path="sdk/lua/lua.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Win Release Unicode" Selected="yes">
       <Project Name="abbreviation" ConfigName="WinReleaseUnicode"/>
@@ -63,6 +65,8 @@
       <Project Name="Gizmos" ConfigName="WinReleaseUnicode"/>
       <Project Name="Interfaces" ConfigName="Common"/>
       <Project Name="LiteEditor" ConfigName="WinReleaseUnicode"/>
+      <Project Name="lua" ConfigName="WinRelease"/>
+      <Project Name="LuaScript" ConfigName="WinReleaseUnicode"/>
       <Project Name="MacBundler" ConfigName="WinReleaseUnicode"/>
       <Project Name="Outline" ConfigName="WinReleaseUnicode"/>
       <Project Name="PCH" ConfigName="Release"/>
@@ -79,7 +83,7 @@
       <Project Name="wxsqlite3" ConfigName="WinReleaseUnicode"/>
       <Project Name="ZoomNavigator" ConfigName="WinReleaseUnicode"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Win Debug Unicode" Selected="no">
+    <WorkspaceConfiguration Name="Win Debug Unicode" Selected="yes">
       <Project Name="abbreviation" ConfigName="WinDebugUnicode"/>
       <Project Name="CallGraph" ConfigName="WinDebugUnicode"/>
       <Project Name="CMakePlugin" ConfigName="WinDebugUnicode"/>
@@ -113,8 +117,10 @@
       <Project Name="wxshapeframework" ConfigName="WinDebugUnicode"/>
       <Project Name="wxsqlite3" ConfigName="WinDebugUnicode"/>
       <Project Name="ZoomNavigator" ConfigName="WinDebugUnicode"/>
+      <Project Name="LuaScript" ConfigName="DebugUnicode"/>
+      <Project Name="lua" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="CMake_Release" Selected="no">
+    <WorkspaceConfiguration Name="CMake_Release" Selected="yes">
       <Project Name="ZoomNavigator" ConfigName="DebugUnicode"/>
       <Project Name="wxsqlite3" ConfigName="WinReleaseUnicode"/>
       <Project Name="wxshapeframework" ConfigName="WinReleaseUnicode"/>
@@ -148,8 +154,10 @@
       <Project Name="SFTP" ConfigName="DebugUnicode"/>
       <Project Name="Tweaks" ConfigName="DebugUnicode"/>
       <Project Name="CMakePlugin" ConfigName="WinDebugUnicode"/>
+      <Project Name="LuaScript" ConfigName="DebugUnicode"/>
+      <Project Name="lua" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="CMake_Debug" Selected="no">
+    <WorkspaceConfiguration Name="CMake_Debug" Selected="yes">
       <Project Name="ZoomNavigator" ConfigName="WinReleaseUnicode"/>
       <Project Name="wxsqlite3" ConfigName="WinReleaseUnicode"/>
       <Project Name="wxshapeframework" ConfigName="WinReleaseUnicode"/>
@@ -183,8 +191,10 @@
       <Project Name="CallGraph" ConfigName="WinReleaseUnicode"/>
       <Project Name="abbreviation" ConfigName="WinReleaseUnicode"/>
       <Project Name="CMakePlugin" ConfigName="WinDebugUnicode"/>
+      <Project Name="LuaScript" ConfigName="DebugUnicode"/>
+      <Project Name="lua" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="OSX_Debug" Selected="no">
+    <WorkspaceConfiguration Name="OSX_Debug" Selected="yes">
       <Project Name="ZoomNavigator" ConfigName="DebugUnicode"/>
       <Project Name="wxsqlite3" ConfigName="WinReleaseUnicode"/>
       <Project Name="wxshapeframework" ConfigName="WinReleaseUnicode"/>
@@ -218,8 +228,10 @@
       <Project Name="abbreviation" ConfigName="WinDebugUnicode"/>
       <Project Name="Tweaks" ConfigName="DebugUnicode"/>
       <Project Name="CMakePlugin" ConfigName="WinDebugUnicode"/>
+      <Project Name="LuaScript" ConfigName="DebugUnicode"/>
+      <Project Name="lua" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="OSX_Release" Selected="no">
+    <WorkspaceConfiguration Name="OSX_Release" Selected="yes">
       <Project Name="ZoomNavigator" ConfigName="DebugUnicode"/>
       <Project Name="wxsqlite3" ConfigName="WinReleaseUnicode"/>
       <Project Name="wxshapeframework" ConfigName="WinReleaseUnicode"/>
@@ -253,6 +265,8 @@
       <Project Name="CMakePlugin" ConfigName="WinDebugUnicode"/>
       <Project Name="CallGraph" ConfigName="DebugUnicode"/>
       <Project Name="abbreviation" ConfigName="WinDebugUnicode"/>
+      <Project Name="LuaScript" ConfigName="DebugUnicode"/>
+      <Project Name="lua" ConfigName="Debug"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>
