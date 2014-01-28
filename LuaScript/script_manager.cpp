@@ -65,7 +65,7 @@ void ScriptManager::GetScripts(wxArrayString& scripts) const
 	dir.Traverse(traverser, "*.lua");
 }
 
-bool ScriptManager::RunScript(const wxString& script)
+void ScriptManager::RunScript(const wxString& script)
 {
 	wxString scriptFile = GetScriptPath(script);
 	LuaRunner runner(m_manager);

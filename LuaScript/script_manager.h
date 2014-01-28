@@ -17,7 +17,7 @@ public:
 	
 	void GetScripts(wxArrayString& scripts) const;
 	
-	bool RunScript(const wxString& script);
+	void RunScript(const wxString& script);
 	
 	bool DeleteScript(const wxString& script);
 	
