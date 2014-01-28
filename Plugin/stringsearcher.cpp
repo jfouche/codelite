@@ -62,6 +62,26 @@ wxString StringFindReplacer::GetString(const wxString& input, int from, bool sea
     }
 }
 
+bool StringFindReplacer::DoWildcardSearch(const wxString& input, int startOffset, const wxString& find_what, size_t flags, int& pos, int& matchLen)
+{
+    // Conver the wildcard to regex
+    wxString regexPattern = find_what;
+    
+    // Escape braces
+    regexPattern.Replace("(", "\\(");
+    regexPattern.Replace(")", "\\)");
+    regexPattern.Replace("[", "\\[");
+    regexPattern.Replace("]", "\\]");
+    regexPattern.Replace("{", "\\{");
+    regexPattern.Replace("}", "\\}");
+    
+    // Covnert match syntax to regular expression
+    regexPattern.Replace("?", ".");         // Any character
+    regexPattern.Replace("*", "[^\\n]*?");  // Non greedy wildcard '*', but don't allow matches to go beyond a single line
+    
+    return DoRESearch(input, startOffset, regexPattern, flags, pos, matchLen);
+}
+
 bool StringFindReplacer::DoRESearch(const wxString& input, int startOffset, const wxString& find_what, size_t flags, int& pos, int& matchLen)
 {
     wxString str = GetString(input, startOffset, flags & wxSD_SEARCH_BACKWARD ? true : false);
@@ -236,13 +256,19 @@ bool StringFindReplacer::Search(const wchar_t* input, int startOffset, const wch
     startOffset = iSO;
 
     bool bResult = false;
-    if (flags & wxSD_REGULAREXPRESSION) {
+    if ( flags & wxSD_WILDCARD ) {
+        bResult = DoWildcardSearch(input, startOffset, find_what, flags, posInChars, matchLenInChars);
+        flags |= wxSD_REGULAREXPRESSION;
+        
+    } else  if (flags & wxSD_REGULAREXPRESSION) {
         bResult = DoRESearch(input, startOffset, find_what, flags, posInChars, matchLenInChars);
+        
     } else {
         bResult = DoSimpleSearch(input, startOffset, find_what, flags, posInChars, matchLenInChars);
     }
+    
     // correct search Pos and Length owing to non plain ASCII multibyte characters
-    if (bResult) {
+    if ( bResult ) {
         pos = UTF8Length(input, posInChars);
         if (flags & wxSD_REGULAREXPRESSION) {
             matchLen = UTF8Length(input, posInChars + matchLenInChars) - pos;
@@ -258,3 +284,4 @@ bool StringFindReplacer::Search(const wchar_t* input, int startOffset, const wch
     int posInChars(0), matchLenInChars(0);
     return StringFindReplacer::Search(input, startOffset, find_what, flags, pos, matchLen, posInChars, matchLenInChars);
 }
+

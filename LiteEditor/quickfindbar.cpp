@@ -68,6 +68,7 @@ QuickFindBar::QuickFindBar(wxWindow* parent, wxWindowID id)
     , m_sci(NULL)
     , m_flags(0)
     , m_lastTextPtr(NULL)
+    , m_themeHelper(this)
 {
     Hide();
     DoShowControls();
@@ -83,7 +84,7 @@ QuickFindBar::QuickFindBar(wxWindow* parent, wxWindowID id)
     wxTheApp->Connect(XRCID("find_previous"),          wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(QuickFindBar::OnFindPrevious),      NULL, this);
     wxTheApp->Connect(XRCID("find_next_at_caret"),     wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(QuickFindBar::OnFindNextCaret),     NULL, this);
     wxTheApp->Connect(XRCID("find_previous_at_caret"), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(QuickFindBar::OnFindPreviousCaret), NULL, this);
-    
+
     EventNotifier::Get()->Connect(wxEVT_FINDBAR_RELEASE_EDITOR, wxCommandEventHandler(QuickFindBar::OnReleaseEditor), NULL, this);
     Connect(QUICKFIND_COMMAND_EVENT, wxCommandEventHandler(QuickFindBar::OnQuickFindCommandEvent), NULL, this);
 }
@@ -119,6 +120,11 @@ void QuickFindBar::DoSearch(bool fwd, bool incr)
 {
     if (!m_sci || m_sci->GetLength() == 0 || m_findWhat->GetValue().IsEmpty())
         return;
+    m_flags = 0;
+    if ( m_checkBoxCase->IsChecked()    ) m_flags |= wxSD_MATCHCASE;
+    if ( m_checkBoxRegex->IsChecked()   ) m_flags |= wxSD_REGULAREXPRESSION;
+    if ( m_checkBoxWildcard->IsChecked()) m_flags |= wxSD_WILDCARD;
+    if ( m_checkBoxWord->IsChecked()    ) m_flags |= wxSD_MATCHWHOLEWORD;
 
     wxString find = m_findWhat->GetValue();
     wchar_t* pinput = DoGetSearchStringPtr();
@@ -140,7 +146,7 @@ void QuickFindBar::DoSearch(bool fwd, bool incr)
         }
     }
 
-    m_findWhat->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+    m_findWhat->SetBackgroundColour( EditorConfigST::Get()->GetCurrentOutputviewBgColour() );
     m_findWhat->Refresh();
     m_sci->SetSelection(pos, pos+len);
 
@@ -185,9 +191,9 @@ void QuickFindBar::OnKeyDown(wxKeyEvent& e)
 {
     switch (e.GetKeyCode()) {
     case WXK_ESCAPE: {
-        wxCommandEvent cmd(wxEVT_COMMAND_TOOL_CLICKED, wxID_HIDE);
-        cmd.SetEventObject(m_toolBar1);
-        m_toolBar1->GetEventHandler()->AddPendingEvent(cmd);
+        wxCommandEvent cmd(wxEVT_COMMAND_TOOL_CLICKED, ID_TOOL_CLOSE);
+        cmd.SetEventObject(m_auibarClose);
+        m_auibarClose->GetEventHandler()->AddPendingEvent(cmd);
         break;
     }
     default:
@@ -205,7 +211,7 @@ void QuickFindBar::OnEnter(wxCommandEvent& e)
     wxUnusedVar(e);
 
     bool shift = wxGetKeyState(WXK_SHIFT);
-    wxCommandEvent evt(wxEVT_COMMAND_TOOL_CLICKED, shift ? wxID_FIND_PREVIOUS : wxID_FIND_NEXT);
+    wxCommandEvent evt(wxEVT_COMMAND_TOOL_CLICKED, shift ? ID_TOOL_PREV : ID_TOOL_NEXT);
     evt.SetEventObject(this);
     GetEventHandler()->AddPendingEvent(evt);
 }
@@ -351,7 +357,7 @@ wxTextCtrl* QuickFindBar::GetFocusedControl()
 void QuickFindBar::OnReplaceEnter(wxCommandEvent& e)
 {
     wxUnusedVar(e);
-    wxCommandEvent evt(wxEVT_COMMAND_TOOL_CLICKED, wxID_TOOL_REPLACE);
+    wxCommandEvent evt(wxEVT_COMMAND_TOOL_CLICKED, ID_TOOL_REPLACE);
     GetEventHandler()->AddPendingEvent(evt);
 }
 
@@ -382,33 +388,9 @@ void QuickFindBar::SetEditor(wxStyledTextCtrl* sci)
     DoShowControls();
 }
 
-void QuickFindBar::OnCheckBoxCase(wxCommandEvent& event)
-{
-    if (event.IsChecked())
-        m_flags |= wxSD_MATCHCASE;
-    else
-        m_flags &= ~wxSD_MATCHCASE;
-}
-
-void QuickFindBar::OnCheckBoxRegex(wxCommandEvent& event)
-{
-    if (event.IsChecked())
-        m_flags |= wxSD_REGULAREXPRESSION;
-    else
-        m_flags &= ~wxSD_REGULAREXPRESSION;
-}
-
-void QuickFindBar::OnCheckBoxWord(wxCommandEvent& event)
-{
-    if (event.IsChecked())
-        m_flags |= wxSD_MATCHWHOLEWORD;
-    else
-        m_flags &= ~wxSD_MATCHWHOLEWORD;
-}
-
 int QuickFindBar::GetCloseButtonId()
 {
-    return wxID_HIDE;
+    return ID_TOOL_CLOSE;
 }
 
 void QuickFindBar::OnToggleReplaceControls(wxCommandEvent& event)
@@ -424,9 +406,8 @@ void QuickFindBar::DoShowControls()
     long v(1);
     EditorConfigST::Get()->GetLongValue(wxT("QuickFindBarShowReplace"), v);
     bool canShowToggleReplaceButton = m_sci && !m_sci->GetReadOnly();
-    bool showReplaceControls        = canShowToggleReplaceButton && v;
 
-    ShowReplaceControls(showReplaceControls);
+    ShowReplaceControls(/*showReplaceControls*/);
     Refresh();
     GetParent()->GetSizer()->Layout();
 }
@@ -436,7 +417,7 @@ bool QuickFindBar::Show(const wxString& findWhat)
     // Same as Show() but set the 'findWhat' field with findWhat
     if ( !m_sci )
         return false;
-        
+
     return DoShow(true, findWhat);
 }
 
@@ -616,16 +597,12 @@ void QuickFindBar::DoMarkAll()
 void QuickFindBar::OnHighlightMatches(wxCommandEvent& event)
 {
     bool checked;
-#if USE_AUI_TOOLBAR
-    checked = m_toolBar2->GetToolToggled(wxID_HIGHLIGHT_MATCHES);
-#else
-    checked = event.IsChecked();
-#endif
+    checked = m_auibarFind->GetToolToggled(ID_TOOL_HIGHLIGHT_MATCHES);
     LEditor* editor = dynamic_cast<LEditor*>(m_sci);
-
     if (checked && editor) {
         editor->SetFindBookmarksActive(true);
         DoMarkAll();
+
     } else {
         if (editor) {
             editor->DelAllMarkers(smt_find_bookmark);
@@ -711,7 +688,7 @@ wxStyledTextCtrl* QuickFindBar::DoCheckPlugins()
     wxCommandEvent evt(wxEVT_FINDBAR_ABOUT_TO_SHOW);
     evt.SetClientData(NULL);
     EventNotifier::Get()->ProcessEvent( evt );
-    
+
     wxStyledTextCtrl* win = reinterpret_cast<wxStyledTextCtrl*>( evt.GetClientData() );
     return win;
 }
@@ -726,5 +703,18 @@ bool QuickFindBar::ShowForPlugins()
     }
 }
 
+void QuickFindBar::OnCheckBoxRegex(wxCommandEvent& event)
+{
+    // regex and wildcard can not co-exist
+    if ( event.IsChecked() ) {
+        m_checkBoxWildcard->SetValue( false );
+    }
+}
 
-    
+void QuickFindBar::OnCheckWild(wxCommandEvent& event)
+{
+    // regex and wildcard can not co-exist
+    if ( event.IsChecked() ) {
+        m_checkBoxRegex->SetValue( false );
+    }
+}
