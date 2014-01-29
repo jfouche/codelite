@@ -28,12 +28,12 @@
 #include <wx/stc/stc.h>
 #include <wx/dataview.h>
 #include <wx/listbox.h>
-#include <wx/pen.h>
-#include <wx/aui/auibar.h>
-#include <wx/toolbar.h>
 #include <wx/bitmap.h>
 #include <map>
 #include <wx/icon.h>
+#include <wx/pen.h>
+#include <wx/aui/auibar.h>
+#include <wx/toolbar.h>
 #include "dataviewfilesmodel.h"
 #include <wx/gauge.h>
 
@@ -60,11 +60,12 @@ protected:
     wxCheckBox* m_checkBoxLog;
     wxCheckBox* m_checkBoxTrackTree;
     wxStdDialogButtonSizer* m_stdBtnSizer284;
-    wxButton* m_button286;
-    wxButton* m_button288;
+    wxButton* m_buttonOK;
+    wxButton* m_buttonCancel;
 
 protected:
     virtual void OnLocalRepoUI(wxUpdateUIEvent& event) { event.Skip(); }
+    virtual void OnOK(wxCommandEvent& event) { event.Skip(); }
 
 public:
     GitSettingsDlgBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Git settings..."), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(-1,-1), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER);
@@ -182,11 +183,13 @@ public:
 class GitFileDiffDlgBase : public wxDialog
 {
 protected:
-    wxAuiToolBar* m_auibar132;
     GitCommitEditor* m_editor;
-    wxButton* m_button128;
+    wxStdDialogButtonSizer* m_stdBtnSizer306;
+    wxButton* m_button308;
+    wxButton* m_button310;
 
 protected:
+    virtual void OnCloseDialog(wxCommandEvent& event) { event.Skip(); }
     virtual void OnSaveAsPatch(wxCommandEvent& event) { event.Skip(); }
 
 public:
@@ -222,11 +225,11 @@ protected:
     wxFilePickerCtrl* m_filePickerPatchFile;
     wxStaticText* m_staticText168;
     wxTextCtrl* m_textCtrlExtraFlags;
-    wxButton* m_button158;
-    wxButton* m_button160;
+    wxStdDialogButtonSizer* m_stdBtnSizer300;
+    wxButton* m_buttonCancel;
+    wxButton* m_buttonOK;
 
 protected:
-    virtual void OnApplyGitPatchUI(wxUpdateUIEvent& event) { event.Skip(); }
 
 public:
     GitApplyPatchDlgBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Git Apply Patch"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(-1,-1), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER);
