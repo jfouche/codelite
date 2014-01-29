@@ -16,10 +16,19 @@ static int lua_IManager_GetActiveEditor(lua_State* L)
 	return 1;
 }
 
+static int lua_IManager_NewEditor(lua_State* L)
+{
+	IManager* manager = LuaIManager::check(L, 1);
+	IEditor* editor = manager->NewEditor();
+	LuaIEditor::instanciate(L, editor);
+	return 1;
+}
+
 const char* IManagerLuaInfos::className = "luaL_IManager";
 
 const luaL_Reg IManagerLuaInfos::methods[] = {
 	{"GetActiveEditor", lua_IManager_GetActiveEditor},
+	{"NewEditor", lua_IManager_NewEditor},
 	{NULL, NULL}
 };
 

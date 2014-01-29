@@ -41,6 +41,18 @@ static int lua_IEditor_ReplaceSelection(lua_State* L)
 	return 0;
 }
 
+static int lua_IEditor_AppendText(lua_State* L)
+{
+	IEditor* editor = LuaIEditor::check(L, 1);
+	if (lua_isstring(L, 2) == 0)
+	{
+		return 0;
+	}
+	const char* text = lua_tostring(L, 2);
+	editor->AppendText(text);
+	return 0;
+}
+
 const char* IEditorLuaInfos::className = "luaL_IEditor";
 
 const luaL_Reg IEditorLuaInfos::methods[] = {
@@ -48,6 +60,7 @@ const luaL_Reg IEditorLuaInfos::methods[] = {
 	{"SetEditorText", lua_IEditor_SetEditorText},
 	{"GetSelection", lua_IEditor_GetSelection},
 	{"ReplaceSelection", lua_IEditor_ReplaceSelection},
+	{"AppendText", lua_IEditor_AppendText},
 	{NULL, NULL}
 };
 
