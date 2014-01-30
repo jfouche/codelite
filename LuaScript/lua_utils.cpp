@@ -16,7 +16,7 @@ std::string lua_stack_dump(lua_State *L)
 			break;
 
 		case LUA_TBOOLEAN:  /* booleans */
-			oss << lua_toboolean(L, i) ? "true" : "false";
+			oss << (lua_toboolean(L, i) ? "true" : "false");
 			break;
 
 		case LUA_TNUMBER:  /* numbers */
