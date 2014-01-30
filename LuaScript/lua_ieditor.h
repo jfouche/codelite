@@ -4,16 +4,6 @@
 #include "lua_utils.hpp"
 #include "ieditor.h"
 
-struct IEditorLuaInfos
-{
-	typedef IEditor value_type;
-	
-	static const char* className;
-	static const luaL_Reg metamethods[];
-	static const luaL_Reg methods[];
-	static const size_t nMethods;
-};
-
-typedef LuaBinder<IEditorLuaInfos> LuaIEditor;
+LUA_BINDER_DEFINE(IEditor, LuaIEditor);
 
 #endif // CL_LUA_IEDITOR_H_INCLUDED

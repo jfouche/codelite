@@ -1,5 +1,4 @@
 #include "lua_workspace.h"
-#include "lua_utils.hpp"
 #include "lua_project.h"
 
 static int lua_Workspace_GetEditorText(lua_State* L)
@@ -33,16 +32,10 @@ static int lua_Workspace_GetProjectList(lua_State* L)
 	return 1;
 }
 
-const char* WorkspaceLuaInfos::className = "luaL_Workspace";
-
-const luaL_Reg WorkspaceLuaInfos::methods[] = {
+static luaL_Reg METHODS[] = {
 	{"GetActiveProjectName", lua_Workspace_GetActiveProjectName},
 	{"GetProjectList", lua_Workspace_GetProjectList},
 	{NULL, NULL}
 };
 
-const luaL_Reg WorkspaceLuaInfos::metamethods[] = {
-	{NULL, NULL}
-};
-
-LUA_IMPL_N_METHODS(WorkspaceLuaInfos);
+LUA_BINDER_IMPL(Workspace, METHODS);

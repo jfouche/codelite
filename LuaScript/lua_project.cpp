@@ -1,5 +1,4 @@
 #include "lua_project.h"
-#include "lua_utils.hpp"
 
 static int lua_Project_GetName(lua_State* L)
 {
@@ -8,15 +7,9 @@ static int lua_Project_GetName(lua_State* L)
 	return 1;
 }
 
-const char* ProjectLuaInfos::className = "luaL_Project";
-
-const luaL_Reg ProjectLuaInfos::methods[] = {
+static const luaL_Reg METHODS[] = {
 	{"GetName", lua_Project_GetName},
 	{NULL, NULL}
 };
 
-const luaL_Reg ProjectLuaInfos::metamethods[] = {
-	{NULL, NULL}
-};
-
-LUA_IMPL_N_METHODS(ProjectLuaInfos);
+LUA_BINDER_IMPL(Project, METHODS);

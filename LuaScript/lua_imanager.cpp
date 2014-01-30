@@ -40,17 +40,11 @@ static int lua_IManager_GetWorkspace(lua_State* L)
 	return 1;
 }
 
-const char* IManagerLuaInfos::className = "luaL_IManager";
-
-const luaL_Reg IManagerLuaInfos::methods[] = {
+const luaL_Reg METHODS[] = {
 	{"GetActiveEditor", lua_IManager_GetActiveEditor},
 	{"NewEditor", lua_IManager_NewEditor},
 	{"GetWorkspace", lua_IManager_GetWorkspace },
 	{NULL, NULL}
 };
 
-const luaL_Reg IManagerLuaInfos::metamethods[] = {
-	{NULL, NULL}
-};
-
-LUA_IMPL_N_METHODS(IManagerLuaInfos);
+LUA_BINDER_IMPL(IManager, METHODS);

@@ -4,16 +4,6 @@
 #include "lua_utils.hpp"
 #include "project.h"
 
-struct ProjectLuaInfos
-{
-	typedef Project value_type;
-	
-	static const char* className;
-	static const luaL_Reg metamethods[];
-	static const luaL_Reg methods[];
-	static const size_t nMethods;
-};
-
-typedef LuaBinder<ProjectLuaInfos> LuaProject;
+LUA_BINDER_DEFINE(Project, LuaProject);
 
 #endif // CL_LUA_PROJECT_H_INCLUDED

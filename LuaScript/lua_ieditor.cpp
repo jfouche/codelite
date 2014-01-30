@@ -1,5 +1,4 @@
 #include "lua_ieditor.h"
-#include "lua_utils.hpp"
 
 static int lua_IEditor_GetEditorText(lua_State* L)
 {
@@ -53,9 +52,7 @@ static int lua_IEditor_AppendText(lua_State* L)
 	return 0;
 }
 
-const char* IEditorLuaInfos::className = "luaL_IEditor";
-
-const luaL_Reg IEditorLuaInfos::methods[] = {
+static const luaL_Reg METHODS[] = {
 	{"GetEditorText", lua_IEditor_GetEditorText},
 	{"SetEditorText", lua_IEditor_SetEditorText},
 	{"GetSelection", lua_IEditor_GetSelection},
@@ -64,8 +61,4 @@ const luaL_Reg IEditorLuaInfos::methods[] = {
 	{NULL, NULL}
 };
 
-const luaL_Reg IEditorLuaInfos::metamethods[] = {
-	{NULL, NULL}
-};
-
-LUA_IMPL_N_METHODS(IEditorLuaInfos);
+LUA_BINDER_IMPL(IEditor, METHODS);

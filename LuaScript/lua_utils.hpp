@@ -41,7 +41,7 @@ struct LuaBinder
 		{
 			luaL_setfuncs(L, T::metamethods, 0);
 		}
-		lua_createtable(L, 0, T::nMethods);
+		lua_createtable(L, 0, 0);
 		luaL_setfuncs(L, T::methods, 0);
 		lua_setfield(L, -2, "__index");
 		lua_pop(L, 1);
@@ -58,7 +58,20 @@ struct LuaBinder
 
 std::string lua_stack_dump(lua_State *L);
 
-#define LUA_IMPL_N_METHODS(clazz) \
-    const size_t clazz::nMethods = sizeof(clazz::methods) / sizeof(*clazz::methods) - 1;
+#define LUA_BINDER_DEFINE(CLASS, BINDER) \
+struct CLASS##LuaInfos \
+{ \
+	typedef CLASS value_type; \
+	static const char* className; \
+	static const luaL_Reg* methods; \
+	static const luaL_Reg metamethods[]; \
+}; \
+typedef LuaBinder<CLASS##LuaInfos> BINDER
+
+
+#define LUA_BINDER_IMPL(CLASS, METHODS) \
+const char* CLASS##LuaInfos::className = #CLASS; \
+const luaL_Reg* CLASS##LuaInfos::methods = METHODS; \
+const luaL_Reg CLASS##LuaInfos::metamethods[] = { {NULL, NULL} }
 
 #endif // CL_LUA_UTILS_H_INCLUDED
