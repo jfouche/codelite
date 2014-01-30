@@ -1,6 +1,7 @@
 #include "lua_ieditor.h"
 
-static int lua_IEditor_GetEditorText(lua_State* L)
+/// @lua IEditor.GetEditorText() : return string
+static int GetEditorText(lua_State* L)
 {
 	IEditor* editor = LuaIEditor::check(L, 1);
 	wxString content = editor->GetEditorText();
@@ -8,7 +9,8 @@ static int lua_IEditor_GetEditorText(lua_State* L)
 	return 1;
 }
 
-static int lua_IEditor_SetEditorText(lua_State* L)
+/// @lua IEditor.SetEditorText(string)
+static int SetEditorText(lua_State* L)
 {
 	IEditor* editor = LuaIEditor::check(L, 1);
 	if (lua_isstring(L, 2) == 0)
@@ -20,7 +22,8 @@ static int lua_IEditor_SetEditorText(lua_State* L)
 	return 0;
 }
 
-static int lua_IEditor_GetSelection(lua_State* L)
+/// @lua IEditor.GetSelection() : return string
+static int GetSelection(lua_State* L)
 {
 	IEditor* editor = LuaIEditor::check(L, 1);
 	wxString selection = editor->GetSelection();
@@ -28,7 +31,8 @@ static int lua_IEditor_GetSelection(lua_State* L)
 	return 1;
 }
 
-static int lua_IEditor_ReplaceSelection(lua_State* L)
+/// @lua IEditor.ReplaceSelection(string)
+static int ReplaceSelection(lua_State* L)
 {
 	IEditor* editor = LuaIEditor::check(L, 1);
 	if (lua_isstring(L, 2) == 0)
@@ -40,7 +44,8 @@ static int lua_IEditor_ReplaceSelection(lua_State* L)
 	return 0;
 }
 
-static int lua_IEditor_AppendText(lua_State* L)
+/// @lua IEditor.AppendText(string)
+static int AppendText(lua_State* L)
 {
 	IEditor* editor = LuaIEditor::check(L, 1);
 	if (lua_isstring(L, 2) == 0)
@@ -53,11 +58,11 @@ static int lua_IEditor_AppendText(lua_State* L)
 }
 
 static const luaL_Reg METHODS[] = {
-	{"GetEditorText", lua_IEditor_GetEditorText},
-	{"SetEditorText", lua_IEditor_SetEditorText},
-	{"GetSelection", lua_IEditor_GetSelection},
-	{"ReplaceSelection", lua_IEditor_ReplaceSelection},
-	{"AppendText", lua_IEditor_AppendText},
+	{"GetEditorText", GetEditorText},
+	{"SetEditorText", SetEditorText},
+	{"GetSelection", GetSelection},
+	{"ReplaceSelection", ReplaceSelection},
+	{"AppendText", AppendText},
 	{NULL, NULL}
 };
 

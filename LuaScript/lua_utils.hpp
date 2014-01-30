@@ -17,16 +17,6 @@ struct LuaBinder
 		return *(value_type**)luaL_checkudata(L, n, T::className);
 	}
 
-	/**
-	 * get and pop the user data
-	 */
-	static value_type* get(lua_State* L, int n)
-	{
-		value_type* value = check(L, n);
-		lua_pop(L, n);
-		return value;
-	}
-
 	static void registerClass(lua_State* L)
 	{
 		luaL_newmetatable(L, T::className);

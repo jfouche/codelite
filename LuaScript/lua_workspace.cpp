@@ -1,13 +1,7 @@
 #include "lua_workspace.h"
 #include "lua_project.h"
 
-static int lua_Workspace_GetEditorText(lua_State* L)
-{
-	Workspace* workspace = LuaWorkspace::check(L, 1);
-	return 1;
-}
-
-static int lua_Workspace_GetActiveProjectName(lua_State* L)
+static int GetActiveProjectName(lua_State* L)
 {
 	Workspace* workspace = LuaWorkspace::check(L, 1);
 	wxString name = workspace->GetActiveProjectName();
@@ -15,9 +9,34 @@ static int lua_Workspace_GetActiveProjectName(lua_State* L)
 	return 1;
 }
 
-static int lua_Workspace_GetProjectList(lua_State* L)
+static int FindProjectByName(lua_State* L)
 {
-	Workspace* workspace = LuaWorkspace::get(L, 1);
+	Workspace* workspace = LuaWorkspace::check(L, 1);
+
+	printf(lua_stack_dump(L).c_str());
+
+	if (lua_isstring(L, 2) == 0)
+	{
+		return 0;
+	}
+	const char* name = lua_tostring(L, 2);
+	
+	wxString err;
+	ProjectPtr project = workspace->FindProjectByName(name, err);
+	if (project)
+	{
+		LuaProject::push(L, project.Get());
+	}
+	else
+	{
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+static int GetProjectList(lua_State* L)
+{
+	Workspace* workspace = LuaWorkspace::check(L, 1);
 	
 	wxArrayString names;
 	workspace->GetProjectList(names);
@@ -33,8 +52,9 @@ static int lua_Workspace_GetProjectList(lua_State* L)
 }
 
 static luaL_Reg METHODS[] = {
-	{"GetActiveProjectName", lua_Workspace_GetActiveProjectName},
-	{"GetProjectList", lua_Workspace_GetProjectList},
+	{"GetActiveProjectName", GetActiveProjectName},
+	{"GetProjectList", GetProjectList},
+	{"FindProjectByName", FindProjectByName},
 	{NULL, NULL}
 };
 
