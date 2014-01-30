@@ -2,7 +2,7 @@
 #define LUA_IMANAGER_H_INCLUDED
 
 #include "lua_utils.hpp"
-#include <imanager.h>
+#include "imanager.h"
 
 struct IManagerLuaInfos
 {

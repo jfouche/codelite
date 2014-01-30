@@ -17,6 +17,16 @@ struct LuaBinder
 		return *(value_type**)luaL_checkudata(L, n, T::className);
 	}
 
+	/**
+	 * get and pop the user data
+	 */
+	static value_type* get(lua_State* L, int n)
+	{
+		value_type* value = check(L, n);
+		lua_pop(L, n);
+		return value;
+	}
+
 	static void registerClass(lua_State* L)
 	{
 		luaL_newmetatable(L, T::className);
@@ -37,7 +47,7 @@ struct LuaBinder
 		lua_pop(L, 1);
 	}
 	
-	static void instanciate(lua_State* L, value_type* instance)
+	static void push(lua_State* L, value_type* instance)
 	{
 		value_type** udata = static_cast<value_type**>(lua_newuserdata(L, sizeof(void*)));
 		*udata = instance;
@@ -48,6 +58,7 @@ struct LuaBinder
 
 std::string lua_stack_dump(lua_State *L);
 
-#define METHODS_COUNT(m) (sizeof(m) / sizeof(*m) - 1)
+#define LUA_IMPL_N_METHODS(clazz) \
+    const size_t clazz::nMethods = sizeof(clazz::methods) / sizeof(*clazz::methods) - 1;
 
 #endif // CL_LUA_UTILS_H_INCLUDED

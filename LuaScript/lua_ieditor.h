@@ -2,7 +2,7 @@
 #define CL_LUA_IEDITOR_H_INCLUDED
 
 #include "lua_utils.hpp"
-#include <ieditor.h>
+#include "ieditor.h"
 
 struct IEditorLuaInfos
 {

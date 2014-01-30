@@ -68,4 +68,4 @@ const luaL_Reg IEditorLuaInfos::metamethods[] = {
 	{NULL, NULL}
 };
 
-const size_t IEditorLuaInfos::nMethods = METHODS_COUNT(IEditorLuaInfos::methods);
+LUA_IMPL_N_METHODS(IEditorLuaInfos);

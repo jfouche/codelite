@@ -32,22 +32,3 @@ std::string lua_stack_dump(lua_State *L)
 	oss << std::endl;/* end the listing */
 	return oss.str();
 }
-
-#if 0
-void lua::registerClass(lua_State* L, const char* name, const luaL_Reg* methods, const luaL_Reg* metas)
-{
-	luaL_newmetatable(L, name);
-	if (metas == NULL)
-	{
-		luaL_setfuncs(L, NO_METAS, 0);
-	}
-	else
-	{
-		luaL_setfuncs(L, metas, 0);
-	}
-	luaL_newlib(L, methods);
-	lua_setfield(L, -2, "__index");
-	lua_pop(L, 1);
-	stack_dump(L);
-}
-#endif
