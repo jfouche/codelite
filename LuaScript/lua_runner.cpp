@@ -32,15 +32,17 @@ void LuaRunner::Run(const wxString& script)
 	if (status != LUA_OK)
 	{
 		wxLogError("[LUA] can't run %s", script.c_str());
+		::wxMessageBox("Can't run script", "Lua plugin error", wxOK|wxICON_ERROR);
 		return;
 	}
 	
 	int result = lua_pcall(m_lua, 0, LUA_MULTRET, 0);
 	if (result != LUA_OK)
 	{
-		wxLogError("[LUA] Error %d in %s", result, script.c_str());
 		const char* err = lua_tostring(m_lua, -1);
-		wxLogError("[LUA] => %s", err);
+		wxString msg = wxString::Format("Error %d : %s", result, err);
+		wxLogError("[LUA] : %s", msg.c_str());
+		::wxMessageBox(msg, "Lua plugin error", wxOK|wxICON_ERROR);
 		return;
 	}
 	wxLogMessage("[LUA] finished");
