@@ -38,6 +38,8 @@
 #include "wx_xml_compatibility.h"
 #include "plugin.h"
 #include "event_notifier.h"
+#include <wx/sstream.h>
+#include <wx/ffile.h>
 
 const wxString Project::STATIC_LIBRARY = wxT("Static Library");
 const wxString Project::DYNAMIC_LIBRARY = wxT("Dynamic Library");
@@ -420,7 +422,20 @@ void Project::RecursiveAdd(wxXmlNode *xmlNode, ProjectTreePtr &ptp, ProjectTreeN
 
 bool Project::SaveXmlFile()
 {
-    bool ok = m_doc.Save(m_fileName.GetFullPath());
+    wxString projectXml;
+    wxStringOutputStream sos( &projectXml );
+    bool ok = m_doc.Save( sos );
+    
+    wxFFile file(m_fileName.GetFullPath(), wxT("w+b"));
+    if ( !file.IsOpened() ) {
+        ok = false;
+        
+    } else {
+        file.Write( projectXml );
+        file.Close();
+        
+    }
+
     SetProjectLastModifiedTime(GetFileLastModifiedTime());
     
     wxCommandEvent evt(wxEVT_FILE_SAVED);

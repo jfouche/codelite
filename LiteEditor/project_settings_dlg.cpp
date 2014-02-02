@@ -53,21 +53,19 @@
 #include "ps_general_page.h"
 #include "plugin.h"
 #include "event_notifier.h"
-
-const wxString APPEND_TO_GLOBAL_SETTINGS = _("Append to global settings");
-const wxString OVERWRITE_GLOBAL_SETTINGS = _("Overwrite global settings");
-const wxString PREPEND_GLOBAL_SETTINGS = _("Prepend to global settings");
+#include "workspacetab.h"
 
 BEGIN_EVENT_TABLE(ProjectSettingsDlg, ProjectSettingsBaseDlg)
 END_EVENT_TABLE()
 
-ProjectSettingsDlg::ProjectSettingsDlg( wxWindow* parent, const wxString &configName, const wxString &projectName, const wxString &title )
+ProjectSettingsDlg::ProjectSettingsDlg( wxWindow* parent, WorkspaceTab* workspaceTab, const wxString &configName, const wxString &projectName, const wxString &title )
     : ProjectSettingsBaseDlg( parent, wxID_ANY, title, wxDefaultPosition, wxSize( 782,502 ), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER )
     , m_projectName(projectName)
     , m_configName(configName)
     , m_isDirty(false)
     , m_isCustomBuild(false)
     , m_isProjectEnabled(true)
+    , m_workspaceTab(workspaceTab)
 {
     DoGetAllBuildConfigs();
     MSWSetNativeTheme( m_treebook->GetTreeCtrl() );
@@ -127,6 +125,8 @@ void ProjectSettingsDlg::BuildTree()
 
 ProjectSettingsDlg::~ProjectSettingsDlg()
 {
+    m_workspaceTab->ProjectSettingsDlgClosed();
+    
     EventNotifier::Get()->Disconnect(wxEVT_PROJECT_TREEITEM_CLICKED, wxCommandEventHandler(ProjectSettingsDlg::OnProjectSelected), NULL, this);
     EventNotifier::Get()->Disconnect(wxEVT_WORKSPACE_CLOSED, wxCommandEventHandler(ProjectSettingsDlg::OnWorkspaceClosed), NULL, this);
 
@@ -510,19 +510,30 @@ bool IProjectSettingsPage::PopupAddOptionDlg(wxTextCtrl* ctrl)
     return false;
 }
 
+bool IProjectSettingsPage::PopupAddOptionDlg(wxString& value)
+{
+    AddOptionDlg dlg(NULL, value);
+    if (dlg.ShowModal() == wxID_OK) {
+        value.Clear();
+        value << dlg.GetValue();
+        return true;
+    }
+    return false;
+}
+
 bool IProjectSettingsPage::SelectChoiceWithGlobalSettings(wxChoice* c, const wxString& text)
 {
     if (text == BuildConfig::APPEND_TO_GLOBAL_SETTINGS) {
-        c->Select(c->FindString(APPEND_TO_GLOBAL_SETTINGS));
+        c->Select(c->FindString(BuildConfig::APPEND_TO_GLOBAL_SETTINGS));
 
     } else if (text == BuildConfig::OVERWRITE_GLOBAL_SETTINGS) {
-        c->Select(c->FindString(OVERWRITE_GLOBAL_SETTINGS));
+        c->Select(c->FindString(BuildConfig::OVERWRITE_GLOBAL_SETTINGS));
 
     } else if (text == BuildConfig::PREPEND_GLOBAL_SETTINGS) {
-        c->Select(c->FindString(PREPEND_GLOBAL_SETTINGS));
+        c->Select(c->FindString(BuildConfig::PREPEND_GLOBAL_SETTINGS));
 
     } else {
-        c->Select(c->FindString(APPEND_TO_GLOBAL_SETTINGS));
+        c->Select(c->FindString(BuildConfig::APPEND_TO_GLOBAL_SETTINGS));
         return false;
     }
     return true;
@@ -536,4 +547,24 @@ bool IProjectSettingsPage::PopupAddOptionCheckDlg(wxTextCtrl *ctrl, const wxStri
         return true;
     }
     return false;
+}
+
+bool IProjectSettingsPage::PopupAddOptionCheckDlg(wxString& v, const wxString& title, const Compiler::CmpCmdLineOptions& options)
+{
+    AddOptionCheckDlg dlg(NULL, title, options, v);
+    if (dlg.ShowModal() == wxID_OK) {
+        v = dlg.GetValue();
+        return true;
+    }
+    return false;
+}
+
+void IProjectSettingsPage::SelectChoiceWithGlobalSettings(wxPGProperty* p, const wxString& text)
+{
+    wxPGChoices choices;
+    choices.Add(BuildConfig::APPEND_TO_GLOBAL_SETTINGS);
+    choices.Add(BuildConfig::OVERWRITE_GLOBAL_SETTINGS);
+    choices.Add(BuildConfig::PREPEND_GLOBAL_SETTINGS);
+    p->SetChoices(choices);
+    p->SetChoiceSelection(choices.Index(text));
 }
