@@ -311,4 +311,8 @@
       </Completion>
     </Configuration>
   </Settings>
+  <VirtualDirectory Name="samples">
+    <File Name="samples/comment_selection.lua"/>
+    <File Name="samples/trim.lua"/>
+  </VirtualDirectory>
 </CodeLite_Project>

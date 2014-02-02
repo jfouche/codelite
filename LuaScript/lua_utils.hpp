@@ -49,19 +49,19 @@ struct LuaBinder
 std::string lua_stack_dump(lua_State *L);
 
 #define LUA_BINDER_DEFINE(CLASS, BINDER) \
-struct CLASS##LuaInfos \
-{ \
-	typedef CLASS value_type; \
-	static const char* className; \
-	static const luaL_Reg* methods; \
-	static const luaL_Reg metamethods[]; \
-}; \
-typedef LuaBinder<CLASS##LuaInfos> BINDER
+	struct CLASS##LuaInfos \
+	{ \
+		typedef CLASS value_type; \
+		static const char* className; \
+		static const luaL_Reg* methods; \
+		static const luaL_Reg metamethods[]; \
+	}; \
+	typedef LuaBinder<CLASS##LuaInfos> BINDER
 
 
 #define LUA_BINDER_IMPL(CLASS, METHODS) \
-const char* CLASS##LuaInfos::className = #CLASS; \
-const luaL_Reg* CLASS##LuaInfos::methods = METHODS; \
-const luaL_Reg CLASS##LuaInfos::metamethods[] = { {NULL, NULL} }
+	const char* CLASS##LuaInfos::className = #CLASS; \
+	const luaL_Reg* CLASS##LuaInfos::methods = METHODS; \
+	const luaL_Reg CLASS##LuaInfos::metamethods[] = { {NULL, NULL} }
 
 #endif // CL_LUA_UTILS_H_INCLUDED
