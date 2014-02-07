@@ -6,7 +6,7 @@ end
 
 function lines(str)
   local t = {}
-  local function helper(line) t:insert(line) return "" end
+  local function helper(line) table.insert(t, line) return "" end
   helper((str:gsub("(.-)\r?\n", helper)))
   return t
 end
@@ -16,10 +16,10 @@ if editor then
 	text = editor:GetEditorText()
 	if #text ~= 0 then
 		l = lines(text)
-		for i, line in ipair(l) do
+		for i, line in ipairs(l) do
 			l[i] = rtrim(line)
 		end
-		newText = l.concat("\n")
-		editor.SetEditorText(newText)
+		newText = table.concat(l, "\n")
+		editor:SetEditorText(newText)
 	end
 end
