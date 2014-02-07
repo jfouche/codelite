@@ -1,15 +1,18 @@
-#include "lua_project.h"
+#include "lua_utils.hpp"
+#include "project.h"
+
+static const char* CLASSNAME = "Project";
 
 static int GetName(lua_State* L)
 {
-	Project* project = LuaProject::check(L, 1);
+	Project* project = lua::check<Project>(L, 1, CLASSNAME);
 	lua_pushstring(L, project->GetName().c_str());
 	return 1;
 }
 
 static int GetFiles(lua_State* L)
 {
-	Project* project = LuaProject::check(L, 1);
+	Project* project = lua::check<Project>(L, 1, CLASSNAME);
 	
 	wxStringSet_t files;
 	project->GetFiles(files);
@@ -30,4 +33,12 @@ static const luaL_Reg METHODS[] = {
 	{NULL, NULL}
 };
 
-LUA_BINDER_IMPL(Project, METHODS);
+void lua_open_Project(lua_State* L)
+{
+	luaL_newmetatable(L, CLASSNAME);
+	lua_createtable(L, 0, 0);
+	luaL_setfuncs(L, METHODS, 0);
+	lua_setfield(L, -2, "__index");
+	lua_pop(L, 1);
+}
+

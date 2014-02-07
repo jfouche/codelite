@@ -1,9 +1,10 @@
 #include "lua_runner.h"
-#include "lua_imanager.h"
-#include "lua_ieditor.h"
-#include "lua_workspace.h"
-#include "lua_project.h"
+#include "lua_utils.hpp"
 
+extern void lua_open_IEditor(lua_State* L);
+extern void lua_open_IManager(lua_State* L);
+extern void lua_open_Workspace(lua_State* L);
+extern void lua_open_Project(lua_State* L);
 
 LuaRunner::LuaRunner(IManager* manager)
 : m_manager(manager)
@@ -21,12 +22,12 @@ void LuaRunner::Init()
 {
 	luaL_openlibs(m_lua);
 
-	LuaIManager::registerClass(m_lua);
-	LuaIEditor::registerClass(m_lua);
-	LuaWorkspace::registerClass(m_lua);
-	LuaProject::registerClass(m_lua);
+	lua_open_IManager(m_lua);
+	lua_open_IEditor(m_lua);
+	lua_open_Workspace(m_lua);
+	lua_open_Project(m_lua);
 
-	LuaIManager::push(m_lua, m_manager);
+	lua::push(m_lua, m_manager, "IManager");
 	lua_setglobal(m_lua, "cl_manager");
 }
 

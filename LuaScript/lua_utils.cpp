@@ -1,7 +1,7 @@
 #include "lua_utils.hpp"
 #include <sstream>
 
-std::string lua_stack_dump(lua_State *L)
+std::string lua::stack_dump(lua_State *L)
 {
 	std::ostringstream oss;
 	oss << "lua stack : ";

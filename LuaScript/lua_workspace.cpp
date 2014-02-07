@@ -1,9 +1,11 @@
-#include "lua_workspace.h"
-#include "lua_project.h"
+#include "lua_utils.hpp"
+#include "workspace.h"
+
+static const char* CLASSNAME = "Workspace";
 
 static int GetActiveProjectName(lua_State* L)
 {
-	Workspace* workspace = LuaWorkspace::check(L, 1);
+	Workspace* workspace = lua::check<Workspace>(L, 1, CLASSNAME);
 	wxString name = workspace->GetActiveProjectName();
 	lua_pushstring(L, name.c_str());
 	return 1;
@@ -11,9 +13,7 @@ static int GetActiveProjectName(lua_State* L)
 
 static int FindProjectByName(lua_State* L)
 {
-	Workspace* workspace = LuaWorkspace::check(L, 1);
-
-	printf(lua_stack_dump(L).c_str());
+	Workspace* workspace = lua::check<Workspace>(L, 1, CLASSNAME);
 
 	if (lua_isstring(L, 2) == 0)
 	{
@@ -25,7 +25,7 @@ static int FindProjectByName(lua_State* L)
 	ProjectPtr project = workspace->FindProjectByName(name, err);
 	if (project)
 	{
-		LuaProject::push(L, project.Get());
+		lua::push(L, project.Get(), "Project");
 	}
 	else
 	{
@@ -36,7 +36,7 @@ static int FindProjectByName(lua_State* L)
 
 static int GetProjectList(lua_State* L)
 {
-	Workspace* workspace = LuaWorkspace::check(L, 1);
+	Workspace* workspace = lua::check<Workspace>(L, 1, CLASSNAME);
 	
 	wxArrayString names;
 	workspace->GetProjectList(names);
@@ -58,4 +58,11 @@ static luaL_Reg METHODS[] = {
 	{NULL, NULL}
 };
 
-LUA_BINDER_IMPL(Workspace, METHODS);
+void lua_open_Workspace(lua_State* L)
+{
+	luaL_newmetatable(L, CLASSNAME);
+	lua_createtable(L, 0, 0);
+	luaL_setfuncs(L, METHODS, 0);
+	lua_setfield(L, -2, "__index");
+	lua_pop(L, 1);
+}

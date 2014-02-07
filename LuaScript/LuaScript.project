@@ -71,13 +71,9 @@
   <Dependencies Name="WinDebugUnicode"/>
   <Dependencies Name="WinReleaseUnicode"/>
   <VirtualDirectory Name="binding">
-    <File Name="lua_ieditor.h"/>
-    <File Name="lua_imanager.h"/>
-    <File Name="lua_workspace.h"/>
     <File Name="lua_ieditor.cpp"/>
     <File Name="lua_imanager.cpp"/>
     <File Name="lua_workspace.cpp"/>
-    <File Name="lua_project.h"/>
     <File Name="lua_project.cpp"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">

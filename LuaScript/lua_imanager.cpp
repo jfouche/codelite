@@ -1,10 +1,12 @@
-#include "lua_imanager.h"
-#include "lua_ieditor.h"
-#include "lua_workspace.h"
+#include "lua_utils.hpp"
+#include "imanager.h"
+#include "workspace.h"
 
-static int lua_IManager_GetActiveEditor(lua_State* L)
+static const char* CLASSNAME = "IManager";
+
+static int GetActiveEditor(lua_State* L)
 {
-	IManager* manager = LuaIManager::check(L, 1);
+	IManager* manager = lua::check<IManager>(L, 1, CLASSNAME);
 	IEditor* editor = manager->GetActiveEditor();
 	if (editor == NULL)
 	{
@@ -12,26 +14,26 @@ static int lua_IManager_GetActiveEditor(lua_State* L)
 	}
 	else
 	{
-		LuaIEditor::push(L, editor);
+		lua::push(L, editor, "IEditor");
 	}
 	return 1;
 }
 
-static int lua_IManager_NewEditor(lua_State* L)
+static int NewEditor(lua_State* L)
 {
-	IManager* manager = LuaIManager::check(L, 1);
+	IManager* manager = lua::check<IManager>(L, 1, CLASSNAME);
 	IEditor* editor = manager->NewEditor();
-	LuaIEditor::push(L, editor);
+	lua::push(L, editor, "IEditor");
 	return 1;
 }
 
-static int lua_IManager_GetWorkspace(lua_State* L)
+static int GetWorkspace(lua_State* L)
 {
-	IManager* manager = LuaIManager::check(L, 1);
+	IManager* manager = lua::check<IManager>(L, 1, CLASSNAME);
 	Workspace* workspace = manager->GetWorkspace();
 	if (workspace->IsOpen())
 	{
-		LuaWorkspace::push(L,workspace);
+		lua::push(L, workspace, "Workspace");
 	}
 	else
 	{
@@ -41,10 +43,17 @@ static int lua_IManager_GetWorkspace(lua_State* L)
 }
 
 const luaL_Reg METHODS[] = {
-	{"GetActiveEditor", lua_IManager_GetActiveEditor},
-	{"NewEditor", lua_IManager_NewEditor},
-	{"GetWorkspace", lua_IManager_GetWorkspace },
+	{"GetActiveEditor", GetActiveEditor},
+	{"NewEditor", NewEditor},
+	{"GetWorkspace", GetWorkspace },
 	{NULL, NULL}
 };
 
-LUA_BINDER_IMPL(IManager, METHODS);
+void lua_open_IManager(lua_State* L)
+{
+	luaL_newmetatable(L, CLASSNAME);
+	lua_createtable(L, 0, 0);
+	luaL_setfuncs(L, METHODS, 0);
+	lua_setfield(L, -2, "__index");
+	lua_pop(L, 1);
+}

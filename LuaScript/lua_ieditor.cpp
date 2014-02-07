@@ -1,9 +1,12 @@
-#include "lua_ieditor.h"
+#include "lua_utils.hpp"
+#include "ieditor.h"
+
+static const char* CLASSNAME = "IEditor";
 
 /// @lua IEditor.GetEditorText() : return string
 static int GetEditorText(lua_State* L)
 {
-	IEditor* editor = LuaIEditor::check(L, 1);
+	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
 	wxString content = editor->GetEditorText();
 	lua_pushstring(L, content.c_str());
 	return 1;
@@ -12,7 +15,7 @@ static int GetEditorText(lua_State* L)
 /// @lua IEditor.SetEditorText(string)
 static int SetEditorText(lua_State* L)
 {
-	IEditor* editor = LuaIEditor::check(L, 1);
+	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
 	if (lua_isstring(L, 2) == 0)
 	{
 		return 0;
@@ -25,7 +28,7 @@ static int SetEditorText(lua_State* L)
 /// @lua IEditor.GetSelection() : return string
 static int GetSelection(lua_State* L)
 {
-	IEditor* editor = LuaIEditor::check(L, 1);
+	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
 	wxString selection = editor->GetSelection();
 	lua_pushstring(L, selection.c_str());
 	return 1;
@@ -34,7 +37,7 @@ static int GetSelection(lua_State* L)
 /// @lua IEditor.ReplaceSelection(string)
 static int ReplaceSelection(lua_State* L)
 {
-	IEditor* editor = LuaIEditor::check(L, 1);
+	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
 	if (lua_isstring(L, 2) == 0)
 	{
 		return 0;
@@ -47,7 +50,7 @@ static int ReplaceSelection(lua_State* L)
 /// @lua IEditor.AppendText(string)
 static int AppendText(lua_State* L)
 {
-	IEditor* editor = LuaIEditor::check(L, 1);
+	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
 	if (lua_isstring(L, 2) == 0)
 	{
 		return 0;
@@ -66,4 +69,11 @@ static const luaL_Reg METHODS[] = {
 	{NULL, NULL}
 };
 
-LUA_BINDER_IMPL(IEditor, METHODS);
+void lua_open_IEditor(lua_State* L)
+{
+	luaL_newmetatable(L, CLASSNAME);
+	lua_createtable(L, 0, 0);
+	luaL_setfuncs(L, METHODS, 0);
+	lua_setfield(L, -2, "__index");
+	lua_pop(L, 1);
+}
