@@ -29,7 +29,6 @@ public:
 private:
 	void Initialize();
 	bool IsPaneDetached() const;
-	void OnRun(wxCommandEvent& event);
 };
 
 #endif // CL_LUA_PLUGIN_H_INCLUDED

@@ -109,12 +109,6 @@ void LuaPlugin::Initialize()
     }
 }
 
-void LuaPlugin::OnRun(wxCommandEvent& event)
-{
-	LuaRunner luaRunner(m_mgr);
-	luaRunner.Run("E:\\Temp\\cl.lua");
-}
-
 bool LuaPlugin::IsPaneDetached() const
 {
     DetachedPanesInfo dpi;
