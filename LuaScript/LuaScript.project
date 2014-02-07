@@ -75,6 +75,7 @@
     <File Name="lua_imanager.cpp"/>
     <File Name="lua_workspace.cpp"/>
     <File Name="lua_project.cpp"/>
+    <File Name="lua_codelite.cpp"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>

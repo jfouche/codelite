@@ -1,4 +1,4 @@
-editor = cl_manager:GetActiveEditor()
+editor = codelite.manager:GetActiveEditor()
 if editor then
 	sel = editor:GetSelection()
 	if #sel > 0 then

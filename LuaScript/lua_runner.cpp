@@ -1,6 +1,7 @@
 #include "lua_runner.h"
 #include "lua_utils.hpp"
 
+extern void lua_open_Codelite(lua_State* L, IManager* manager, const char* name);
 extern void lua_open_IEditor(lua_State* L);
 extern void lua_open_IManager(lua_State* L);
 extern void lua_open_Workspace(lua_State* L);
@@ -27,8 +28,7 @@ void LuaRunner::Init()
 	lua_open_Workspace(m_lua);
 	lua_open_Project(m_lua);
 
-	lua::push(m_lua, m_manager, "IManager");
-	lua_setglobal(m_lua, "cl_manager");
+	lua_open_Codelite(m_lua, m_manager, "codelite");
 }
 
 void LuaRunner::Run(const wxString& script)
