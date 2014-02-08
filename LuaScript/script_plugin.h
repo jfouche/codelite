@@ -4,18 +4,24 @@
 #include "plugin.h"
 #include "script_panel.h"
 #include "script_manager.h"
+#include "lua_runner.h"
 
 class wxComboBox;
 
-class LuaPlugin : public IPlugin
+class ScriptPlugin : public IPlugin
 {
+	static ScriptPlugin* thePlugin;
+	
 	ScriptManager m_scriptMgr;
+	LuaRunner m_hookRunner;
 	ScriptPanel* m_scriptPanel;
-	wxComboBox* m_combo;
 	
 public:
-	LuaPlugin(IManager *manager);
-	~LuaPlugin();
+	ScriptPlugin(IManager* manager);
+	~ScriptPlugin();
+	
+	static ScriptPlugin* Create(IManager* manager);
+	static ScriptPlugin* Get();
 
 	//--------------------------------------------
 	//Abstract methods
@@ -25,9 +31,10 @@ public:
 	virtual void HookPopupMenu(wxMenu *menu, MenuType type);
 	virtual void UnHookPopupMenu(wxMenu *menu, MenuType type);
 	virtual void UnPlug();
-
+	
 private:
-	void Initialize();
+	void InitUi();
+	void InitHooks();
 	bool IsPaneDetached() const;
 };
 

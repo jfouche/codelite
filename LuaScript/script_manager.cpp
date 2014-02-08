@@ -82,3 +82,27 @@ wxString ScriptManager::GetScriptPath(const wxString& script) const
 {
 	return wxFileName(GetScriptDir(), script).GetFullPath();
 }
+
+wxString ScriptManager::GetHookDir() const
+{
+	wxString userDir = clStandardPaths::Get().GetUserDataDir();
+	wxFileName dir(userDir, "hooks");
+	if (dir.Exists(wxFILE_EXISTS_DIR) == false)
+	{
+		::wxMkDir(dir.GetFullPath());
+	}
+	return dir.GetFullPath();
+}
+
+
+void ScriptManager::GetHooks(wxArrayString& hooks) const
+{
+	ScriptTraverser traverser(hooks);
+	wxDir dir(GetHookDir());
+	dir.Traverse(traverser, "*.lua");
+}
+
+wxString ScriptManager::GetHookPath(const wxString& hook) const
+{
+	return wxFileName(GetHookDir(), hook).GetFullPath();
+}

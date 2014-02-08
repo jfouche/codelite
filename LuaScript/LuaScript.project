@@ -50,6 +50,7 @@
     <File Name="lua_utils.cpp"/>
     <File Name="script_panel.cpp"/>
     <File Name="script_plugin.cpp"/>
+    <File Name="lua_event_handler.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <File Name="lua_runner.h"/>
@@ -57,6 +58,7 @@
     <File Name="script_panel.h"/>
     <File Name="script_plugin.h"/>
     <File Name="lua_utils.hpp"/>
+    <File Name="lua_event_handler.h"/>
   </VirtualDirectory>
   <Dependencies/>
   <VirtualDirectory Name="wxcrafter">

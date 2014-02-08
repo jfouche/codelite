@@ -22,9 +22,14 @@ public:
 	bool DeleteScript(const wxString& script);
 	
 	wxString GetScriptPath(const wxString& script) const;
+
+	void GetHooks(wxArrayString& hooks) const;
+
+	wxString GetHookPath(const wxString& hook) const;
 	
 private:
 	wxString GetScriptDir() const;
+	wxString GetHookDir() const;
 };
 
 #endif // CL_LUA_SCRIPT_MANAGER_H_INCLUDED

@@ -1,10 +1,9 @@
 #include "script_plugin.h"
 #include <wx/xrc/xmlres.h>
-#include "lua_runner.h"
 #include "detachedpanesinfo.h"
 #include "dockablepane.h"
 
-static LuaPlugin* thePlugin = NULL;
+ScriptPlugin* ScriptPlugin::thePlugin = 0;
 
 static const char* SCRIPT_PANE_TITLE = "Scripts";
 
@@ -12,11 +11,7 @@ static const char* SCRIPT_PANE_TITLE = "Scripts";
 //Define the plugin entry point
 extern "C" EXPORT IPlugin *CreatePlugin(IManager *manager)
 {
-	if (thePlugin == 0)
-	{
-		thePlugin = new LuaPlugin(manager);
-	}
-	return thePlugin;
+	return ScriptPlugin::Create(manager);
 }
 
 extern "C" EXPORT PluginInfo GetPluginInfo()
@@ -34,28 +29,44 @@ extern "C" EXPORT int GetPluginInterfaceVersion()
 	return PLUGIN_INTERFACE_VERSION;
 }
 
-LuaPlugin::LuaPlugin(IManager *manager)
+ScriptPlugin::ScriptPlugin(IManager *manager)
 	: IPlugin(manager)
 	, m_scriptMgr(manager)
+	, m_hookRunner(manager)
 {
 	m_longName = wxT("Lua script plugin");
 	m_shortName = wxT("Lua");
 
-	Initialize();
+	InitUi();
+	InitHooks();
 }
 
-LuaPlugin::~LuaPlugin()
+ScriptPlugin::~ScriptPlugin()
 {
 }
 
-clToolBar *LuaPlugin::CreateToolBar(wxWindow *parent)
+ScriptPlugin* ScriptPlugin::Create(IManager* manager)
+{
+	if (thePlugin == 0)
+	{
+		thePlugin = new ScriptPlugin(manager);
+	}
+	return thePlugin;
+}
+
+ScriptPlugin* ScriptPlugin::Get()
+{
+	return thePlugin;
+}
+
+clToolBar *ScriptPlugin::CreateToolBar(wxWindow *parent)
 {
 	// Create the toolbar to be used by the plugin
 	clToolBar *tb(NULL);
 	return tb;
 }
 
-void LuaPlugin::CreatePluginMenu(wxMenu *pluginsMenu)
+void ScriptPlugin::CreatePluginMenu(wxMenu *pluginsMenu)
 {
 	/*
 		// You can use the below code a snippet:
@@ -71,15 +82,15 @@ void LuaPlugin::CreatePluginMenu(wxMenu *pluginsMenu)
 	*/
 }
 
-void LuaPlugin::HookPopupMenu(wxMenu *menu, MenuType type)
+void ScriptPlugin::HookPopupMenu(wxMenu *menu, MenuType type)
 {
 }
 
-void LuaPlugin::UnHookPopupMenu(wxMenu *menu, MenuType type)
+void ScriptPlugin::UnHookPopupMenu(wxMenu *menu, MenuType type)
 {
 }
 
-void LuaPlugin::UnPlug()
+void ScriptPlugin::UnPlug()
 {
 // Remove the tab if it's actually docked in the workspace pane
     size_t index = m_mgr->GetWorkspacePaneNotebook()->GetPageIndex(m_scriptPanel);
@@ -90,7 +101,7 @@ void LuaPlugin::UnPlug()
     m_scriptPanel->Destroy();
 }
 
-void LuaPlugin::Initialize()
+void ScriptPlugin::InitUi()
 {
     // create tab (possibly detached)
     Notebook *book = m_mgr->GetWorkspacePaneNotebook();
@@ -109,7 +120,19 @@ void LuaPlugin::Initialize()
     }
 }
 
-bool LuaPlugin::IsPaneDetached() const
+void ScriptPlugin::InitHooks()
+{
+	wxArrayString hooks;
+	m_scriptMgr.GetHooks(hooks);
+	
+	for (size_t i = 0; i < hooks.size(); ++i)
+	{
+		wxString hook = m_scriptMgr.GetHookPath(hooks[i]);
+		m_hookRunner.Run(hook);
+	}
+}
+
+bool ScriptPlugin::IsPaneDetached() const
 {
     DetachedPanesInfo dpi;
     m_mgr->GetConfigTool()->ReadObject(wxT("DetachedPanesList"), &dpi);
