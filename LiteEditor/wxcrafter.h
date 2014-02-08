@@ -38,6 +38,7 @@
 #include <wx/scrolwin.h>
 #include <wx/statbmp.h>
 #include <wx/dirctrl.h>
+#include <wx/frame.h>
 
 class NewProjectDlgBaseClass : public wxDialog
 {
@@ -261,6 +262,24 @@ protected:
 public:
     WorkspaceTabBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(-1,-1), long style = wxTAB_TRAVERSAL);
     virtual ~WorkspaceTabBase();
+};
+
+
+class EditorFrameBase : public wxFrame
+{
+protected:
+    wxPanel* m_mainPanel;
+    wxToolBar* m_toolbar;
+
+protected:
+    virtual void OnClose(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnCloseUI(wxUpdateUIEvent& event) { event.Skip(); }
+    virtual void OnFind(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnFindUI(wxUpdateUIEvent& event) { event.Skip(); }
+
+public:
+    EditorFrameBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("EditorFrame"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(-1,-1), long style = wxDEFAULT_FRAME_STYLE|wxFRAME_NO_TASKBAR|wxFRAME_FLOAT_ON_PARENT);
+    virtual ~EditorFrameBase();
 };
 
 #endif

@@ -525,6 +525,8 @@
     <File Name="context_diff.h"/>
     <File Name="context_html.h"/>
     <File Name="context_html.cpp"/>
+    <File Name="editorframe.h"/>
+    <File Name="editorframe.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Manager">
     <File Name="manager.h"/>
@@ -1153,7 +1155,7 @@
         <CustomPostBuild/>
         <CustomPreBuild/>
       </AdditionalRules>
-      <Completion EnableCpp11="no">
+      <Completion EnableCpp11="yes">
         <ClangCmpFlagsC/>
         <ClangCmpFlags/>
         <ClangPP/>
@@ -1491,7 +1493,7 @@ resources.cpp: resources.xrc
         <Library Value="liblibclang.dll"/>
       </Linker>
       <ResourceCompiler Options="$(shell wx-config --rcflags)" Required="yes"/>
-      <General OutputFile="$(IntermediateDirectory)/codelite-dbg.exe" IntermediateDirectory="./Debug" Command="./codelite-dbg.exe" CommandArguments="-b . " UseSeparateDebugArgs="yes" DebugArguments="-b . --no-plugins" WorkingDirectory="../Runtime" PauseExecWhenProcTerminates="no" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/codelite-dbg.exe" IntermediateDirectory="./Debug" Command=".\codelite-dbg.exe" CommandArguments="-b ." UseSeparateDebugArgs="yes" DebugArguments="-b ." WorkingDirectory="../Runtime" PauseExecWhenProcTerminates="no" IsGUIProgram="no" IsEnabled="yes"/>
       <Environment EnvVarSetName="Default" DbgSetName="">
         <![CDATA[PATH=../sdk/clang/lib;$(WXWIN)\lib\gcc_dll;$(PATH)]]>
       </Environment>
@@ -1522,7 +1524,8 @@ resources.cpp: resources.xrc
         <CustomPostBuild/>
         <CustomPreBuild>resources.cpp
 resources.cpp: resources.xrc
-	wxrc /c /v /o resources.cpp resources.xrc</CustomPreBuild>
+	wxrc /c /v /o resources.cpp resources.xrc
+</CustomPreBuild>
       </AdditionalRules>
       <Completion EnableCpp11="yes">
         <ClangCmpFlagsC/>
@@ -1532,7 +1535,7 @@ resources.cpp: resources.xrc
       </Completion>
     </Configuration>
     <Configuration Name="WinReleaseUnicode" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-O2;;$(shell wx-config --debug=no --cxxflags --unicode=yes);-Winvalid-pch" C_Options="-O2" Assembler="" Required="yes" PreCompiledHeader="../PCH/precompiled_header_release.h" PCHInCommandLine="yes" UseDifferentPCHFlags="yes" PCHFlags="$(shell wx-config --cxxflags --unicode=yes --debug=no) -O2">
+      <Compiler Options="-O2;;$(shell wx-config --debug=no --cxxflags --unicode=yes);-Winvalid-pch" C_Options="-O2" Assembler="" Required="yes" PreCompiledHeader="..\PCH\precompiled_header_release.h" PCHInCommandLine="yes" UseDifferentPCHFlags="yes" PCHFlags="$(shell wx-config --cxxflags --unicode=yes --debug=no) -O2">
         <IncludePath Value="."/>
         <IncludePath Value="../CodeLite"/>
         <IncludePath Value="../sdk/wxsqlite3/include"/>
@@ -1553,7 +1556,7 @@ resources.cpp: resources.xrc
         <Library Value="liblibclang.dll"/>
       </Linker>
       <ResourceCompiler Options="$(shell wx-config --rcflags)" Required="yes"/>
-      <General OutputFile="$(IntermediateDirectory)/codelite.exe" IntermediateDirectory="./Release" Command="./codelite.exe" CommandArguments="-b ." UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="../Runtime" PauseExecWhenProcTerminates="no" IsGUIProgram="yes" IsEnabled="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/codelite.exe" IntermediateDirectory="./Release" Command=".\codelite.exe" CommandArguments="-b ." UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="..\Runtime" PauseExecWhenProcTerminates="no" IsGUIProgram="yes" IsEnabled="yes"/>
       <Environment EnvVarSetName="Default" DbgSetName="Default">
         <![CDATA[PATH=../sdk/clang/lib;$(WXWIN)\lib\gcc_dll;$(PATH)]]>
       </Environment>

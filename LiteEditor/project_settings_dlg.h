@@ -59,6 +59,7 @@ public:
     virtual void SelectChoiceWithGlobalSettings(wxPGProperty* p, const wxString& text);
     virtual bool PopupAddOptionCheckDlg(wxTextCtrl *ctrl, const wxString& title, const Compiler::CmpCmdLineOptions& options);
     virtual bool PopupAddOptionCheckDlg(wxString &v, const wxString& title, const Compiler::CmpCmdLineOptions& options);
+
 };
 
 /**
@@ -78,19 +79,8 @@ public:
     virtual void Save(BuildConfigPtr buildConf, ProjectSettingsPtr projSettingsPtr);
 
 protected:
-
-    virtual void OnButtonAddCCompilerOptions(wxCommandEvent& event);
-    virtual void OnCmdEvtVModified( wxCommandEvent& event );
-    virtual void OnButtonAddCompilerOptions(wxCommandEvent &event);
-    virtual void OnAddSearchPath(wxCommandEvent &event);
-    virtual void OnButtonAddPreprocessor(wxCommandEvent &event);
-
-    virtual void OnAddLibraryPath(wxCommandEvent &event);
-    virtual void OnAddLibrary(wxCommandEvent &event);
-    virtual void OnButtonAddLinkerOptions(wxCommandEvent &event);
-
-    virtual void OnResourceCmpAddPath(wxCommandEvent &e);
-    virtual void OnResourceCmpAddOption(wxCommandEvent &e);
+    virtual void OnCustomEditorClicked(wxCommandEvent& event);
+    virtual void OnValueChanged(wxPropertyGridEvent& event);
 };
 
 /**
@@ -104,8 +94,9 @@ class ProjectSettingsDlg : public ProjectSettingsBaseDlg
     bool      m_isCustomBuild;
     bool      m_isProjectEnabled;
     WorkspaceTab* m_workspaceTab;
-    
+
 protected:
+    virtual void OnPageChanged(wxTreebookEvent& event);
     void SaveValues();
     void ClearValues();
     void LoadValues(const wxString &configName);
@@ -136,6 +127,16 @@ public:
     bool GetIsDirty() const {
         return m_isDirty;
     }
+
+    /**
+     * @brief show an info bar at the top of the dialog to indicate that this project is disabled
+     */
+    void ShowHideDisabledMessage();
+
+    /**
+     * @brief show an info bar at the top of dialog to indicate that the options are disabled
+     */
+    void ShowCustomProjectMessage(bool show);
 
 public:
     /** Constructor */

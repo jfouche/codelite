@@ -18,6 +18,7 @@
 #include <wx/choice.h>
 #include <wx/arrstr.h>
 #include <wx/treebook.h>
+#include <wx/infobar.h>
 #include <wx/button.h>
 #include <wx/checkbox.h>
 #include <wx/propgrid/manager.h>
@@ -39,6 +40,7 @@ protected:
     wxPanel* m_panelSettings;
     wxChoice* m_choiceConfig;
     wxTreebook* m_treebook;
+    wxInfoBar* m_infobar;
     wxStdDialogButtonSizer* m_stdBtnSizer126;
     wxButton* m_button_ok;
     wxButton* m_button_apply;
@@ -47,6 +49,7 @@ protected:
 
 protected:
     virtual void OnConfigurationChanged(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnPageChanged(wxTreebookEvent& event) { event.Skip(); }
     virtual void OnButtonOK(wxCommandEvent& event) { event.Skip(); }
     virtual void OnButtonApply(wxCommandEvent& event) { event.Skip(); }
     virtual void OnButtonApplyUI(wxUpdateUIEvent& event) { event.Skip(); }
@@ -54,7 +57,7 @@ protected:
     virtual void OnButtonHelp(wxCommandEvent& event) { event.Skip(); }
 
 public:
-    ProjectSettingsBaseDlg(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Project Settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(-1,-1), long style = wxDEFAULT_DIALOG_STYLE|wxSTAY_ON_TOP|wxRESIZE_BORDER);
+    ProjectSettingsBaseDlg(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Project Settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(-1,-1), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER);
     virtual ~ProjectSettingsBaseDlg();
 };
 
@@ -83,6 +86,7 @@ protected:
     virtual void OnProjectEnabled(wxCommandEvent& event) { event.Skip(); }
     virtual void OnValueChanged(wxPropertyGridEvent& event) { event.Skip(); }
     virtual void OnProjectCustumBuildUI(wxUpdateUIEvent& event) { event.Skip(); }
+    virtual void OnCustomEditorClicked(wxCommandEvent& event) { event.Skip(); }
 
 public:
     PSGeneralPageBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(-1,-1), long style = wxTAB_TRAVERSAL);
@@ -187,22 +191,17 @@ public:
 class PSResourcesPageBase : public wxPanel
 {
 protected:
-    wxPanel* m_resourceCmpPage;
-    wxStaticText* m_staticText33111;
-    wxChoice* m_choiceResUseWithGlobalSettings;
-    wxStaticText* m_staticText221;
-    wxTextCtrl* m_textAddResCmpOptions;
-    wxButton* m_buttonAddResCmpOptions;
-    wxStaticText* m_staticText23;
-    wxTextCtrl* m_textAddResCmpPath;
-    wxButton* m_buttonAddResCmpPath;
+    wxPropertyGridManager* m_pgMgr;
+    wxPGProperty* CATEGORY_RESOURCES;
+    wxPGProperty* m_pgPropBehaviorWithGlobalSettings;
+    wxPGProperty* m_pgPropResCmpOptions;
+    wxPGProperty* m_pgPropResCmpSearchPath;
 
 protected:
     virtual void OnProjectEnabledUI(wxUpdateUIEvent& event) { event.Skip(); }
-    virtual void OnrResourceCompilerNotNeededUI(wxUpdateUIEvent& event) { event.Skip(); }
-    virtual void OnCmdEvtVModified(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnResourceCmpAddOption(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnResourceCmpAddPath(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnValueChanged(wxPropertyGridEvent& event) { event.Skip(); }
+    virtual void OnCustomEditorClicked(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnResourcesEnabledUI(wxUpdateUIEvent& event) { event.Skip(); }
 
 public:
     PSResourcesPageBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(-1,-1), long style = wxTAB_TRAVERSAL);
@@ -286,49 +285,23 @@ public:
 class GlobalSettingsBasePanel : public wxPanel
 {
 protected:
-    wxNotebook* m_notebook;
-    wxPanel* m_compilerPage;
-    wxStaticText* m_staticText6;
-    wxTextCtrl* m_textCompilerOptions;
-    wxButton* m_buttonCompilerOptions;
-    wxStaticText* m_staticText46;
-    wxTextCtrl* m_textCtrlCCompileOptions;
-    wxButton* m_buttonCCompileOptions;
-    wxStaticText* m_staticText4;
-    wxTextCtrl* m_textAdditionalSearchPath;
-    wxButton* m_buttonAddSearchPath;
-    wxStaticText* m_staticText171;
-    wxTextCtrl* m_textPreprocessor;
-    wxButton* m_buttonAddPreprocessor;
-    wxPanel* m_linkerPage;
-    wxStaticText* m_staticText10;
-    wxTextCtrl* m_textLinkerOptions;
-    wxButton* m_buttonLinkerOptions;
-    wxStaticText* m_staticText7;
-    wxTextCtrl* m_textLibraryPath;
-    wxButton* m_buttonLibraryPath;
-    wxStaticText* m_staticText8;
-    wxTextCtrl* m_textLibraries;
-    wxButton* m_buttonLibraries;
-    wxPanel* m_resourceCmpPage;
-    wxStaticText* m_staticText221;
-    wxTextCtrl* m_textAddResCmpOptions;
-    wxButton* m_buttonAddResCmpOptions;
-    wxStaticText* m_staticText23;
-    wxTextCtrl* m_textAddResCmpPath;
-    wxButton* m_buttonAddResCmpPath;
+    wxPropertyGridManager* m_pgMgr;
+    wxPGProperty* CATEGORY_COMPILER;
+    wxPGProperty* m_pgPropCppCmpOpts;
+    wxPGProperty* m_pgPropCCmpOpts;
+    wxPGProperty* m_pgPropIncludePaths;
+    wxPGProperty* m_pgPropPreProcessors;
+    wxPGProperty* CATEGORY_LINKER;
+    wxPGProperty* m_pgPropOptions;
+    wxPGProperty* m_pgPropLibPath;
+    wxPGProperty* m_pgPropLIbs;
+    wxPGProperty* CATEGORY_RESOURCES;
+    wxPGProperty* m_pgPropResCmpOptions;
+    wxPGProperty* m_pgPropResCmpSearchPath;
 
 protected:
-    virtual void OnCmdEvtVModified(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnButtonAddCompilerOptions(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnButtonAddCCompilerOptions(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnAddSearchPath(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnButtonAddPreprocessor(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnButtonAddLinkerOptions(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnAddLibraryPath(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnAddLibrary(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnResourceCmpAddOption(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnResourceCmpAddPath(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnValueChanged(wxPropertyGridEvent& event) { event.Skip(); }
+    virtual void OnCustomEditorClicked(wxCommandEvent& event) { event.Skip(); }
 
 public:
     GlobalSettingsBasePanel(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(-1,-1), long style = wxTAB_TRAVERSAL);

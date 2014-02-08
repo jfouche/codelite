@@ -142,7 +142,7 @@ public:
     static bool                                 m_ccShowPrivateMembers;
     static bool                                 m_ccShowItemsComments;
     static bool                                 m_ccInitialized;
-
+    typedef std::vector<LEditor*> Vec_t;
 public:
     static FindReplaceData &GetFindReplaceData() {
         return m_findReplaceData;
@@ -731,7 +731,12 @@ public:
     virtual int PositionAfterPos(int pos);
     virtual int PositionBeforePos(int pos);
     virtual int GetCharAtPos(int pos);
-
+    
+    /**
+     * @brief return true if the current editor is detached from the mainbook
+     */
+    bool IsDetached() const;
+    
     //----------------------------------------------------------------------------
     //----------------------------------------------------------------------------
 
@@ -766,6 +771,8 @@ public:
     void PasteLineAbove();
 
 private:
+    void DoUpdateTLWTitle(bool raise);
+    
     void FillBPtoMarkerArray();
     BPtoMarker GetMarkerForBreakpt(enum BreakpointType bp_type);
     void SetProperties();
@@ -793,7 +800,6 @@ private:
     wxMenu* DoCreateDebuggerWatchMenu(const wxString &word);
 
     DECLARE_EVENT_TABLE()
-    void OnMouseCaptureLost(wxMouseCaptureLostEvent &e);
     void OnHighlightWordChecked(wxCommandEvent &e);
     void OnRemoveMatchInidicator(wxCommandEvent &e);
     void OnSavePoint(wxStyledTextEvent &event);

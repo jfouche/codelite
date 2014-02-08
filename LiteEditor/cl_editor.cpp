@@ -130,7 +130,6 @@ BEGIN_EVENT_TABLE(LEditor, wxStyledTextCtrl)
     EVT_COMMAND                    (wxID_ANY, wxEVT_FRD_CLEARBOOKMARKS, LEditor::OnFindDialog)
     EVT_COMMAND                    (wxID_ANY, wxCMD_EVENT_REMOVE_MATCH_INDICATOR, LEditor::OnRemoveMatchInidicator)
     EVT_COMMAND                    (wxID_ANY, wxCMD_EVENT_SET_EDITOR_ACTIVE,      LEditor::OnSetActive)
-    EVT_MOUSE_CAPTURE_LOST         (LEditor::OnMouseCaptureLost)
 END_EVENT_TABLE()
 
 // Instantiate statics
@@ -647,9 +646,7 @@ void LEditor::OnSavePoint(wxStyledTextEvent &event)
 
     title << GetFileName().GetFullName();
     clMainFrame::Get()->GetMainBook()->SetPageTitle(this, title);
-    if (clMainFrame::Get()->GetMainBook()->GetActiveEditor() == this) {
-        clMainFrame::Get()->SetFrameTitle(this);
-    }
+    DoUpdateTLWTitle( false );
 }
 
 void LEditor::OnCharAdded(wxStyledTextEvent& event)
@@ -1161,7 +1158,7 @@ bool LEditor::SaveFileAs()
 
         // update the tab title (again) since we really want to trigger an update to the file tooltip
         clMainFrame::Get()->GetMainBook()->SetPageTitle(this, m_fileName.GetFullName());
-        clMainFrame::Get()->SetFrameTitle(this);
+        DoUpdateTLWTitle(false);
 
         // update syntax highlight
         SetSyntaxHighlight();
@@ -1831,8 +1828,9 @@ void LEditor::BraceMatch(const bool& bSelRegion)
 
 void LEditor::SetActive()
 {
-    clMainFrame::Get()->SetFrameTitle(this);
-
+    // ensure that the top level window parent of this editor is 'Raised'
+    DoUpdateTLWTitle(true);
+    
     // if the find and replace dialog is opened, set ourself
     // as the event owners
     if ( m_findReplaceDlg ) {
@@ -4596,9 +4594,29 @@ void LEditor::ToggleBreakpointEnablement()
     clMainFrame::Get()->GetDebuggerPane()->GetBreakpointView()->Initialize();
 }
 
-void LEditor::OnMouseCaptureLost(wxMouseCaptureLostEvent& e)
+void LEditor::DoUpdateTLWTitle(bool raise)
 {
-    if ( HasCapture() ) {
-        ReleaseMouse();
+    // ensure that the top level window parent of this editor is 'Raised'
+    wxWindow* tlw = ::wxGetTopLevelParent(this);
+    if ( tlw && raise ) {
+        tlw->Raise();
     }
+    
+    if ( !IsDetached() ) {
+        clMainFrame::Get()->SetFrameTitle(this);
+
+    } else {
+        wxString title;
+        title << GetFileName().GetFullPath();
+        if ( GetModify() ) {
+            title.Prepend("*");
+        }
+        tlw->SetLabel( title );
+    }
+}
+
+bool LEditor::IsDetached() const
+{
+    const wxWindow* tlw = ::wxGetTopLevelParent(const_cast<LEditor*>(this));
+    return (tlw && (clMainFrame::Get() != tlw));
 }

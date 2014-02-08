@@ -52,6 +52,17 @@
 #define LEX_FIF_SCOPE          5
 #define LEX_FIF_MATCH_COMMENT  6
 
+class MySTC : public wxStyledTextCtrl
+{
+public:
+    MySTC(wxWindow* parent) : wxStyledTextCtrl( parent ) {}
+    virtual ~MySTC() {
+        if ( HasCapture() ) {
+            ReleaseMouse();
+        }
+    }
+};
+
 BEGIN_EVENT_TABLE(FindResultsTab, OutputTabWindow)
     EVT_COMMAND(wxID_ANY, wxEVT_SEARCH_THREAD_SEARCHSTARTED,  FindResultsTab::OnSearchStart)
     EVT_COMMAND(wxID_ANY, wxEVT_SEARCH_THREAD_MATCHFOUND,     FindResultsTab::OnSearchMatch)
@@ -230,7 +241,11 @@ void FindResultsTab::SetStyles(wxStyledTextCtrl *sci)
 
 size_t FindResultsTab::GetPageCount() const
 {
-    return m_book->GetPageCount();
+    if ( m_book ) {
+        return m_book->GetPageCount();
+    } else {
+        return 1;
+    }
 }
 
 void FindResultsTab::AppendText(const wxString& line)
@@ -314,7 +329,7 @@ void FindResultsTab::OnSearchStart(wxCommandEvent& e)
     if (e.GetInt() != 0 || m_sci == NULL) {
         if (m_book) {
             clWindowUpdateLocker locker(this);
-            wxStyledTextCtrl *sci = new wxStyledTextCtrl(m_book);
+            MySTC *sci = new MySTC(m_book);
             SetStyles(sci);
             sci->Connect(wxEVT_STC_STYLENEEDED, wxStyledTextEventHandler(FindResultsTab::OnStyleNeeded), NULL, this);
 
@@ -494,8 +509,8 @@ void FindResultsTab::OnSearchEnded(wxCommandEvent& e)
     // We need to tell all editors that there's been a (new) search
     // This lets them clear any already-saved line-changes,
     // which a new save will have taken into account
-    std::vector<LEditor*> editors;
-    clMainFrame::Get()->GetMainBook()->GetAllEditors(editors);
+    LEditor::Vec_t editors;
+    clMainFrame::Get()->GetMainBook()->GetAllEditors(editors, MainBook::kGetAll_IncludeDetached);
     for (size_t n=0; n < editors.size(); ++n) {
         LEditor* editor = dynamic_cast<LEditor*>(*(editors.begin()+n));
         if (editor) {

@@ -539,10 +539,11 @@ BEGIN_EVENT_TABLE(clMainFrame, wxFrame)
     EVT_MENU(XRCID("copy_file_path"),                   clMainFrame::OnCopyFilePathOnly)
     EVT_MENU(XRCID("copy_file_name_only"),              clMainFrame::OnCopyFileName)
     EVT_MENU(XRCID("open_shell_from_filepath"),         clMainFrame::OnOpenShellFromFilePath)
-
+    EVT_MENU(XRCID("ID_DETACH_EDITOR"),                 clMainFrame::OnDetachEditor)
     EVT_UPDATE_UI(XRCID("copy_file_name"),              clMainFrame::OnFileExistUpdateUI)
     EVT_UPDATE_UI(XRCID("copy_file_path"),              clMainFrame::OnFileExistUpdateUI)
     EVT_UPDATE_UI(XRCID("open_shell_from_filepath"),    clMainFrame::OnFileExistUpdateUI)
+    EVT_UPDATE_UI(XRCID("ID_DETACH_EDITOR"),            clMainFrame::OnDetachEditorUI)
 
     //-----------------------------------------------------------------
     // Default editor context menu
@@ -1575,7 +1576,7 @@ bool clMainFrame::IsEditorEvent(wxEvent &event)
 {
 #ifdef __WXGTK__
     MainBook *mainBook = GetMainBook();
-    if(!mainBook || !mainBook->GetActiveEditor()) {
+    if(!mainBook || !mainBook->GetActiveEditor(true)) {
         if ( event.GetId() == wxID_FIND )
             return true;
         else
@@ -1595,7 +1596,7 @@ bool clMainFrame::IsEditorEvent(wxEvent &event)
             isFocused = true;
 
         } else {
-            isFocused = mainBook->GetActiveEditor()->IsFocused();
+            isFocused = mainBook->GetActiveEditor(true)->IsFocused();
 
         }
         return isFocused;
@@ -1643,7 +1644,7 @@ void clMainFrame::DispatchCommandEvent(wxCommandEvent &event)
     }
 
     // Do the default and pass this event to the Editor
-    LEditor* editor = GetMainBook()->GetActiveEditor();
+    LEditor* editor = GetMainBook()->GetActiveEditor(true);
     if ( !editor && event.GetId() != wxID_FIND ) {
         return;
     }
@@ -1666,7 +1667,7 @@ void clMainFrame::DispatchUpdateUIEvent(wxUpdateUIEvent &event)
         return;
     }
 
-    LEditor* editor = GetMainBook()->GetActiveEditor();
+    LEditor* editor = GetMainBook()->GetActiveEditor(true);
     if ( !editor ) {
         event.Enable(false);
         return;
@@ -1685,7 +1686,7 @@ void clMainFrame::OnFileExistUpdateUI(wxUpdateUIEvent &event)
 {
     CHECK_SHUTDOWN();
 
-    LEditor* editor = GetMainBook()->GetActiveEditor();
+    LEditor* editor = GetMainBook()->GetActiveEditor(true);
     if ( !editor ) {
         event.Enable(false);
     } else {
@@ -1767,7 +1768,7 @@ void clMainFrame::LoadSession(const wxString &sessionName)
 
 void clMainFrame::OnSave(wxCommandEvent& event)
 {
-    LEditor *editor = GetMainBook()->GetActiveEditor();
+    LEditor *editor = GetMainBook()->GetActiveEditor(true);
     if (editor) {
         editor->SaveFile();
 
@@ -1806,7 +1807,7 @@ void clMainFrame::OnFileLoadTabGroup(wxCommandEvent& WXUNUSED(event))
 
     // Disable the 'Replace' checkbox if there aren't any editors to replace
     std::vector<LEditor*> editors;
-    GetMainBook()->GetAllEditors(editors);
+    GetMainBook()->GetAllEditors(editors, MainBook::kGetAll_Default);
     dlg.EnableReplaceCheck(editors.size());
 
     if (dlg.ShowModal() != wxID_OK) {
@@ -1838,14 +1839,14 @@ void clMainFrame::OnFileLoadTabGroup(wxCommandEvent& WXUNUSED(event))
 void clMainFrame::OnFileReload(wxCommandEvent &event)
 {
     wxUnusedVar(event);
-    LEditor *editor = GetMainBook()->GetActiveEditor();
+    LEditor *editor = GetMainBook()->GetActiveEditor(true);
     if (editor) {
         if ( editor->GetModify() ) {
             // Ask user if he really wants to lose all changes
             wxString msg;
             msg << _("The file") << wxT(" '") << editor->GetFileName().GetFullName() << wxT(" '") << _("has been altered.") << wxT("\n");
             msg << _("Are you sure you want to lose all changes?");
-            if ( wxMessageBox(msg, _("Confirm"), wxYES_NO, this) != wxYES ) {
+            if ( wxMessageBox(msg, _("Confirm"), wxYES_NO, ::wxGetTopLevelParent(editor) ) != wxYES ) {
                 return;
             }
         }
@@ -2009,8 +2010,7 @@ void clMainFrame::OnFileSaveTabGroup(wxCommandEvent& WXUNUSED(event))
 
     std::vector<LEditor*> editors;
     wxArrayString filepaths;
-    bool retain_order(true);
-    GetMainBook()->GetAllEditors(editors, retain_order);	// We'll want the order of intArr to match the order in MainBook::SaveSession
+    GetMainBook()->GetAllEditors(editors, MainBook::kGetAll_RetainOrder|MainBook::kGetAll_IncludeDetached); // We'll want the order of intArr to match the order in MainBook::SaveSession
     for (size_t i = 0; i < editors.size(); ++i) {
         filepaths.Add(editors[i]->GetFileName().GetFullPath());
     }
@@ -2071,9 +2071,9 @@ void clMainFrame::OnCompleteWordUpdateUI(wxUpdateUIEvent &event)
 {
     CHECK_SHUTDOWN();
 
-    LEditor* editor = GetMainBook()->GetActiveEditor();
+    LEditor* editor = GetMainBook()->GetActiveEditor(true);
     // This menu item is enabled only if the current editor belongs to a project
-    event.Enable(editor);
+    event.Enable(editor && !editor->GetProject().IsEmpty());
 }
 
 void clMainFrame::OnWorkspaceOpen(wxUpdateUIEvent &event)
@@ -2634,14 +2634,17 @@ void clMainFrame::OnExecuteNoDebug(wxCommandEvent &event)
                                                            "PromptForBuildBeforeExecute", 
                                                            _("Build before execute"), 
                                                            _("No, just execute it"));
-    if ( res == wxID_YES ) {
-        QueueCommand buildCommand( QueueCommand::kBuild );
-        ManagerST::Get()->PushQueueCommand( buildCommand );
-        commandExecute.SetCheckBuildSuccess( true ); // execute only if build was successfull
-    }
+    // Don't do anything if "X" is pressed
+    if ( res != wxID_CANCEL ) {
+        if ( res == wxID_YES ) {
+            QueueCommand buildCommand( QueueCommand::kBuild );
+            ManagerST::Get()->PushQueueCommand( buildCommand );
+            commandExecute.SetCheckBuildSuccess( true ); // execute only if build was successfull
+        }
 
-    ManagerST::Get()->PushQueueCommand( commandExecute );
-    ManagerST::Get()->ProcessCommandQueue();
+        ManagerST::Get()->PushQueueCommand( commandExecute );
+        ManagerST::Get()->ProcessCommandQueue();
+    }
 }
 
 void clMainFrame::OnExecuteNoDebugUI(wxUpdateUIEvent &event)
@@ -2766,13 +2769,13 @@ void clMainFrame::OnFileCloseAll(wxCommandEvent &event)
 void clMainFrame::OnQuickOutline(wxCommandEvent &event)
 {
     // Sanity
-    if (!GetMainBook()->GetActiveEditor())
-        return;
-
+    LEditor *activeEditor = GetMainBook()->GetActiveEditor(true);
+    CHECK_PTR_RET(activeEditor);
+    
     // let the plugins process this first
     clCodeCompletionEvent evt(wxEVT_CC_SHOW_QUICK_OUTLINE, GetId());
     evt.SetEventObject(this);
-    evt.SetEditor( GetMainBook()->GetActiveEditor() );
+    evt.SetEditor( activeEditor );
 
     if(EventNotifier::Get()->ProcessEvent(evt))
         return;
@@ -2781,11 +2784,11 @@ void clMainFrame::OnQuickOutline(wxCommandEvent &event)
     if (ManagerST::Get()->IsWorkspaceOpen() == false)
         return;
 
-    if (GetMainBook()->GetActiveEditor()->GetProject().IsEmpty())
+    if (activeEditor->GetProject().IsEmpty())
         return;
 
-    QuickOutlineDlg dlg(this,
-                        GetMainBook()->GetActiveEditor()->GetFileName().GetFullPath(),
+    QuickOutlineDlg dlg(::wxGetTopLevelParent(activeEditor),
+                        activeEditor->GetFileName().GetFullPath(),
                         wxID_ANY,
                         wxT(""),
                         wxDefaultPosition,
@@ -2794,13 +2797,7 @@ void clMainFrame::OnQuickOutline(wxCommandEvent &event)
                        );
 
     dlg.ShowModal();
-
-#ifdef __WXMAC__
-    LEditor *editor = GetMainBook()->GetActiveEditor();
-    if (editor) {
-        editor->SetActive();
-    }
-#endif
+    activeEditor->SetActive();
 }
 
 wxString clMainFrame::CreateWorkspaceTable()
@@ -3093,23 +3090,25 @@ void clMainFrame::OnDebug(wxCommandEvent &e)
         }
 
         // Debugger is not running, but workspace is opened -> start debug session
-        bool answer(false);
         QueueCommand dbgCmd(QueueCommand::kDebug);
         
         wxStandardID res = ::PromptForYesNoDialogWithCheckbox(_("Would you like to build the project before debugging it?"), 
                                                               "BuildBeforeDebug",
                                                               _("Build and Debug"), _("Debug without building"));
-        if ( res == wxID_YES ) {
-            QueueCommand bldCmd( QueueCommand::kBuild );
-            ManagerST::Get()->PushQueueCommand(bldCmd);
-            dbgCmd.SetCheckBuildSuccess(true);
+        // Don't do anything if "X" is pressed
+        if ( res != wxID_CANCEL ) {
+            if ( res == wxID_YES ) {
+                QueueCommand bldCmd( QueueCommand::kBuild );
+                ManagerST::Get()->PushQueueCommand(bldCmd);
+                dbgCmd.SetCheckBuildSuccess(true);
+            }
+
+            // place a debug command
+            ManagerST::Get()->PushQueueCommand(dbgCmd);
+
+            // trigger the commands queue
+            ManagerST::Get()->ProcessCommandQueue();
         }
-
-        // place a debug command
-        ManagerST::Get()->PushQueueCommand(dbgCmd);
-
-        // trigger the commands queue
-        ManagerST::Get()->ProcessCommandQueue();
     }
 }
 
@@ -3367,13 +3366,7 @@ void clMainFrame::OnAppActivated(wxActivateEvent &e)
 
         m_theFrame->ReloadExternallyModifiedProjectFiles();
         m_theFrame->GetMainBook()->ReloadExternallyModified(true);
-
-/*
-        if(ManagerST::Get()->IsWorkspaceOpen() && !ManagerST::Get()->IsWorkspaceClosing()) {
-            // Retag the workspace the light way
-            ManagerST::Get()->RetagWorkspace(TagsManager::Retag_Quick_No_Scan);
-        }
-*/
+        
         // Notify plugins that we got the focus.
         // Some plugins want to hide some frames etc
         wxCommandEvent evtGotFocus(wxEVT_CODELITE_MAINFRAME_GOT_FOCUS);
@@ -3591,7 +3584,7 @@ void clMainFrame::OnManagePlugins(wxCommandEvent &e)
 void clMainFrame::OnCppContextMenu(wxCommandEvent &e)
 {
     wxUnusedVar(e);
-    LEditor *editor = GetMainBook()->GetActiveEditor();
+    LEditor *editor = GetMainBook()->GetActiveEditor(true);
     if (editor) {
         editor->GetContext()->ProcessEvent(e);
     }
@@ -4380,14 +4373,17 @@ void clMainFrame::ReloadExternallyModifiedProjectFiles()
                                                             "ReloadWorkspaceWhenAltered", 
                                                             _("Yes, reload the workspace"), 
                                                             _("Don't reload the workspace"));
-    if ( res == wxID_YES ) {
-        wxCommandEvent evtReload(wxEVT_COMMAND_MENU_SELECTED, XRCID("reload_workspace"));
-        GetEventHandler()->AddPendingEvent( evtReload );
+    // Don't do anything if "X" is pressed
+    if ( res != wxID_CANCEL ) {
+        if ( res == wxID_YES ) {
+            wxCommandEvent evtReload(wxEVT_COMMAND_MENU_SELECTED, XRCID("reload_workspace"));
+            GetEventHandler()->AddPendingEvent( evtReload );
 
-    } else {
-        // user cancelled the dialog or chosed not to reload the workspace
-        if ( GetMainBook()->GetActiveEditor() ) {
-            GetMainBook()->GetActiveEditor()->CallAfter( &LEditor::SetActive );
+        } else {
+            // user cancelled the dialog or chosed not to reload the workspace
+            if ( GetMainBook()->GetActiveEditor() ) {
+                GetMainBook()->GetActiveEditor()->CallAfter( &LEditor::SetActive );
+            }
         }
     }
 }
@@ -5127,7 +5123,7 @@ void clMainFrame::OnParserThreadReady(wxCommandEvent& e)
 void clMainFrame::OnFileSaveUI(wxUpdateUIEvent& event)
 {
     CHECK_SHUTDOWN();
-    LEditor *editor = GetMainBook()->GetActiveEditor();
+    LEditor *editor = GetMainBook()->GetActiveEditor(true);
     if ( editor ) {
         event.Enable(editor->IsModified());
 
@@ -5282,14 +5278,13 @@ void clMainFrame::OnFileSaveAllUI(wxUpdateUIEvent& event)
 {
     bool hasModifiedEditor = false;
     std::vector<LEditor*> editors;
-    GetMainBook()->GetAllEditors(editors);
+    GetMainBook()->GetAllEditors(editors, MainBook::kGetAll_IncludeDetached);
     for(size_t i=0; i<editors.size(); ++i) {
         if( editors.at(i)->IsModified() ) {
             hasModifiedEditor = true;
             break;
         }
     }
-
     event.Enable( hasModifiedEditor );
 }
 
@@ -5403,4 +5398,14 @@ void clMainFrame::OnSettingsChanged(wxCommandEvent& e)
 {
     e.Skip();
     SetFrameTitle( GetMainBook()->GetActiveEditor() );
+}
+
+void clMainFrame::OnDetachEditor(wxCommandEvent& e)
+{
+    GetMainBook()->DetachActiveEditor();
+}
+
+void clMainFrame::OnDetachEditorUI(wxUpdateUIEvent& e)
+{
+    e.Enable( GetMainBook()->GetActiveEditor() != NULL );
 }

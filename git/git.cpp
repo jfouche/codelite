@@ -32,6 +32,8 @@
 #include <wx/sstream.h>
 #include <wx/msgdlg.h>
 #include "GitApplyPatchDlg.h"
+#include "DiffSideBySidePanel.h"
+#include <wx/ffile.h>
 
 static GitPlugin* thePlugin = NULL;
 #define GIT_MESSAGE(...)  m_console->AddText(wxString::Format(__VA_ARGS__));
@@ -894,7 +896,7 @@ void GitPlugin::ProcessGitActionQueue(const wxString& commandString /*= ""*/)
         GIT_MESSAGE1(wxT("Updating remotes"));
         command << wxT(" --no-pager remote update");
         break;
-
+ 
     case gitListRemotes:
         GIT_MESSAGE1(wxT("Listing remotes"));
         command << wxT(" --no-pager remote");
@@ -914,9 +916,9 @@ void GitPlugin::ProcessGitActionQueue(const wxString& commandString /*= ""*/)
         break;
 
     case gitDiffFile:
-        GIT_MESSAGE1(wxT("Diff file ") + ga.arguments);
-        command << wxT(" --no-pager diff --no-color ") << ga.arguments;
-        GIT_MESSAGE1(wxT("%s. Repo path: %s"), command.c_str(), m_repositoryDirectory.c_str());
+        GIT_MESSAGE1(wxT("Diff file: ") + ga.arguments);
+        command << wxT(" --no-pager show HEAD:") << ga.arguments;
+        GIT_MESSAGE(wxT("%s. (Repo path: %s)"), command, m_repositoryDirectory);
         break;
 
     case gitDiffRepoCommit:
@@ -1324,8 +1326,13 @@ void GitPlugin::OnProcessTerminated(wxCommandEvent &event)
     m_console->AddRawText( ped->GetData() );
     m_commandOutput.append(ped->GetData());
 
-    delete ped;
-    m_commandOutput.Replace(wxT("\r"), wxT(""));
+    wxDELETE(ped);
+    
+    gitAction ga = m_gitActionQueue.front();
+    if ( ga.action != gitDiffFile ) {
+        // Dont manipulate the output if its a diff...
+        m_commandOutput.Replace(wxT("\r"), wxT(""));
+    }
 
     if(m_commandOutput.StartsWith(wxT("fatal")) || m_commandOutput.StartsWith(wxT("error"))) {
         wxString msg = _("There was a problem while performing a git action.\n"
@@ -1342,7 +1349,6 @@ void GitPlugin::OnProcessTerminated(wxCommandEvent &event)
         return;
     }
 
-    gitAction ga = m_gitActionQueue.front();
     if(ga.action == gitListAll || ga.action == gitListModified || ga.action == gitResetRepo ) {
         if(ga.action == gitListAll && m_bActionRequiresTreUpdate) {
             if(m_commandOutput.Lower().Contains(_("created")))
@@ -1360,9 +1366,9 @@ void GitPlugin::OnProcessTerminated(wxCommandEvent &event)
         m_remotes = gitList;
 
     } else if(ga.action == gitDiffFile ) {
-        GitFileDiffDlg dlg(m_topWindow);
-        dlg.SetDiff(m_commandOutput);
-        dlg.ShowModal();
+        
+        // Show the diff in the diff-viewer
+        DoShowDiffViewer(m_commandOutput, ga.arguments);
 
     } else if(ga.action == gitDiffRepoCommit ) {
         GitCommitDlg dlg(m_topWindow, m_repositoryDirectory);
@@ -1942,15 +1948,16 @@ void GitPlugin::DoGetFileViewSelectedFiles(wxArrayString& files, bool relativeTo
 
 void GitPlugin::DoShowDiffsForFiles(const wxArrayString& files)
 {
-    // prepare a space delimited list
-    wxString filelist;
     for(size_t i=0; i<files.GetCount(); ++i) {
-        filelist << files.Item(i) << " ";
+        
+        // and finally, perform the action
+        // File name should be relative to the repo
+        wxFileName fn(files.Item(i));
+        fn.MakeRelativeTo(m_repositoryDirectory);
+        gitAction ga( gitDiffFile, fn.GetFullPath(wxPATH_UNIX) );
+        m_gitActionQueue.push( ga );
     }
-
-    // and finally, perform the action
-    gitAction ga(gitDiffFile, filelist);
-    m_gitActionQueue.push(ga);
+    
     ProcessGitActionQueue();
 }
 
@@ -2042,4 +2049,29 @@ void GitPlugin::LoadDefaultGitCommands(GitEntry& data, bool overwrite/*= false*/
         data.DeleteGitCommandsEntry(name);
         data.AddGitCommandsEntry(gce, name);
     }
+}
+
+void GitPlugin::DoShowDiffViewer(const wxString& headFile, const wxString& fileName)
+{
+    // Write the content of the head file to a temporary file
+    wxFileName tmpFile( wxFileName::CreateTempFileName("gittmp") );
+    wxFileName fnWorkingCopy(fileName);
+    fnWorkingCopy.MakeAbsolute(m_repositoryDirectory);
+    
+    tmpFile.SetExt( wxFileName(fileName).GetExt() );
+    wxString tmpFilePath = tmpFile.GetFullPath();
+    wxFFile fp(tmpFilePath, "w+b");
+    if ( fp.IsOpened() ) {
+        fp.Write( headFile );
+        fp.Close();
+    }
+    DiffSideBySidePanel* p = new DiffSideBySidePanel(m_mgr->GetEditorPaneNotebook());
+    p->SetFiles(tmpFilePath, fnWorkingCopy.GetFullPath());
+    p->Diff();
+    p->SetLeftFileReadOnly(true);
+    p->SetRightFileReadOnly(true);
+    
+    // Remove our temp file
+    ::wxRemoveFile( tmpFile.GetFullPath() );
+    m_mgr->AddPage(p, _("Git Diff: ") + fnWorkingCopy.GetFullName(), wxNullBitmap, true);
 }
