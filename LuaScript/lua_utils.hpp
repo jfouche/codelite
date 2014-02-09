@@ -15,11 +15,19 @@ namespace lua
 		lua_setmetatable(L, -2);
 	}
 
+	/// To be specialized
+	template <typename T>
+	void push(lua_State* L, T* instance);
+
 	template <typename T>
 	T* check(lua_State* L, int n, const char* name)
 	{
 		return *(T**) luaL_checkudata(L, n, name);
 	}
+	
+	/// To be specialized
+	template <typename T>
+	T* check(lua_State* L, int n);
 
 	std::string stack_dump(lua_State *L);
 }

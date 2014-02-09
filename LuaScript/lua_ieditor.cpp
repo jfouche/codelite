@@ -3,10 +3,25 @@
 
 static const char* CLASSNAME = "IEditor";
 
+namespace lua
+{
+	template <>
+	void push(lua_State* L, IEditor* instance)
+	{
+		push(L, instance, CLASSNAME);
+	}
+
+	template <>
+	IEditor* check(lua_State* L, int n)
+	{
+		return check<IEditor>(L, n, CLASSNAME);
+	}
+}
+
 /// @lua IEditor.GetEditorText() : return string
 static int GetEditorText(lua_State* L)
 {
-	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
+	IEditor* editor = lua::check<IEditor>(L, 1);
 	wxString content = editor->GetEditorText();
 	lua_pushstring(L, content.c_str());
 	return 1;
@@ -15,7 +30,7 @@ static int GetEditorText(lua_State* L)
 /// @lua IEditor.SetEditorText(string)
 static int SetEditorText(lua_State* L)
 {
-	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
+	IEditor* editor = lua::check<IEditor>(L, 1);
 	if (lua_isstring(L, 2) == 0)
 	{
 		return 0;
@@ -28,7 +43,7 @@ static int SetEditorText(lua_State* L)
 /// @lua IEditor.GetSelection() : return string
 static int GetSelection(lua_State* L)
 {
-	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
+	IEditor* editor = lua::check<IEditor>(L, 1);
 	wxString selection = editor->GetSelection();
 	lua_pushstring(L, selection.c_str());
 	return 1;
@@ -37,7 +52,7 @@ static int GetSelection(lua_State* L)
 /// @lua IEditor.ReplaceSelection(string)
 static int ReplaceSelection(lua_State* L)
 {
-	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
+	IEditor* editor = lua::check<IEditor>(L, 1);
 	if (lua_isstring(L, 2) == 0)
 	{
 		return 0;
@@ -50,7 +65,7 @@ static int ReplaceSelection(lua_State* L)
 /// @lua IEditor.AppendText(string)
 static int AppendText(lua_State* L)
 {
-	IEditor* editor = lua::check<IEditor>(L, 1, CLASSNAME);
+	IEditor* editor = lua::check<IEditor>(L, 1);
 	if (lua_isstring(L, 2) == 0)
 	{
 		return 0;

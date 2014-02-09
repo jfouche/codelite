@@ -3,16 +3,31 @@
 
 static const char* CLASSNAME = "Project";
 
+namespace lua
+{
+	template <>
+	void push(lua_State* L, Project* instance)
+	{
+		push(L, instance, CLASSNAME);
+	}
+
+	template <>
+	Project* check(lua_State* L, int n)
+	{
+		return check<Project>(L, n, CLASSNAME);
+	}
+}
+
 static int GetName(lua_State* L)
 {
-	Project* project = lua::check<Project>(L, 1, CLASSNAME);
+	Project* project = lua::check<Project>(L, 1);
 	lua_pushstring(L, project->GetName().c_str());
 	return 1;
 }
 
 static int GetFiles(lua_State* L)
 {
-	Project* project = lua::check<Project>(L, 1, CLASSNAME);
+	Project* project = lua::check<Project>(L, 1);
 	
 	wxStringSet_t files;
 	project->GetFiles(files);

@@ -4,9 +4,24 @@
 
 static const char* CLASSNAME = "IManager";
 
+namespace lua
+{
+	template <>
+	void push(lua_State* L, IManager* instance)
+	{
+		push(L, instance, CLASSNAME);
+	}
+
+	template <>
+	IManager* check(lua_State* L, int n)
+	{
+		return check<IManager>(L, n, CLASSNAME);
+	}
+}
+
 static int GetActiveEditor(lua_State* L)
 {
-	IManager* manager = lua::check<IManager>(L, 1, CLASSNAME);
+	IManager* manager = lua::check<IManager>(L, 1);
 	IEditor* editor = manager->GetActiveEditor();
 	if (editor == NULL)
 	{
@@ -14,26 +29,26 @@ static int GetActiveEditor(lua_State* L)
 	}
 	else
 	{
-		lua::push(L, editor, "IEditor");
+		lua::push(L, editor);
 	}
 	return 1;
 }
 
 static int NewEditor(lua_State* L)
 {
-	IManager* manager = lua::check<IManager>(L, 1, CLASSNAME);
+	IManager* manager = lua::check<IManager>(L, 1);
 	IEditor* editor = manager->NewEditor();
-	lua::push(L, editor, "IEditor");
+	lua::push(L, editor);
 	return 1;
 }
 
 static int GetWorkspace(lua_State* L)
 {
-	IManager* manager = lua::check<IManager>(L, 1, CLASSNAME);
+	IManager* manager = lua::check<IManager>(L, 1);
 	Workspace* workspace = manager->GetWorkspace();
 	if (workspace->IsOpen())
 	{
-		lua::push(L, workspace, "Workspace");
+		lua::push(L, workspace);
 	}
 	else
 	{

@@ -3,9 +3,24 @@
 
 static const char* CLASSNAME = "Workspace";
 
+namespace lua
+{
+	template <>
+	void push(lua_State* L, Workspace* instance)
+	{
+		push(L, instance, CLASSNAME);
+	}
+
+	template <>
+	Workspace* check(lua_State* L, int n)
+	{
+		return check<Workspace>(L, n, CLASSNAME);
+	}
+}
+
 static int GetActiveProjectName(lua_State* L)
 {
-	Workspace* workspace = lua::check<Workspace>(L, 1, CLASSNAME);
+	Workspace* workspace = lua::check<Workspace>(L, 1);
 	wxString name = workspace->GetActiveProjectName();
 	lua_pushstring(L, name.c_str());
 	return 1;
@@ -13,7 +28,7 @@ static int GetActiveProjectName(lua_State* L)
 
 static int FindProjectByName(lua_State* L)
 {
-	Workspace* workspace = lua::check<Workspace>(L, 1, CLASSNAME);
+	Workspace* workspace = lua::check<Workspace>(L, 1);
 
 	if (lua_isstring(L, 2) == 0)
 	{
@@ -25,7 +40,7 @@ static int FindProjectByName(lua_State* L)
 	ProjectPtr project = workspace->FindProjectByName(name, err);
 	if (project)
 	{
-		lua::push(L, project.Get(), "Project");
+		lua::push(L, project.Get());
 	}
 	else
 	{
@@ -36,7 +51,7 @@ static int FindProjectByName(lua_State* L)
 
 static int GetProjectList(lua_State* L)
 {
-	Workspace* workspace = lua::check<Workspace>(L, 1, CLASSNAME);
+	Workspace* workspace = lua::check<Workspace>(L, 1);
 	
 	wxArrayString names;
 	workspace->GetProjectList(names);
