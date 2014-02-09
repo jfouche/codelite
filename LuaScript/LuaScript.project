@@ -68,7 +68,6 @@
     <File Name="wxcrafter_lua_script_bitmaps.cpp"/>
     <File Name="wxcrafter_lua_script_bitmaps.xrc"/>
   </VirtualDirectory>
-  <Dependencies Name="DebugUnicode"/>
   <Dependencies Name="ReleaseUnicode"/>
   <Dependencies Name="WinDebugUnicode"/>
   <Dependencies Name="WinReleaseUnicode"/>
@@ -78,6 +77,7 @@
     <File Name="lua_workspace.cpp"/>
     <File Name="lua_project.cpp"/>
     <File Name="lua_codelite.cpp"/>
+    <File Name="lua_events.cpp"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
@@ -313,5 +313,7 @@
   <VirtualDirectory Name="samples">
     <File Name="samples/comment_selection.lua"/>
     <File Name="samples/trim.lua"/>
+    <File Name="samples/cl_events.lua"/>
   </VirtualDirectory>
+  <Dependencies Name="DebugUnicode"/>
 </CodeLite_Project>

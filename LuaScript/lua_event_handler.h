@@ -2,9 +2,10 @@
 #define CL_LUA_EVENT_HANDLER_H_INCLUDED
 
 #include "lua_runner.h"
+#include <wx/event.h>
 #include "cl_command_event.h"
 
-class LuaEventHandler
+class LuaEventHandler : public wxEvtHandler
 {
 	static LuaEventHandler* INSTANCE;
 	
@@ -18,9 +19,10 @@ public:
 	static void Init(LuaRunner& runner);
 	
 	static LuaEventHandler* Get();
-	
-	template <typename T>
-	void onEvent(T& event);
+
+	void onCmdEvent(wxCommandEvent& event);
+
+	void onClEvent(clCommandEvent& event);
 };
 
 #endif // CL_LUA_EVENT_HANDLER_H_INCLUDED

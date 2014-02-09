@@ -32,3 +32,10 @@ std::string lua::stack_dump(lua_State *L)
 	oss << std::endl;/* end the listing */
 	return oss.str();
 }
+
+void lua::print_stack(lua_State *L)
+{
+	printf(stack_dump(L).c_str());
+	printf("\n");
+	fflush(stdout);
+}

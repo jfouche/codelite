@@ -24,12 +24,11 @@ void LuaEventHandler::Init(LuaRunner& runner)
 	}
 }
 
-template<>
-void LuaEventHandler::onEvent(clCommandEvent& event)
+void LuaEventHandler::onClEvent(clCommandEvent& event)
 {
 }
 
-template<>
-void LuaEventHandler::onEvent(wxCommandEvent& event)
+void LuaEventHandler::onCmdEvent(wxCommandEvent& event)
 {
+	wxLogError("onCmdEvent");
 }

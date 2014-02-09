@@ -5,7 +5,25 @@
 #include "event_notifier.h"
 #include "lua_event_handler.h"
 
-const wxEventTypeTag<clCommandEvent> wxEVT_CMD_FILE_SAVED(wxEVT_FILE_SAVED);
+class LuaFunctionEvtHandler : public wxEvtHandler
+{
+	lua_State* m_lua;
+	lua_CFunction m_function;
+	
+public:
+	LuaFunctionEvtHandler(lua_State* L, lua_CFunction fct)
+	: m_lua(L)
+	, m_function(fct)
+	{
+	}
+	
+	void onEvent(wxCommandEvent& event)
+	{
+		wxLogError("[LUA] LuaFunctionEvtHandler::OnEvent");
+		lua_pushcfunction(m_lua, m_function);
+		//lua_call(m_lua, 0, 0);
+	}
+};
 
 static int Trace(lua_State* L)
 {
@@ -14,20 +32,19 @@ static int Trace(lua_State* L)
 	return 0;
 }
 
-void lua_function_execute(wxCommandEvent& event)
-{
-	wxLogError("[LUA] lua_function_execute");
-}
-
 static int Bind(lua_State* L)
 {
 	if (lua_isfunction(L, 1) == false)
 	{
 		return 0;
 	}
-	
+
 	lua_CFunction fct = lua_tocfunction(L, 1);
-	//wxTheApp->Bind(wxEVT_CMD_FILE_SAVED, &LuaEventHandler::onEvent, LuaEventHandler::Get());
+	lua::print_stack(L);
+	//lua_call(L, 0, 0);
+
+	LuaFunctionEvtHandler* evtHandler = new LuaFunctionEvtHandler(L, fct);
+	wxTheApp->Connect(wxEVT_FILE_SAVED, wxCommandEventHandler(LuaFunctionEvtHandler::onEvent), 0, evtHandler);
 	return 0;
 }
 

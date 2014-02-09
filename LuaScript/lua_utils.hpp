@@ -30,6 +30,8 @@ namespace lua
 	T* check(lua_State* L, int n);
 
 	std::string stack_dump(lua_State *L);
+	
+	void print_stack(lua_State *L);
 }
 
 #endif // CL_LUA_UTILS_H_INCLUDED
