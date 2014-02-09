@@ -102,6 +102,8 @@
       <Project Name="Gizmos" ConfigName="WinDebugUnicode"/>
       <Project Name="Interfaces" ConfigName="Common"/>
       <Project Name="LiteEditor" ConfigName="WinDebugUnicode"/>
+      <Project Name="lua" ConfigName="WinRelease"/>
+      <Project Name="LuaScript" ConfigName="WinDebugUnicode"/>
       <Project Name="MacBundler" ConfigName="WinDebugUnicode"/>
       <Project Name="Outline" ConfigName="WinDebugUnicode"/>
       <Project Name="PCH" ConfigName="Debug"/>
@@ -117,8 +119,6 @@
       <Project Name="wxshapeframework" ConfigName="WinDebugUnicode"/>
       <Project Name="wxsqlite3" ConfigName="WinDebugUnicode"/>
       <Project Name="ZoomNavigator" ConfigName="WinDebugUnicode"/>
-      <Project Name="LuaScript" ConfigName="DebugUnicode"/>
-      <Project Name="lua" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="CMake_Release" Selected="no">
       <Project Name="ZoomNavigator" ConfigName="DebugUnicode"/>
