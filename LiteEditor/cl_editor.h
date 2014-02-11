@@ -111,6 +111,7 @@ class LEditor : public wxStyledTextCtrl, public IEditor
     int                                         m_lastMatchPos;
     static std::map<wxString, int>              ms_bookmarkShapes;
     bool                                        m_popupIsOn;
+    bool                                        m_isDragging;
     time_t                                      m_modifyTime;
     std::map<int, wxString>                     m_customCmds;
     bool                                        m_isVisible;
@@ -285,13 +286,14 @@ public:
     }
 
     /**
-     * If word-wrap isn't on, this calls DoEnsureCaretIsVisible() immediately. Otherwise it
+     * If word-wrap isn't on, and forceDelay is false, this calls DoEnsureCaretIsVisible() immediately. Otherwise it
      * stores a position for OnScnPainted() to ensure-is-visible in the next scintilla paint event
      * This doesn't happen until scintilla painting is complete, so it isn't ruined by e.g. word-wrap
      * \param position the position to ensure is visible
      * \param preserveSelection preserve any selection
+     * \param forceDelay wait for the next paint event even if word-wrap is off
      */
-    void SetEnsureCaretIsVisible(int pos, bool preserveSelection = true);
+    void SetEnsureCaretIsVisible(int pos, bool preserveSelection = true, bool forceDelay = false);
 
     /**
      * Does the necessary things to ensure that the destination line of a GoTo is visible
@@ -468,6 +470,10 @@ public:
 
     bool IsContextMenuOn() const {
         return m_popupIsOn;
+    }
+
+    bool IsDragging() const {
+        return m_isDragging;
     }
 
     /**

@@ -1,7 +1,8 @@
 #include "clDTL.h"
-#include <wx/tokenzr.h>
 #include "dtl/dtl.hpp"
 #include <wx/ffile.h>
+#include <wx/tokenzr.h>
+#include <wx/utils.h>
 
 clDTL::clDTL()
 {
@@ -61,31 +62,46 @@ void clDTL::Diff(const wxFileName& fnLeft, const wxFileName& fnRight)
     
     int state = STATE_NONE;
     int seqStartLine = wxNOT_FOUND;
+    size_t seqSize      = 0;
+    
+    LineInfoVec_t tmpSeqLeft;
+    LineInfoVec_t tmpSeqRight;
     
     for(size_t i=0; i<seq.size(); ++i) {
         switch(seq.at(i).second.type) {
         case dtl::SES_COMMON: {
+            if ( state == STATE_IN_SEQ ) {
+                
+                // set the sequence size
+                seqSize = ::wxMax(tmpSeqLeft.size(), tmpSeqRight.size() );
+                
+                m_sequences.push_back( std::make_pair(seqStartLine, seqStartLine + seqSize) );
+                seqStartLine = wxNOT_FOUND;
+                state = STATE_NONE;
+                
+                // increase the buffer size
+                tmpSeqLeft.resize(seqSize);
+                tmpSeqRight.resize(seqSize);
+                
+                m_resultLeft.insert(m_resultLeft.end(), tmpSeqLeft.begin(), tmpSeqLeft.end());
+                m_resultRight.insert(m_resultRight.end(), tmpSeqRight.begin(), tmpSeqRight.end());
+
+                tmpSeqLeft.clear();
+                tmpSeqRight.clear();
+                seqSize = 0;
+            }
             clDTL::LineInfo line(seq.at(i).first, LINE_COMMON);
             m_resultLeft.push_back( line );
             m_resultRight.push_back( line );
-            
-            if ( state == STATE_IN_SEQ ) {
-                m_sequences.push_back( std::make_pair(seqStartLine, i) );
-                seqStartLine = wxNOT_FOUND;
-                state = STATE_NONE;
-            }
             break;
             
         }
         case dtl::SES_ADD: {
-            clDTL::LineInfo lineLeft("\n", LINE_PLACEHOLDER);
-            m_resultLeft.push_back( lineLeft );
-            
             clDTL::LineInfo lineRight(seq.at(i).first, LINE_ADDED);
-            m_resultRight.push_back( lineRight );
+            tmpSeqRight.push_back( lineRight );
             
             if ( state == STATE_NONE ) {
-                seqStartLine = i;
+                seqStartLine = m_resultLeft.size();
                 state = STATE_IN_SEQ;
             }
             break;
@@ -93,13 +109,10 @@ void clDTL::Diff(const wxFileName& fnLeft, const wxFileName& fnRight)
         }
         case dtl::SES_DELETE: {
             clDTL::LineInfo lineLeft(seq.at(i).first, LINE_REMOVED);
-            m_resultLeft.push_back( lineLeft );
-            
-            clDTL::LineInfo lineRight("\n", LINE_PLACEHOLDER);
-            m_resultRight.push_back( lineRight );
+            tmpSeqLeft.push_back( lineLeft );
             
             if ( state == STATE_NONE ) {
-                seqStartLine = i;
+                seqStartLine = m_resultLeft.size();
                 state = STATE_IN_SEQ;
             }
             break;
@@ -108,8 +121,23 @@ void clDTL::Diff(const wxFileName& fnLeft, const wxFileName& fnRight)
     }
     
     if ( state == STATE_IN_SEQ ) {
-        m_sequences.push_back( std::make_pair(seqStartLine, seq.size()-1) );
-        seqStartLine = wxNOT_FOUND;
-        state = STATE_NONE;
+        // set the sequence size
+        seqSize = ::wxMax(tmpSeqLeft.size(), tmpSeqRight.size() );
+        if ( seqSize ) {
+            m_sequences.push_back( std::make_pair(seqStartLine, seqStartLine + seqSize) );
+            seqStartLine = wxNOT_FOUND;
+            state = STATE_NONE;
+            
+            // increase the buffer size
+            tmpSeqLeft.resize(seqSize);
+            tmpSeqRight.resize(seqSize);
+            
+            m_resultLeft.insert(m_resultLeft.end(), tmpSeqLeft.begin(), tmpSeqLeft.end());
+            m_resultRight.insert(m_resultRight.end(), tmpSeqRight.begin(), tmpSeqRight.end());
+
+            tmpSeqLeft.clear();
+            tmpSeqRight.clear();
+            seqSize = 0;
+        }
     }
 }

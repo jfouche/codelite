@@ -2066,12 +2066,11 @@ void GitPlugin::DoShowDiffViewer(const wxString& headFile, const wxString& fileN
         fp.Close();
     }
     DiffSideBySidePanel* p = new DiffSideBySidePanel(m_mgr->GetEditorPaneNotebook());
-    p->SetFiles(tmpFilePath, fnWorkingCopy.GetFullPath());
+    DiffSideBySidePanel::FileInfo l(tmpFilePath, _("HEAD version"), true);
+    l.deleteFileOnDestroy = true; // ask the diff view to delete the file when its done
+    DiffSideBySidePanel::FileInfo r(fnWorkingCopy.GetFullPath(), _("Working copy"), false);
+    p->SetFilesDetails(l, r);
     p->Diff();
-    p->SetLeftFileReadOnly(true);
-    p->SetRightFileReadOnly(true);
     
-    // Remove our temp file
-    ::wxRemoveFile( tmpFile.GetFullPath() );
     m_mgr->AddPage(p, _("Git Diff: ") + fnWorkingCopy.GetFullName(), wxNullBitmap, true);
 }

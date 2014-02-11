@@ -496,6 +496,11 @@ void Manager::CreateProject ( ProjectData &data )
         bldConf->SetLinkOptions(linkoptions);
 #endif
         bldConf->SetCompilerType ( data.m_cmpType );
+        
+        // Make sure that the build configuration has a project type associated with it
+        if ( bldConf->GetProjectType().IsEmpty() ) {
+            bldConf->SetProjectType( settings->GetProjectType(wxEmptyString) );
+        }
         bldConf = settings->GetNextBuildConfiguration ( cookie );
     }
     proj->SetSettings ( settings );
@@ -974,6 +979,12 @@ void Manager::RemoveVirtualDirectory ( const wxString &virtualDirFullPath )
 bool Manager::AddNewFileToProject ( const wxString &fileName, const wxString &vdFullPath, bool openIt )
 {
     wxFile file;
+    wxFileName fn(fileName);
+    if ( !fn.DirExists() ) {
+        // ensure that the path to the file exists
+        fn.Mkdir(wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL); 
+    }
+    
     if ( !file.Create ( fileName.GetData(), true ) )
         return false;
 
@@ -2492,9 +2503,9 @@ void Manager::DbgMarkDebuggerLine ( const wxString &fileName, int lineno )
         editor->HighlightLine (lineno);
         editor->SetEnsureCaretIsVisible(editor->PositionFromLine(lineno-1), false);
         
-    } else if (clMainFrame::Get()->GetMainBook()->OpenFile ( fn.GetFullPath(), wxEmptyString, lineno-1, wxNOT_FOUND) && lineno > 0) {
-        editor = clMainFrame::Get()->GetMainBook()->GetActiveEditor(true);
-        if ( editor ) {
+    } else {
+        editor = clMainFrame::Get()->GetMainBook()->OpenFile (fn.GetFullPath(), wxEmptyString, lineno-1, wxNOT_FOUND);
+        if ( editor && lineno > 0 ) {
             editor->HighlightLine(lineno);
             editor->SetEnsureCaretIsVisible(editor->PositionFromLine(lineno-1), false);
         }
@@ -2624,11 +2635,11 @@ void Manager::UpdateGotControl ( const DebuggerEventData &e )
     if ( (reason != DBG_BP_HIT) || dinfo.whenBreakpointHitRaiseCodelite ) {
         if ( clMainFrame::Get()->IsIconized() || !clMainFrame::Get()->IsShown() ) {
             clMainFrame::Get()->Restore();
-            clMainFrame::Get()->Raise();
         }
-        if ( !clMainFrame::Get()->IsShownOnScreen() ) {
-            clMainFrame::Get()->Raise();
-        }
+        long curFlags = clMainFrame::Get()->GetWindowStyleFlag();
+        clMainFrame::Get()->SetWindowStyleFlag(curFlags | wxSTAY_ON_TOP);
+        clMainFrame::Get()->Raise();
+        clMainFrame::Get()->SetWindowStyleFlag(curFlags);
         m_dbgCanInteract = true;
     }
 

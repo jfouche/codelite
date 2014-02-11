@@ -39,6 +39,10 @@
 #include <map>
 #include "cl_command_event.h"
 #include "workspacesvnsettings.h"
+#include <wx/cmdline.h>
+#include "dirsaver.h"
+#include "clcommandlineparser.h"
+#include "DiffSideBySidePanel.h"
 
 BEGIN_EVENT_TABLE(SubversionView, SubversionPageBase)
     EVT_UPDATE_UI(XRCID("svn_stop"),         SubversionView::OnStopUI)
@@ -925,52 +929,82 @@ void SubversionView::OnShowSvnInfo(wxCommandEvent& event)
 
 void SubversionView::OnItemActivated(wxTreeEvent& event)
 {
-    wxArrayTreeItemIds items;
-    wxArrayString      paths;
-    size_t count = m_treeCtrl->GetSelections(items);
-    for(size_t i=0; i<count; i++) {
-        wxTreeItemId item = items.Item(i);
-
-        if(item.IsOk() == false)
-            continue;
-
-        SvnTreeData *data = (SvnTreeData *)m_treeCtrl->GetItemData(item);
-        if (data && data->GetType() == SvnTreeData::SvnNodeTypeFile) {
-            paths.Add(/*DoGetCurRepoPath() + wxFileName::GetPathSeparator() + */data->GetFilepath());
-        }
-    }
-
-    if(paths.IsEmpty()) {
+    wxTreeItemId item = m_treeCtrl->GetFocusedItem();
+    CHECK_ITEM_RET(item);
+    
+    SvnTreeData *data = (SvnTreeData *)m_treeCtrl->GetItemData(item);
+    if (!data || data->GetType() != SvnTreeData::SvnNodeTypeFile) {
         event.Skip();
         return;
     }
-
+    
     wxString loginString;
     if(m_plugin->LoginIfNeeded(event, DoGetCurRepoPath(), loginString) == false) {
         return;
     }
+    
     bool nonInteractive = m_plugin->GetNonInteractiveMode(event);
-    wxString diffAgainst(wxT("BASE"));
 
     // Simple diff
     wxString command;
+    
     // By default use ignore-whitespaces
     command << m_plugin->GetSvnExeNameNoConfigDir(nonInteractive) << loginString;
     
     SvnSettingsData ssd = m_plugin->GetSettings();
     if ( ssd.GetFlags() & SvnUseExternalDiff ) {
-        command << " --diff-cmd=\"" << ssd.GetExternalDiffViewer() << "\" ";
+        
+        // Using external diff viewer
+        command << " diff \"" << data->GetFilepath() << "\" --diff-cmd=\"" << ssd.GetExternalDiffViewer() << "\"";
+        m_plugin->GetConsole()->Execute(command, DoGetCurRepoPath(), new SvnDiffHandler(m_plugin, event.GetId(), this), false);
+        
+    } else {
+        
+        // Use the internal diff viewer
+        // --diff-cmd will execute external tool like this:
+        // -u -L "php-plugin/XDebugManager.cpp	(revision 447)" -L "php-plugin/XDebugManager.cpp	(working copy)" C:\src\codelite\codelitephp\.svn\pristine\ae\ae25b80b53f432c6124c455ef815679df6ed4ea4.svn-base C:\src\codelite\codelitephp\php-plugin\XDebugManager.cpp 
+        command << " diff \"" << data->GetFilepath() << "\" --diff-cmd=";
+        // We dont have proper echo on windows that can be used here, so 
+        // we provide our own batch script wrapper
+        wxFileName echoTool(wxStandardPaths::Get().GetExecutablePath());
+        echoTool.SetFullName("codelite-echo");
+#ifdef __WXMSW__
+        echoTool.SetExt("exe");
+#endif
+        command << "\"" << echoTool.GetFullPath() << "\"";
+        
+        wxArrayString lines;
+        {
+            DirSaver ds;
+            ::wxSetWorkingDirectory( DoGetCurRepoPath() );
+            ProcUtils::SafeExecuteCommand(command, lines);
+        }
+        if ( lines.GetCount() < 3 ) {
+            return;
+        }
+        
+        clCommandLineParser parser(lines.Item(2));
+        wxArrayString tokens = parser.ToArray();
+        if ( tokens.GetCount() < 2 )
+            return;
+
+        wxString rightFile = tokens.Last();
+        tokens.RemoveAt(tokens.GetCount()-1);
+        wxString leftFile = tokens.Last();
+        
+        // get the left file title
+        wxString title_left, title_right;
+        title_right = _("Working copy");
+        title_left  = _("HEAD version");
+        
+        DiffSideBySidePanel *diffPanel = new DiffSideBySidePanel( EventNotifier::Get()->TopFrame());
+        DiffSideBySidePanel::FileInfo l(leftFile, title_left, true);
+        DiffSideBySidePanel::FileInfo r(rightFile, title_right, false);
+        diffPanel->SetFilesDetails(l, r);
+        diffPanel->Diff();
+
+        m_plugin->GetManager()->AddPage( diffPanel, _("Svn Diff: ") + wxFileName(data->GetFilepath()).GetFullName(), wxNullBitmap, true);
     }
-    command << " diff ";
-    if ( !(ssd.GetFlags() & SvnUseExternalDiff) ) { 
-        command << " -x -w "; 
-    }
-    command << " -r" << diffAgainst << " ";
-    
-    for (size_t i=0; i<paths.GetCount(); i++) {
-        command << wxT("\"") << paths.Item(i) << wxT("\" ");
-    }
-    m_plugin->GetConsole()->Execute(command, DoGetCurRepoPath(), new SvnDiffHandler(m_plugin, event.GetId(), this), false);
 }
 
 void SubversionView::OnStopUI(wxUpdateUIEvent& event)

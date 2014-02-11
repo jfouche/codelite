@@ -129,28 +129,26 @@ DiffSideBySidePanelBase::DiffSideBySidePanelBase(wxWindow* parent, wxWindowID id
     m_ribbonButtonBar85->AddButton(ID_TOOL_COPY_DIFF_LEFT_TO_RIGHT, _("Copy from left"), wxXmlResource::Get()->LoadBitmap(wxT("diff-copy-left-to-right")), _("Copy current diff sequence from the left side to the right side"), wxRIBBON_BUTTON_NORMAL);
     
     m_ribbonButtonBar85->AddButton(ID_TOOL_COPY_DIFF_RIGHT_TO_LEFT, _("Copy from right"), wxXmlResource::Get()->LoadBitmap(wxT("diff-copy-right-to-left")), _("Copy current diff sequence from the right side to the left side"), wxRIBBON_BUTTON_NORMAL);
+    
+    m_ribbonButtonBar85->AddButton(ID_TOOL_SAVE, _("Save"), wxXmlResource::Get()->LoadBitmap(wxT("diff-save")), _("Save changes and refresh the diff view"), wxRIBBON_BUTTON_NORMAL);
     m_ribbonButtonBar85->Realize();
     m_ribbonBar41->Realize();
-    wxFlexGridSizer* flexGridSizer20 = new wxFlexGridSizer(0, 3, 0, 0);
-    flexGridSizer20->SetFlexibleDirection( wxBOTH );
-    flexGridSizer20->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
-    flexGridSizer20->AddGrowableCol(0);
-    flexGridSizer20->AddGrowableCol(2);
-    flexGridSizer20->AddGrowableRow(1);
+    m_splitter101 = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxSP_LIVE_UPDATE|wxSP_NO_XP_THEME|wxSP_3DSASH);
+    m_splitter101->SetSashGravity(0.5);
+    m_splitter101->SetMinimumPaneSize(10);
     
-    boxSizer13->Add(flexGridSizer20, 1, wxEXPAND, 5);
+    boxSizer13->Add(m_splitter101, 1, wxALL|wxEXPAND, 2);
     
-    m_filePickerLeft = new wxFilePickerCtrl(this, wxID_ANY, wxEmptyString, wxT("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1,-1), wxFLP_DEFAULT_STYLE|wxFLP_USE_TEXTCTRL|wxFLP_SMALL);
+    m_splitterPage105 = new wxPanel(m_splitter101, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxTAB_TRAVERSAL);
     
-    flexGridSizer20->Add(m_filePickerLeft, 1, wxALL|wxEXPAND, 2);
+    wxBoxSizer* boxSizer111 = new wxBoxSizer(wxVERTICAL);
+    m_splitterPage105->SetSizer(boxSizer111);
     
-    flexGridSizer20->Add(0, 0, 1, wxALL, 5);
+    m_filePickerLeft = new wxFilePickerCtrl(m_splitterPage105, wxID_ANY, wxEmptyString, wxT("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1,-1), wxFLP_DEFAULT_STYLE|wxFLP_USE_TEXTCTRL|wxFLP_SMALL);
     
-    m_filePickerRight = new wxFilePickerCtrl(this, wxID_ANY, wxEmptyString, wxT("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1,-1), wxFLP_DEFAULT_STYLE|wxFLP_USE_TEXTCTRL|wxFLP_SMALL);
+    boxSizer111->Add(m_filePickerLeft, 0, wxALL|wxEXPAND, 2);
     
-    flexGridSizer20->Add(m_filePickerRight, 0, wxALL|wxEXPAND, 2);
-    
-    m_stcLeft = new wxStyledTextCtrl(this, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), 0);
+    m_stcLeft = new wxStyledTextCtrl(m_splitterPage105, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), 0);
     m_stcLeft->SetFocus();
     // Configure the fold margin
     m_stcLeft->SetMarginType     (4, wxSTC_MARGIN_SYMBOL);
@@ -187,11 +185,26 @@ DiffSideBySidePanelBase::DiffSideBySidePanelBase(wxWindow* parent, wxWindowID id
     m_stcLeft->SetKeyWords(3, wxT(""));
     m_stcLeft->SetKeyWords(4, wxT(""));
     
-    flexGridSizer20->Add(m_stcLeft, 1, wxALL|wxEXPAND, 2);
+    boxSizer111->Add(m_stcLeft, 1, wxALL|wxEXPAND, 2);
     
-    flexGridSizer20->Add(0, 0, 1, wxALL, 5);
+    m_staticTextLeft = new wxStaticText(m_splitterPage105, wxID_ANY, _("Static Text Label"), wxDefaultPosition, wxSize(-1,-1), 0);
+    wxFont m_staticTextLeftFont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
+    m_staticTextLeftFont.SetWeight(wxFONTWEIGHT_BOLD);
+    m_staticTextLeft->SetFont(m_staticTextLeftFont);
     
-    m_stcRight = new wxStyledTextCtrl(this, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), 0);
+    boxSizer111->Add(m_staticTextLeft, 0, wxALL|wxALIGN_LEFT, 2);
+    
+    m_splitterPage109 = new wxPanel(m_splitter101, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxTAB_TRAVERSAL);
+    m_splitter101->SplitVertically(m_splitterPage105, m_splitterPage109, 0);
+    
+    wxBoxSizer* boxSizer113 = new wxBoxSizer(wxVERTICAL);
+    m_splitterPage109->SetSizer(boxSizer113);
+    
+    m_filePickerRight = new wxFilePickerCtrl(m_splitterPage109, wxID_ANY, wxEmptyString, wxT("Select a file"), wxT("*"), wxDefaultPosition, wxSize(-1,-1), wxFLP_DEFAULT_STYLE|wxFLP_USE_TEXTCTRL|wxFLP_SMALL);
+    
+    boxSizer113->Add(m_filePickerRight, 0, wxALL|wxEXPAND, 2);
+    
+    m_stcRight = new wxStyledTextCtrl(m_splitterPage109, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), 0);
     // Configure the fold margin
     m_stcRight->SetMarginType     (4, wxSTC_MARGIN_SYMBOL);
     m_stcRight->SetMarginMask     (4, wxSTC_MASK_FOLDERS);
@@ -227,9 +240,16 @@ DiffSideBySidePanelBase::DiffSideBySidePanelBase(wxWindow* parent, wxWindowID id
     m_stcRight->SetKeyWords(3, wxT(""));
     m_stcRight->SetKeyWords(4, wxT(""));
     
-    flexGridSizer20->Add(m_stcRight, 1, wxALL|wxEXPAND, 2);
+    boxSizer113->Add(m_stcRight, 1, wxALL|wxEXPAND, 2);
     
-    SetSizeHints(500,300);
+    m_staticTextRight = new wxStaticText(m_splitterPage109, wxID_ANY, _("Static Text Label"), wxDefaultPosition, wxSize(-1,-1), 0);
+    wxFont m_staticTextRightFont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
+    m_staticTextRightFont.SetWeight(wxFONTWEIGHT_BOLD);
+    m_staticTextRight->SetFont(m_staticTextRightFont);
+    
+    boxSizer113->Add(m_staticTextRight, 0, wxALL|wxALIGN_LEFT, 2);
+    
+    SetSizeHints(500,500);
     if ( GetSizer() ) {
          GetSizer()->Fit(this);
     }
@@ -241,7 +261,11 @@ DiffSideBySidePanelBase::DiffSideBySidePanelBase(wxWindow* parent, wxWindowID id
     m_ribbonButtonBar49->Connect(wxID_UP, wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxRibbonButtonBarEventHandler(DiffSideBySidePanelBase::OnPrevDiffSequence), NULL, this);
     m_ribbonButtonBar49->Connect(wxID_UP, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(DiffSideBySidePanelBase::OnPrevDiffUI), NULL, this);
     m_ribbonButtonBar85->Connect(ID_TOOL_COPY_DIFF_LEFT_TO_RIGHT, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(DiffSideBySidePanelBase::OnCopyLeftToRightUI), NULL, this);
+    m_ribbonButtonBar85->Connect(ID_TOOL_COPY_DIFF_LEFT_TO_RIGHT, wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxRibbonButtonBarEventHandler(DiffSideBySidePanelBase::OnCopyLeftToRight), NULL, this);
     m_ribbonButtonBar85->Connect(ID_TOOL_COPY_DIFF_RIGHT_TO_LEFT, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(DiffSideBySidePanelBase::OnCopyRightToLeftUI), NULL, this);
+    m_ribbonButtonBar85->Connect(ID_TOOL_COPY_DIFF_RIGHT_TO_LEFT, wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxRibbonButtonBarEventHandler(DiffSideBySidePanelBase::OnCopyRightToLeft), NULL, this);
+    m_ribbonButtonBar85->Connect(ID_TOOL_SAVE, wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxRibbonButtonBarEventHandler(DiffSideBySidePanelBase::OnSaveChanges), NULL, this);
+    m_ribbonButtonBar85->Connect(ID_TOOL_SAVE, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(DiffSideBySidePanelBase::OnSaveChangesUI), NULL, this);
     m_stcLeft->Connect(wxEVT_STC_PAINTED, wxStyledTextEventHandler(DiffSideBySidePanelBase::OnLeftStcPainted), NULL, this);
     m_stcRight->Connect(wxEVT_STC_PAINTED, wxStyledTextEventHandler(DiffSideBySidePanelBase::OnRightStcPainted), NULL, this);
     
@@ -255,7 +279,11 @@ DiffSideBySidePanelBase::~DiffSideBySidePanelBase()
     m_ribbonButtonBar49->Disconnect(wxID_UP, wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxRibbonButtonBarEventHandler(DiffSideBySidePanelBase::OnPrevDiffSequence), NULL, this);
     m_ribbonButtonBar49->Disconnect(wxID_UP, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(DiffSideBySidePanelBase::OnPrevDiffUI), NULL, this);
     m_ribbonButtonBar85->Disconnect(ID_TOOL_COPY_DIFF_LEFT_TO_RIGHT, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(DiffSideBySidePanelBase::OnCopyLeftToRightUI), NULL, this);
+    m_ribbonButtonBar85->Disconnect(ID_TOOL_COPY_DIFF_LEFT_TO_RIGHT, wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxRibbonButtonBarEventHandler(DiffSideBySidePanelBase::OnCopyLeftToRight), NULL, this);
     m_ribbonButtonBar85->Disconnect(ID_TOOL_COPY_DIFF_RIGHT_TO_LEFT, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(DiffSideBySidePanelBase::OnCopyRightToLeftUI), NULL, this);
+    m_ribbonButtonBar85->Disconnect(ID_TOOL_COPY_DIFF_RIGHT_TO_LEFT, wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxRibbonButtonBarEventHandler(DiffSideBySidePanelBase::OnCopyRightToLeft), NULL, this);
+    m_ribbonButtonBar85->Disconnect(ID_TOOL_SAVE, wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxRibbonButtonBarEventHandler(DiffSideBySidePanelBase::OnSaveChanges), NULL, this);
+    m_ribbonButtonBar85->Disconnect(ID_TOOL_SAVE, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(DiffSideBySidePanelBase::OnSaveChangesUI), NULL, this);
     m_stcLeft->Disconnect(wxEVT_STC_PAINTED, wxStyledTextEventHandler(DiffSideBySidePanelBase::OnLeftStcPainted), NULL, this);
     m_stcRight->Disconnect(wxEVT_STC_PAINTED, wxStyledTextEventHandler(DiffSideBySidePanelBase::OnRightStcPainted), NULL, this);
     

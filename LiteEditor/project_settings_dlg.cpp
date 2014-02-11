@@ -96,7 +96,7 @@ ProjectSettingsDlg::ProjectSettingsDlg( wxWindow* parent, WorkspaceTab* workspac
     m_infobar->SetShowHideEffects(wxSHOW_EFFECT_NONE, wxSHOW_EFFECT_NONE);
     
     ShowHideDisabledMessage();
-    ShowCustomProjectMessage( IsCustomBuildEnabled() );
+    //ShowCustomProjectMessage( IsCustomBuildEnabled() );
 }
 
 void ProjectSettingsDlg::DoClearDialog()
@@ -199,6 +199,11 @@ void ProjectSettingsDlg::LoadValues(const wxString& configName)
     buildConf = projSettingsPtr->GetBuildConfiguration(configName);
     if (!buildConf) {
         return;
+    }
+    
+    if ( buildConf->GetProjectType().IsEmpty() ) {
+        // no project type is defined by the 
+        buildConf->SetProjectType( projSettingsPtr->GetProjectType(wxEmptyString) );
     }
     size_t pageCount = m_treebook->GetPageCount();
     for(size_t i=0; i<pageCount; i++) {
