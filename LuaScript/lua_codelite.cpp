@@ -5,31 +5,6 @@
 #include "event_notifier.h"
 #include "lua_event_handler.h"
 
-class LuaFunctionEvtHandler : public wxEvtHandler
-{
-	lua_State* m_lua;
-	lua_CFunction m_function;
-	
-public:
-	LuaFunctionEvtHandler(lua_State* L, lua_CFunction fct)
-	: m_lua(L)
-	, m_function(fct)
-	{
-	}
-	
-	void onEvent(wxCommandEvent& event)
-	{
-		event.Skip(true);
-		
-		wxLogError("[LUA] LuaFunctionEvtHandler::OnEvent");
-		lua_pushcfunction(m_lua, m_function);
-		lua::print_stack(m_lua);
-		lua_call(m_lua, 0, 0);
-		
-		printf("EVENT FINISHED"); fflush(stdout);
-	}
-};
-
 static int Trace(lua_State* L)
 {
 	const char* message = lua_tostring(L, 1);

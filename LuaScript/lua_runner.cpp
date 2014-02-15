@@ -43,7 +43,6 @@ void LuaRunner::Run(const wxString& script)
 		::wxMessageBox(msg, "Lua plugin error", wxOK|wxICON_ERROR);
 		return;
 	}
-	lua::print_stack(m_lua);
 	wxLogError("[LUA] finished");
 }
 
@@ -56,7 +55,8 @@ HookRunner::HookRunner(IManager* manager)
 	int r = luaL_dofile(m_lua, initScript.GetFullPath().c_str());
 	if (r != LUA_OK)
 	{
-		printf("HookRunner error %s", lua_tostring(m_lua, -1));
+		wxString msg = wxString::Format("HookRunner error %s", lua_tostring(m_lua, -1));
+		wxLogError(msg);
 	}
 }
 

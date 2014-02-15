@@ -146,12 +146,10 @@ bool ScriptPlugin::IsPaneDetached() const
 
 void ScriptPlugin::onClEvent(clCommandEvent& event)
 {
-	printf("OnClEvent(%d)\n", event.GetEventType());
 	m_hookRunner.onClEvent(event);
 }
 
 void ScriptPlugin::onCmdEvent(wxCommandEvent& event)
 {
-	printf("onCmdEvent(%d)\n", event.GetEventType()); fflush(stdout);
 	m_hookRunner.onCmdEvent(event);
 }
