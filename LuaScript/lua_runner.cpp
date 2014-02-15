@@ -34,23 +34,51 @@ void LuaRunner::Init()
 void LuaRunner::Run(const wxString& script)
 {
 	wxLogMessage("[LUA] running %s", script.c_str());
-	int status = luaL_loadfile(m_lua, script.c_str());
+	int status = luaL_dofile(m_lua, script.c_str());
 	if (status != LUA_OK)
 	{
-		wxLogError("[LUA] can't run %s", script.c_str());
-		::wxMessageBox("Can't run script", "Lua plugin error", wxOK|wxICON_ERROR);
-		return;
-	}
-	
-	int result = lua_pcall(m_lua, 0, LUA_MULTRET, 0);
-	if (result != LUA_OK)
-	{
 		const char* err = lua_tostring(m_lua, -1);
-		wxString msg = wxString::Format("Error %d : %s", result, err);
+		wxString msg = wxString::Format("Error %d : %s", status, err);
 		wxLogError("[LUA] : %s", msg.c_str());
 		::wxMessageBox(msg, "Lua plugin error", wxOK|wxICON_ERROR);
 		return;
 	}
-	wxLogMessage("[LUA] finished");
+	lua::print_stack(m_lua);
+	wxLogError("[LUA] finished");
 }
 
+HookRunner::HookRunner(IManager* manager)
+: LuaRunner(manager)
+{
+	wxFileName initScript(m_manager->GetInstallDirectory(), "codelite.lua");
+	initScript.AppendDir("plugins");
+	initScript.AppendDir("resources");
+	int r = luaL_dofile(m_lua, initScript.GetFullPath().c_str());
+	if (r != LUA_OK)
+	{
+		printf("HookRunner error %s", lua_tostring(m_lua, -1));
+	}
+}
+
+void HookRunner::RunFunctions(int id)
+{
+	lua_getglobal(m_lua, "codelite");
+	lua_getfield(m_lua, -1, "on_event");
+	lua_pushvalue(m_lua, -2); // push self
+	lua_remove(m_lua, -3);
+	lua_pushnumber(m_lua, id);
+	lua_pushstring(m_lua, "EVENT");
+
+	lua_call(m_lua, 3, 0);
+
+}
+
+void HookRunner::onClEvent(clCommandEvent& event)
+{
+	RunFunctions(event.GetEventType());
+}
+
+void HookRunner::onCmdEvent(wxCommandEvent& event)
+{
+	RunFunctions(event.GetEventType());
+}

@@ -2,6 +2,7 @@
 #include <wx/xrc/xmlres.h>
 #include "detachedpanesinfo.h"
 #include "dockablepane.h"
+#include "event_notifier.h"
 
 ScriptPlugin* ScriptPlugin::thePlugin = 0;
 
@@ -39,6 +40,9 @@ ScriptPlugin::ScriptPlugin(IManager *manager)
 
 	InitUi();
 	InitHooks();
+	
+	EventNotifier* evSrc = EventNotifier::Get();
+	evSrc->Connect(wxEVT_FILE_SAVED, wxCommandEventHandler(ScriptPlugin::onCmdEvent), NULL, this);
 }
 
 ScriptPlugin::~ScriptPlugin()
@@ -138,4 +142,16 @@ bool ScriptPlugin::IsPaneDetached() const
     m_mgr->GetConfigTool()->ReadObject(wxT("DetachedPanesList"), &dpi);
     wxArrayString detachedPanes = dpi.GetPanes();
     return detachedPanes.Index(SCRIPT_PANE_TITLE) != wxNOT_FOUND;
+}
+
+void ScriptPlugin::onClEvent(clCommandEvent& event)
+{
+	printf("OnClEvent(%d)\n", event.GetEventType());
+	m_hookRunner.onClEvent(event);
+}
+
+void ScriptPlugin::onCmdEvent(wxCommandEvent& event)
+{
+	printf("onCmdEvent(%d)\n", event.GetEventType()); fflush(stdout);
+	m_hookRunner.onCmdEvent(event);
 }

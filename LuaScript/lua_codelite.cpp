@@ -19,9 +19,14 @@ public:
 	
 	void onEvent(wxCommandEvent& event)
 	{
+		event.Skip(true);
+		
 		wxLogError("[LUA] LuaFunctionEvtHandler::OnEvent");
 		lua_pushcfunction(m_lua, m_function);
-		//lua_call(m_lua, 0, 0);
+		lua::print_stack(m_lua);
+		lua_call(m_lua, 0, 0);
+		
+		printf("EVENT FINISHED"); fflush(stdout);
 	}
 };
 
@@ -32,25 +37,8 @@ static int Trace(lua_State* L)
 	return 0;
 }
 
-static int Bind(lua_State* L)
-{
-	if (lua_isfunction(L, 1) == false)
-	{
-		return 0;
-	}
-
-	lua_CFunction fct = lua_tocfunction(L, 1);
-	lua::print_stack(L);
-	//lua_call(L, 0, 0);
-
-	LuaFunctionEvtHandler* evtHandler = new LuaFunctionEvtHandler(L, fct);
-	wxTheApp->Connect(wxEVT_FILE_SAVED, wxCommandEventHandler(LuaFunctionEvtHandler::onEvent), 0, evtHandler);
-	return 0;
-}
-
 static const luaL_Reg METHODS[] = {
 	{"Trace", Trace},
-	{"Bind", Bind},
 	{NULL, NULL}
 };
 

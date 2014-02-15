@@ -4,10 +4,11 @@
 std::string lua::stack_dump(lua_State *L)
 {
 	std::ostringstream oss;
-	oss << "lua stack : ";
+	oss << "Lua stack ( " << L << ")" << std::endl;
 	const int top = lua_gettop(L);
 	for (int i = 1; i <= top; i++)    /* repeat for each level */
 	{
+		oss << " - " << i << " : ";
 		const int t = lua_type(L, i);
 		switch (t)
 		{
@@ -27,9 +28,8 @@ std::string lua::stack_dump(lua_State *L)
 			oss << lua_typename(L, t);
 			break;
 		}
-		oss << " ";  /* put a separator */
+		oss << std::endl;  /* put a separator */
 	}
-	oss << std::endl;/* end the listing */
 	return oss.str();
 }
 

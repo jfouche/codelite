@@ -13,7 +13,7 @@ class ScriptPlugin : public IPlugin
 	static ScriptPlugin* thePlugin;
 	
 	ScriptManager m_scriptMgr;
-	LuaRunner m_hookRunner;
+	HookRunner m_hookRunner;
 	ScriptPanel* m_scriptPanel;
 	
 public:
@@ -36,6 +36,9 @@ private:
 	void InitUi();
 	void InitHooks();
 	bool IsPaneDetached() const;
+	
+	void onCmdEvent(wxCommandEvent& event);
+	void onClEvent(clCommandEvent& event);
 };
 
 #endif // CL_LUA_PLUGIN_H_INCLUDED
