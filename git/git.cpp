@@ -1143,7 +1143,7 @@ void GitPlugin::FinishGitListAction(const gitAction& ga)
         // Finally, cache the modified-files list: it's used in other functions
         m_modifiedFiles.swap(gitFileSet);
     }
-    m_mgr->SetStatusMessage(_(""), 0);
+    m_mgr->SetStatusMessage("", 0);
 }
 
 /*******************************************************************************/
@@ -2065,12 +2065,12 @@ void GitPlugin::DoShowDiffViewer(const wxString& headFile, const wxString& fileN
         fp.Write( headFile );
         fp.Close();
     }
-    DiffSideBySidePanel* p = new DiffSideBySidePanel(m_mgr->GetEditorPaneNotebook());
+    DiffSideBySidePanel* p = new DiffSideBySidePanel(m_mgr->GetEditorPaneNotebook(), clDTL::kTwoPanes);
     DiffSideBySidePanel::FileInfo l(tmpFilePath, _("HEAD version"), true);
-    l.deleteFileOnDestroy = true; // ask the diff view to delete the file when its done
+    l.deleteOnExit = true;
     DiffSideBySidePanel::FileInfo r(fnWorkingCopy.GetFullPath(), _("Working copy"), false);
     p->SetFilesDetails(l, r);
     p->Diff();
-    
+    p->SetOriginSourceControl();
     m_mgr->AddPage(p, _("Git Diff: ") + fnWorkingCopy.GetFullName(), wxNullBitmap, true);
 }

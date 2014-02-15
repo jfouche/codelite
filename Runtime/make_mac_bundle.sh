@@ -222,6 +222,7 @@ cp ../lib/git.dylib ./codelite.app/Contents/SharedSupport/plugins/
 cp ../lib/ZoomNavigator.dylib ./codelite.app/Contents/SharedSupport/plugins/
 cp ../lib/SFTP.dylib ./codelite.app/Contents/SharedSupport/plugins/
 cp ../lib/CMakePlugin.dylib ./codelite.app/Contents/SharedSupport/plugins/
+cp ../lib/CodeLiteDiff.dylib ./codelite.app/Contents/SharedSupport/plugins/
 
 if [ -f ../lib/wxcrafter.dylib ]; then
     cp ../lib/wxcrafter.dylib ./codelite.app/Contents/SharedSupport/plugins/
@@ -242,6 +243,7 @@ if test -f ../bin/codelite-clang ; then
 fi
 
 cp ../bin/codelitegcc  ./codelite.app/Contents/MacOS/
+cp ../bin/codelite-echo  ./codelite.app/Contents/MacOS/
 cp ../bin/codelite-make  ./codelite.app/Contents/SharedSupport/
 cp ../bin/codelite_cppcheck ./codelite.app/Contents/SharedSupport/
 cp ../../Runtime/./OpenTerm   ./codelite.app/Contents/SharedSupport/

@@ -1562,6 +1562,7 @@ resources.cpp: resources.xrc
     <Project Name="Tweaks"/>
     <Project Name="CMakePlugin"/>
     <Project Name="LuaScript"/>
+    <Project Name="CodeLiteDiff"/>
   </Dependencies>
   <Dependencies Name="WinDebugUnicode">
     <Project Name="PCH"/>
@@ -1595,6 +1596,8 @@ resources.cpp: resources.xrc
     <Project Name="SFTP"/>
     <Project Name="Tweaks"/>
     <Project Name="LuaScript"/>
+    <Project Name="CMakePlugin"/>
+    <Project Name="CodeLiteDiff"/>
   </Dependencies>
   <Dependencies Name="WinDebugUnicode">
     <Project Name="PCH"/>
@@ -1628,5 +1631,7 @@ resources.cpp: resources.xrc
     <Project Name="SFTP"/>
     <Project Name="Tweaks"/>
     <Project Name="LuaScript"/>
+    <Project Name="CMakePlugin"/>
+    <Project Name="CodeLiteDiff"/>
   </Dependencies>
 </CodeLite_Project>
