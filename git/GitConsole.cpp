@@ -226,32 +226,34 @@ void GitConsole::OnClearGitLogUI(wxUpdateUIEvent& event)
 void GitConsole::AddText(const wxString& text)
 {
     wxString tmp = text;
-    tmp.Trim().Trim(false);
-
-    if ( tmp.IsEmpty() )
-        return;
+    tmp.Replace("\r\n", "\n");
     
-    tmp << "\n";
     m_stcLog->SetReadOnly(false);
-    m_stcLog->AppendText( tmp );
-    m_stcLog->SetReadOnly(true);
+    
+    int lineNumber = m_stcLog->GetLineCount(); // there is always at least 1 line in the document
+    --lineNumber; // wxSTC count lines from 0
+
+    wxArrayString lines = ::wxStringTokenize(tmp, "\n", wxTOKEN_STRTOK);
+    for(size_t i=0; i<lines.GetCount(); ++i) {
+        wxString &curline = lines.Item(i);
+        if ( curline.StartsWith("\r") && lineNumber) {
+            m_stcLog->LineDelete(); // Deletes the "\n" we append to each line
+            m_stcLog->LineDelete(); // The the last line we added
+        }
+        m_stcLog->AppendText(curline + "\n");
+        
+        // update the lineNumber
+        lineNumber = m_stcLog->GetLineCount(); // there is always at least 1 line in the document
+        --lineNumber; // wxSTC count lines from 0
+    }
+    m_stcLog->SetReadOnly(false);
     m_stcLog->ScrollToEnd();
 }
 
 void GitConsole::AddRawText(const wxString& text)
 {
-    wxString tmp = text;
-    tmp.Trim().Trim(false);
-
-    if ( tmp.IsEmpty() )
-        return;
-
-    wxArrayString lines = ::wxStringTokenize(tmp, "\n\r", wxTOKEN_STRTOK);
-    for(size_t i=0; i<lines.GetCount(); ++i) {
-        AddText(lines.Item(i));
-    }
+    AddText( text );
 }
-
 
 bool GitConsole::IsVerbose() const
 {
@@ -359,23 +361,32 @@ void GitConsole::UpdateTreeView(const wxString& output)
     }
 
 #ifndef __WXMAC__
-    if ( !m_dvFilesModel->HasChildren(m_itemModified) )
+    if ( !m_dvFilesModel->HasChildren(m_itemModified) ) {
         m_dvFilesModel->DeleteItem(m_itemModified);
-    else
+        m_itemModified = wxDataViewItem();
+    } else {
         m_dvFiles->Expand(m_itemModified);
-
-    if ( !m_dvFilesModel->HasChildren(m_itemUntracked) )
+    }
+    
+    if ( !m_dvFilesModel->HasChildren(m_itemUntracked) ) {
         m_dvFilesModel->DeleteItem(m_itemUntracked);
-
-    if ( !m_dvFilesModel->HasChildren(m_itemNew) )
+        m_itemUntracked = wxDataViewItem();
+    }
+    
+    if ( !m_dvFilesModel->HasChildren(m_itemNew) ) {
         m_dvFilesModel->DeleteItem(m_itemNew);
-    else
+        m_itemNew = wxDataViewItem();
+    } else {
         m_dvFiles->Expand(m_itemNew);
-
-    if ( !m_dvFilesModel->HasChildren(m_itemDeleted) )
+    }
+    
+    if ( !m_dvFilesModel->HasChildren(m_itemDeleted) ) {
         m_dvFilesModel->DeleteItem(m_itemDeleted);
-    else
+        m_itemDeleted = wxDataViewItem();
+    } else {
         m_dvFiles->Expand(m_itemDeleted);
+        
+    }
 #endif
 }
 
@@ -613,4 +624,13 @@ bool GitConsole::IsProgressShown() const
 void GitConsole::PulseProgress()
 {
     m_gauge->Pulse();
+}
+
+bool GitConsole::IsDirty() const
+{
+    bool hasDeleted  = m_itemDeleted.IsOk() && m_dvFilesModel->HasChildren( m_itemDeleted );
+    bool hasModified = m_itemModified.IsOk() && m_dvFilesModel->HasChildren( m_itemModified );
+    bool hasNew      = m_itemNew.IsOk() && m_dvFilesModel->HasChildren( m_itemNew );
+    
+    return hasDeleted || hasModified || hasNew;
 }
