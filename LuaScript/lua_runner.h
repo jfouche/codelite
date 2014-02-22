@@ -2,7 +2,7 @@
 #define LUA_RUNNER_H_INCLUDED
 
 #include <imanager.h>
-#include "lua.hpp"
+#include "lua_utils.hpp"
 #include "cl_command_event.h"
 
 class LuaRunner
@@ -30,7 +30,17 @@ public:
 	void onClEvent(clCommandEvent& event);
 	
 private:
-	void RunFunctions(int id);
+	template<typename T>
+	void RunFunctions(int id, T* event)
+	{
+		PushOnEventFunctionAndSelf();
+		lua_pushnumber(m_lua, id);
+		lua::push(m_lua, event);
+		lua::print_stack(m_lua);
+		lua_call(m_lua, 3, 0);
+	}
+
+	void PushOnEventFunctionAndSelf();
 };
 
 #endif // LUA_RUNNER_H_INCLUDED

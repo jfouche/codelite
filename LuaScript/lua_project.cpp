@@ -1,20 +1,19 @@
-#include "lua_utils.hpp"
+#include "lua_bindings.h"
 #include "project.h"
 
-static const char* CLASSNAME = "Project";
 
 namespace lua
 {
 	template <>
 	void push(lua_State* L, Project* instance)
 	{
-		push(L, instance, CLASSNAME);
+		push(L, instance, PROJECT_CLASSNAME);
 	}
 
 	template <>
 	Project* check(lua_State* L, int n)
 	{
-		return check<Project>(L, n, CLASSNAME);
+		return check<Project>(L, n, PROJECT_CLASSNAME);
 	}
 }
 
@@ -50,10 +49,7 @@ static const luaL_Reg METHODS[] = {
 
 void lua_open_Project(lua_State* L)
 {
-	luaL_newmetatable(L, CLASSNAME);
-	lua_createtable(L, 0, 0);
-	luaL_setfuncs(L, METHODS, 0);
-	lua_setfield(L, -2, "__index");
+	lua::createClass(L, PROJECT_CLASSNAME, METHODS);
 	lua_pop(L, 1);
 }
 

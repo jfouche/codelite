@@ -1,11 +1,5 @@
 #include "lua_runner.h"
-#include "lua_utils.hpp"
-
-extern void lua_open_Codelite(lua_State* L, IManager* manager, const char* name);
-extern void lua_open_IEditor(lua_State* L);
-extern void lua_open_IManager(lua_State* L);
-extern void lua_open_Workspace(lua_State* L);
-extern void lua_open_Project(lua_State* L);
+#include "lua_bindings.h"
 
 LuaRunner::LuaRunner(IManager* manager)
 : m_manager(manager)
@@ -27,6 +21,7 @@ void LuaRunner::Init()
 	lua_open_IEditor(m_lua);
 	lua_open_Workspace(m_lua);
 	lua_open_Project(m_lua);
+	lua_open_Events(m_lua);
 
 	lua_open_Codelite(m_lua, m_manager, "codelite");
 }
@@ -60,25 +55,20 @@ HookRunner::HookRunner(IManager* manager)
 	}
 }
 
-void HookRunner::RunFunctions(int id)
+void HookRunner::PushOnEventFunctionAndSelf()
 {
 	lua_getglobal(m_lua, "codelite");
 	lua_getfield(m_lua, -1, "on_event");
 	lua_pushvalue(m_lua, -2); // push self
 	lua_remove(m_lua, -3);
-	lua_pushnumber(m_lua, id);
-	lua_pushstring(m_lua, "EVENT");
-
-	lua_call(m_lua, 3, 0);
-
 }
 
 void HookRunner::onClEvent(clCommandEvent& event)
 {
-	RunFunctions(event.GetEventType());
+	RunFunctions(event.GetEventType(), &event);
 }
 
 void HookRunner::onCmdEvent(wxCommandEvent& event)
 {
-	RunFunctions(event.GetEventType());
+	RunFunctions(event.GetEventType(), &event);
 }

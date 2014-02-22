@@ -1,5 +1,5 @@
-local f = function()
-	codelite.Trace("FILE SAVED")
+local f = function(event)
+	codelite.Trace("FILE SAVED : " .. event:GetString())
 end
 
-codelite.Bind(f)
+codelite:Bind(wxEVT_FILE_SAVED, f)

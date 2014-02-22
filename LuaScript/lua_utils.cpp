@@ -39,3 +39,16 @@ void lua::print_stack(lua_State *L)
 	printf("\n");
 	fflush(stdout);
 }
+
+void lua::createClass(lua_State* L, const char* name)
+{
+	luaL_newmetatable(L, name); // New metatable on the stack
+	lua_pushvalue(L, -1); // there are two 'copies' of the metatable on the stack
+	lua_setfield(L, -2, "__index");
+}
+
+void lua::createClass(lua_State* L, const char* name, const luaL_Reg* methods)
+{
+	createClass(L, name);
+	luaL_setfuncs(L, methods, 0);
+}

@@ -79,6 +79,7 @@
     <File Name="lua_project.cpp"/>
     <File Name="lua_codelite.cpp"/>
     <File Name="lua_events.cpp"/>
+    <File Name="lua_bindings.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="samples">
     <File Name="samples/comment_selection.lua"/>

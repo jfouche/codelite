@@ -1,20 +1,19 @@
-#include "lua_utils.hpp"
+#include "lua_bindings.h"
 #include "workspace.h"
 
-static const char* CLASSNAME = "Workspace";
 
 namespace lua
 {
 	template <>
 	void push(lua_State* L, Workspace* instance)
 	{
-		push(L, instance, CLASSNAME);
+		push(L, instance, WORKSPACE_CLASSNAME);
 	}
 
 	template <>
 	Workspace* check(lua_State* L, int n)
 	{
-		return check<Workspace>(L, n, CLASSNAME);
+		return check<Workspace>(L, n, WORKSPACE_CLASSNAME);
 	}
 }
 
@@ -75,9 +74,6 @@ static luaL_Reg METHODS[] = {
 
 void lua_open_Workspace(lua_State* L)
 {
-	luaL_newmetatable(L, CLASSNAME);
-	lua_createtable(L, 0, 0);
-	luaL_setfuncs(L, METHODS, 0);
-	lua_setfield(L, -2, "__index");
+	lua::createClass(L, WORKSPACE_CLASSNAME, METHODS);
 	lua_pop(L, 1);
 }

@@ -1,21 +1,19 @@
-#include "lua_utils.hpp"
+#include "lua_bindings.h"
 #include "imanager.h"
 #include "workspace.h"
-
-static const char* CLASSNAME = "IManager";
 
 namespace lua
 {
 	template <>
 	void push(lua_State* L, IManager* instance)
 	{
-		push(L, instance, CLASSNAME);
+		push(L, instance, IMANAGER_CLASSNAME);
 	}
 
 	template <>
 	IManager* check(lua_State* L, int n)
 	{
-		return check<IManager>(L, n, CLASSNAME);
+		return check<IManager>(L, n, IMANAGER_CLASSNAME);
 	}
 }
 
@@ -66,9 +64,6 @@ const luaL_Reg METHODS[] = {
 
 void lua_open_IManager(lua_State* L)
 {
-	luaL_newmetatable(L, CLASSNAME);
-	lua_createtable(L, 0, 0);
-	luaL_setfuncs(L, METHODS, 0);
-	lua_setfield(L, -2, "__index");
+	lua::createClass(L, IMANAGER_CLASSNAME, METHODS);
 	lua_pop(L, 1);
 }

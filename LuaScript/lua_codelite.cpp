@@ -2,8 +2,6 @@
 #include "imanager.h"
 #include "cl_command_event.h"
 #include "plugin.h"
-#include "event_notifier.h"
-#include "lua_event_handler.h"
 
 static int Trace(lua_State* L)
 {
@@ -19,12 +17,11 @@ static const luaL_Reg METHODS[] = {
 
 void lua_open_Codelite(lua_State* L, IManager* manager, const char* name)
 {
-	lua_createtable(L, 0, 0);
-	luaL_setfuncs(L, METHODS, 0);
+	lua::createClass(L, "CODELITE", METHODS);
 
 	// add the 'manager' field
 	lua_pushstring(L, "manager");
-	lua::push(L, manager, "IManager");
+	lua::push(L, manager);
 	lua_settable(L, -3);
 
 	lua_setglobal(L, name);

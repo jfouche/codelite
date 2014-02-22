@@ -29,6 +29,16 @@ namespace lua
 	template <typename T>
 	T* check(lua_State* L, int n);
 
+	/**
+	 * the class is on the stack at the end
+	 */
+	void createClass(lua_State* L, const char* name);
+
+	/**
+	 * the class is on the stack at the end
+	 */
+	void createClass(lua_State* L, const char* name, const luaL_Reg* methods);
+
 	std::string stack_dump(lua_State *L);
 	
 	void print_stack(lua_State *L);
