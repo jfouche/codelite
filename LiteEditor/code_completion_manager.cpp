@@ -5,17 +5,25 @@
 #include "ctags_manager.h"
 #include "entry.h"
 #include "frame.h"
+#include "clang_compilation_db_thread.h"
+#include "compilation_database.h"
+#include "event_notifier.h"
+#include "plugin.h"
 
-static CodeCompletionManager ms_CodeCompletionManager;
+static CodeCompletionManager *ms_CodeCompletionManager = NULL;
 
 CodeCompletionManager::CodeCompletionManager()
     : m_options(CC_CTAGS_ENABLED)
     , m_wordCompletionRefreshNeeded(false)
 {
+    EventNotifier::Get()->Connect(wxEVT_BUILD_ENDED, clBuildEventHandler(CodeCompletionManager::OnBuildEnded), NULL, this);
+    wxTheApp->Bind(wxEVT_ACTIVATE_APP, &CodeCompletionManager::OnAppActivated, this );
 }
 
 CodeCompletionManager::~CodeCompletionManager()
 {
+    EventNotifier::Get()->Disconnect(wxEVT_BUILD_ENDED, clBuildEventHandler(CodeCompletionManager::OnBuildEnded), NULL, this);
+    wxTheApp->Unbind(wxEVT_ACTIVATE_APP, &CodeCompletionManager::OnAppActivated, this );
 }
 
 void CodeCompletionManager::WordCompletion(LEditor *editor, const wxString& expr, const wxString& word)
@@ -48,7 +56,10 @@ void CodeCompletionManager::WordCompletion(LEditor *editor, const wxString& expr
 
 CodeCompletionManager& CodeCompletionManager::Get()
 {
-    return ms_CodeCompletionManager;
+    if ( !ms_CodeCompletionManager ) {
+        ms_CodeCompletionManager = new CodeCompletionManager;
+    }
+    return *ms_CodeCompletionManager;
 }
 
 bool CodeCompletionManager::DoCtagsWordCompletion(LEditor* editor, const wxString& expr, const wxString& word)
@@ -241,4 +252,30 @@ void CodeCompletionManager::GotoDecl(LEditor* editor)
     if(!res && (GetOptions() & CC_CLANG_ENABLED)) {
         DoClangGotoDecl(editor);
     }
+}
+
+void CodeCompletionManager::OnBuildEnded(clBuildEvent& e)
+{
+    e.Skip();
+    DoUpdateCompilationDatabase();
+}
+
+void CodeCompletionManager::DoUpdateCompilationDatabase()
+{
+    // Create a worker thread (detached thread) that 
+    // will initialize the database now that the compilation has ended
+    CompilationDatabase db;
+    ClangCompilationDbThread* thr = new ClangCompilationDbThread( db.GetFileName().GetFullPath() );
+    thr->Start();
+}
+
+void CodeCompletionManager::OnAppActivated(wxActivateEvent& e)
+{
+    e.Skip();
+    DoUpdateCompilationDatabase();
+}
+
+void CodeCompletionManager::Release()
+{
+    wxDELETE(ms_CodeCompletionManager);
 }

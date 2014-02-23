@@ -29,8 +29,10 @@
 #include <wx/string.h>
 #include <wx/filename.h>
 #include "cl_editor.h"
+#include "cl_command_event.h"
+#include <wx/event.h>
 
-class CodeCompletionManager
+class CodeCompletionManager : public wxEvtHandler
 {
 protected:
     size_t m_options;
@@ -52,7 +54,13 @@ protected:
     void DoClangGotoDecl      (LEditor *editor);
 
     void DoUpdateOptions();
-
+    void DoUpdateCompilationDatabase();
+    
+protected:
+    // Event handlers
+    void OnBuildEnded(clBuildEvent &e);
+    void OnAppActivated(wxActivateEvent &e);
+    
 public:
     CodeCompletionManager();
     virtual ~CodeCompletionManager();
@@ -71,6 +79,8 @@ public:
     }
 
     static CodeCompletionManager& Get();
+    static void Release();
+    
     void WordCompletion(LEditor* editor, const wxString& expr, const wxString& word);
     void Calltip       (LEditor* editor, int line, const wxString &expr, const wxString &text, const wxString &word);
     void CodeComplete  (LEditor* editor, int line, const wxString &expr, const wxString &text);
