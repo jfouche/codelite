@@ -60,10 +60,9 @@ void lua_open_Events(lua_State* L)
 	lua::createClass(L, WX_EVT_CLASSNAME, WX_METHODS);
 	lua_pop(L, 1);
 
-//	luaL_newmetatable(L, CL_EVT_CLASSNAME);
-//	luaL_setfuncs(L, WX_METHODS, 0);
-//	luaL_setfuncs(L, CL_METHODS, 0);
-//	lua_pop(L, 1);
+	lua::createClass(L, CL_EVT_CLASSNAME, WX_METHODS);
+	luaL_setfuncs(L, CL_METHODS, 0);
+	lua_pop(L, 1);
 
 	SET_GLOBAL_EVENT(L, wxEVT_FILE_SAVED);
 }

@@ -8,10 +8,10 @@ class IManager;
 
 class ScriptPanel : public ScriptPanelBase
 {
-	ScriptManager& m_scriptMgr;
+	ScriptMgrPtr m_scriptMgr;
 	
 public:
-    ScriptPanel(wxWindow* parent, ScriptManager& scriptMgr);
+    ScriptPanel(wxWindow* parent, ScriptMgrPtr scriptMgr);
     virtual ~ScriptPanel();
 
 protected:

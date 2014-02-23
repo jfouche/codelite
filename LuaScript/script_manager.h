@@ -2,6 +2,7 @@
 #define CL_LUA_SCRIPT_MANAGER_H_INCLUDED
 
 #include <imanager.h>
+#include "smart_ptr.h"
 
 class ScriptManager
 {
@@ -31,5 +32,7 @@ private:
 	wxString GetScriptDir() const;
 	wxString GetHookDir() const;
 };
+
+typedef SmartPtr<ScriptManager> ScriptMgrPtr;
 
 #endif // CL_LUA_SCRIPT_MANAGER_H_INCLUDED

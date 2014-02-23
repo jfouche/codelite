@@ -4,4 +4,5 @@
   <object class="wxBitmap" name="clean">..\codelite-icons-fresh-farm\toolbars\16\build\clean.png</object>
   <object class="wxBitmap" name="play">..\codelite-icons-fresh-farm\toolbars\16\debugger\play.png</object>
   <object class="wxBitmap" name="project-active">..\codelite-icons-fresh-farm\workspace\16\project-active.png</object>
+  <object class="wxBitmap" name="script_gear">resources\script_gear.png</object>
 </resource>

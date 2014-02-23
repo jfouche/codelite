@@ -14,6 +14,12 @@
 #include <wx/sizer.h>
 #include <wx/toolbar.h>
 #include <wx/listbox.h>
+#include <wx/frame.h>
+#include <wx/iconbndl.h>
+#include <wx/listbook.h>
+#include <wx/imaglist.h>
+#include <wx/listctrl.h>
+#include <wx/button.h>
 
 class ScriptPanelBase : public wxPanel
 {
@@ -37,6 +43,29 @@ protected:
 public:
     ScriptPanelBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(200,300), long style = wxTAB_TRAVERSAL);
     virtual ~ScriptPanelBase();
+};
+
+
+class ScriptSettingsFrameBase : public wxFrame
+{
+protected:
+    wxListbook* m_listbook29;
+    wxPanel* m_panel31;
+    wxListCtrl* m_listCtrlScripts;
+    wxButton* m_button41;
+    wxButton* m_button43;
+    wxButton* m_button45;
+    wxPanel* m_panel33;
+    wxListCtrl* m_listCtrlHooks;
+    wxButton* m_button4110;
+    wxButton* m_button4311;
+    wxButton* m_button4512;
+
+protected:
+
+public:
+    ScriptSettingsFrameBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Script plugin settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500,300), long style = wxDEFAULT_FRAME_STYLE);
+    virtual ~ScriptSettingsFrameBase();
 };
 
 #endif

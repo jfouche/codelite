@@ -1,6 +1,6 @@
 #include "script_panel.h"
 
-ScriptPanel::ScriptPanel(wxWindow* parent, ScriptManager& scriptMgr)
+ScriptPanel::ScriptPanel(wxWindow* parent, ScriptMgrPtr scriptMgr)
     : ScriptPanelBase(parent)
 	, m_scriptMgr(scriptMgr)
 {
@@ -13,13 +13,13 @@ ScriptPanel::~ScriptPanel()
 
 IManager* ScriptPanel::GetManager()
 {
-	return m_scriptMgr.GetManager();
+	return m_scriptMgr->GetManager();
 }
 
 void ScriptPanel::RefreshList()
 {
 	wxArrayString scripts;
-	m_scriptMgr.GetScripts(scripts);
+	m_scriptMgr->GetScripts(scripts);
 	m_listScripts->Set(scripts);
 }
 
@@ -31,7 +31,7 @@ void ScriptPanel::onAddScript(wxCommandEvent& event)
 		return;
 	
 	wxString path = dlg.GetPath();
-	if (m_scriptMgr.AddScript(path) == false)
+	if (m_scriptMgr->AddScript(path) == false)
 	{
 		::wxMessageBox(_("Can't add script"), _("Script"));
 		return;
@@ -44,7 +44,7 @@ void ScriptPanel::OnRunScript(wxCommandEvent& event)
 	wxString script = m_listScripts->GetStringSelection();
 	if (script.IsEmpty() == false)
 	{
-		m_scriptMgr.RunScript(script);
+		m_scriptMgr->RunScript(script);
 	}
 }
 
@@ -55,7 +55,7 @@ void ScriptPanel::OnEditScript(wxCommandEvent& event)
 	{
 		return;
 	}
-	wxString scriptPath = m_scriptMgr.GetScriptPath(script);
+	wxString scriptPath = m_scriptMgr->GetScriptPath(script);
 	if (wxFileExists(scriptPath))
 	{
 		GetManager()->OpenFile(scriptPath);
@@ -67,7 +67,7 @@ void ScriptPanel::OnDeleteScript(wxCommandEvent& event)
 	wxString script = m_listScripts->GetStringSelection();
 	if (script.IsEmpty() == false)
 	{
-		if (m_scriptMgr.DeleteScript(script))
+		if (m_scriptMgr->DeleteScript(script))
 		{
 			RefreshList();
 		}

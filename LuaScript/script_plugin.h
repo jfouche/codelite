@@ -5,16 +5,18 @@
 #include "script_panel.h"
 #include "script_manager.h"
 #include "lua_runner.h"
+#include <wx/minifram.h>
 
-class wxComboBox;
+class ScriptFrame;
 
 class ScriptPlugin : public IPlugin
 {
 	static ScriptPlugin* thePlugin;
 	
-	ScriptManager m_scriptMgr;
+	ScriptMgrPtr m_scriptMgr;
 	HookRunner m_hookRunner;
 	ScriptPanel* m_scriptPanel;
+	ScriptFrame* m_scriptsFrame;
 	
 public:
 	ScriptPlugin(IManager* manager);
@@ -39,6 +41,10 @@ private:
 	
 	void onCmdEvent(wxCommandEvent& event);
 	void onClEvent(clCommandEvent& event);
+
+	void OnShowFrame(wxCommandEvent& event);
+	void OnSettings(wxCommandEvent& event);
+	void OnShowFrameUi(wxUpdateUIEvent& event);
 };
 
 #endif // CL_LUA_PLUGIN_H_INCLUDED

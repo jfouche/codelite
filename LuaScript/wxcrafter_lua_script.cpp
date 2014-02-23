@@ -67,3 +67,93 @@ ScriptPanelBase::~ScriptPanelBase()
     m_listScripts->Disconnect(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, wxCommandEventHandler(ScriptPanelBase::OnRunScript), NULL, this);
     
 }
+
+ScriptSettingsFrameBase::ScriptSettingsFrameBase(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style)
+    : wxFrame(parent, id, title, pos, size, style)
+{
+    if ( !bBitmapLoaded ) {
+        // We need to initialise the default bitmap handler
+        wxXmlResource::Get()->AddHandler(new wxBitmapXmlHandler);
+        wxC71ADInitBitmapResources();
+        bBitmapLoaded = true;
+    }
+    // Set icon(s) to the application/dialog
+    wxIconBundle app_icons;
+    {
+        wxBitmap iconBmp = wxXmlResource::Get()->LoadBitmap(wxT("script_gear"));
+        wxIcon icn;
+        icn.CopyFromBitmap(iconBmp);
+        app_icons.AddIcon( icn );
+    }
+    SetIcons( app_icons );
+
+    
+    wxBoxSizer* boxSizer27 = new wxBoxSizer(wxVERTICAL);
+    this->SetSizer(boxSizer27);
+    
+    m_listbook29 = new wxListbook(this, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxLB_DEFAULT|wxBK_DEFAULT);
+    
+    boxSizer27->Add(m_listbook29, 1, wxALL|wxEXPAND, 5);
+    
+    m_panel31 = new wxPanel(m_listbook29, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxTAB_TRAVERSAL);
+    m_listbook29->AddPage(m_panel31, _("Scripts"), false);
+    
+    wxBoxSizer* boxSizer35 = new wxBoxSizer(wxHORIZONTAL);
+    m_panel31->SetSizer(boxSizer35);
+    
+    m_listCtrlScripts = new wxListCtrl(m_panel31, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxLC_REPORT);
+    
+    boxSizer35->Add(m_listCtrlScripts, 1, wxALL|wxEXPAND, 5);
+    
+    wxBoxSizer* boxSizer39 = new wxBoxSizer(wxVERTICAL);
+    
+    boxSizer35->Add(boxSizer39, 0, wxALL|wxALIGN_TOP, 5);
+    
+    m_button41 = new wxButton(m_panel31, wxID_ANY, _("Add..."), wxDefaultPosition, wxSize(-1,-1), 0);
+    
+    boxSizer39->Add(m_button41, 0, wxALL, 5);
+    
+    m_button43 = new wxButton(m_panel31, wxID_ANY, _("Delete"), wxDefaultPosition, wxSize(-1,-1), 0);
+    
+    boxSizer39->Add(m_button43, 0, wxALL, 5);
+    
+    m_button45 = new wxButton(m_panel31, wxID_ANY, _("Edit"), wxDefaultPosition, wxSize(-1,-1), 0);
+    
+    boxSizer39->Add(m_button45, 0, wxALL, 5);
+    
+    m_panel33 = new wxPanel(m_listbook29, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxTAB_TRAVERSAL);
+    m_listbook29->AddPage(m_panel33, _("Hooks"), false);
+    
+    wxBoxSizer* boxSizer357 = new wxBoxSizer(wxHORIZONTAL);
+    m_panel33->SetSizer(boxSizer357);
+    
+    m_listCtrlHooks = new wxListCtrl(m_panel33, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxLC_REPORT);
+    
+    boxSizer357->Add(m_listCtrlHooks, 1, wxALL|wxEXPAND, 5);
+    
+    wxBoxSizer* boxSizer399 = new wxBoxSizer(wxVERTICAL);
+    
+    boxSizer357->Add(boxSizer399, 0, wxALL|wxALIGN_TOP, 5);
+    
+    m_button4110 = new wxButton(m_panel33, wxID_ANY, _("Add..."), wxDefaultPosition, wxSize(-1,-1), 0);
+    
+    boxSizer399->Add(m_button4110, 0, wxALL, 5);
+    
+    m_button4311 = new wxButton(m_panel33, wxID_ANY, _("Delete"), wxDefaultPosition, wxSize(-1,-1), 0);
+    
+    boxSizer399->Add(m_button4311, 0, wxALL, 5);
+    
+    m_button4512 = new wxButton(m_panel33, wxID_ANY, _("Edit"), wxDefaultPosition, wxSize(-1,-1), 0);
+    
+    boxSizer399->Add(m_button4512, 0, wxALL, 5);
+    
+    SetSizeHints(500,300);
+    if ( GetSizer() ) {
+         GetSizer()->Fit(this);
+    }
+    Centre(wxBOTH);
+}
+
+ScriptSettingsFrameBase::~ScriptSettingsFrameBase()
+{
+}

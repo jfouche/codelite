@@ -52,6 +52,7 @@
     <File Name="script_plugin.cpp"/>
     <File Name="lua_event_handler.cpp"/>
     <File Name="codelite.lua"/>
+    <File Name="script_settings_frame.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <File Name="lua_runner.h"/>
@@ -60,6 +61,7 @@
     <File Name="script_plugin.h"/>
     <File Name="lua_utils.hpp"/>
     <File Name="lua_event_handler.h"/>
+    <File Name="script_settings_frame.h"/>
   </VirtualDirectory>
   <Dependencies/>
   <VirtualDirectory Name="wxcrafter">
@@ -296,6 +298,8 @@
       <PostBuild>
         <Command Enabled="yes">copy "$(IntermediateDirectory)\LuaScript.dll" ..\Runtime\plugins</Command>
         <Command Enabled="yes">copy "codelite.lua" ..\Runtime\plugins\resources</Command>
+        <Command Enabled="yes">copy resources\*.* ..\Runtime\plugins\resources</Command>
+        <Command Enabled="yes"/>
         <Command Enabled="yes"/>
       </PostBuild>
       <CustomBuild Enabled="no">
