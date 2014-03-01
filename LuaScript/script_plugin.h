@@ -9,8 +9,6 @@ class ScriptFrame;
 
 class ScriptPlugin : public IPlugin
 {
-	static ScriptPlugin* thePlugin;
-	
 	ScriptMgrPtr m_scriptMgr;
 	ScriptFrame* m_scriptsFrame;
 	
@@ -18,9 +16,6 @@ public:
 	ScriptPlugin(IManager* manager);
 	~ScriptPlugin();
 	
-	static ScriptPlugin* Create(IManager* manager);
-	static ScriptPlugin* Get();
-
 	//--------------------------------------------
 	//Abstract methods
 	//--------------------------------------------

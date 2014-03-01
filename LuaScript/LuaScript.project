@@ -50,7 +50,6 @@
     <File Name="lua_utils.cpp"/>
     <File Name="script_plugin.cpp"/>
     <File Name="lua_event_handler.cpp"/>
-    <File Name="codelite.lua"/>
     <File Name="script_settings_dlg.cpp"/>
     <File Name="script_frame.cpp"/>
   </VirtualDirectory>
@@ -80,7 +79,7 @@
     <File Name="lua_project.cpp"/>
     <File Name="lua_codelite.cpp"/>
     <File Name="lua_events.cpp"/>
-    <File Name="lua_bindings.h"/>
+    <File Name="lua_cl_bindings.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="samples">
     <File Name="samples/comment_selection.lua"/>
@@ -88,6 +87,10 @@
     <File Name="samples/cl_events.lua"/>
   </VirtualDirectory>
   <Dependencies Name="DebugUnicode"/>
+  <Dependencies Name="WinReleaseUnicode"/>
+  <VirtualDirectory Name="resources">
+    <File Name="resources/codelite.lua"/>
+  </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -296,7 +299,6 @@
       <PreBuild/>
       <PostBuild>
         <Command Enabled="yes">copy "$(IntermediateDirectory)\LuaScript.dll" ..\Runtime\plugins</Command>
-        <Command Enabled="yes">copy "codelite.lua" ..\Runtime\plugins\resources</Command>
         <Command Enabled="yes">copy resources\*.* ..\Runtime\plugins\resources</Command>
         <Command Enabled="yes"/>
         <Command Enabled="yes"/>
@@ -323,5 +325,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="WinReleaseUnicode"/>
 </CodeLite_Project>

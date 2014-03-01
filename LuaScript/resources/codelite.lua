@@ -1,4 +1,3 @@
-codelite.__index = codelite
 codelite.bindings = {}
 
 function codelite.Bind(self, id, fct)

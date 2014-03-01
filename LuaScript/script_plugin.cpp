@@ -6,7 +6,7 @@
 #include "script_settings_dlg.h"
 #include "script_frame.h"
 
-ScriptPlugin* ScriptPlugin::thePlugin = 0;
+static ScriptPlugin* thePlugin = 0;
 
 static const int SHOW_FRAME_ID = XRCID("script_show_frame");
 static const int SETTINGS_ID   = XRCID("script_settings");
@@ -14,9 +14,13 @@ static const int SETTINGS_ID   = XRCID("script_settings");
 // ============================================================================
 
 //Define the plugin entry point
-extern "C" EXPORT IPlugin *CreatePlugin(IManager *manager)
+extern "C" EXPORT IPlugin* CreatePlugin(IManager *manager)
 {
-	return ScriptPlugin::Create(manager);
+	if (thePlugin == 0)
+	{
+		thePlugin = new ScriptPlugin(manager);
+	}
+	return thePlugin;
 }
 
 extern "C" EXPORT PluginInfo GetPluginInfo()
@@ -51,20 +55,6 @@ ScriptPlugin::ScriptPlugin(IManager *manager)
 
 ScriptPlugin::~ScriptPlugin()
 {
-}
-
-ScriptPlugin* ScriptPlugin::Create(IManager* manager)
-{
-	if (thePlugin == 0)
-	{
-		thePlugin = new ScriptPlugin(manager);
-	}
-	return thePlugin;
-}
-
-ScriptPlugin* ScriptPlugin::Get()
-{
-	return thePlugin;
 }
 
 clToolBar *ScriptPlugin::CreateToolBar(wxWindow *parent)

@@ -1,4 +1,4 @@
-#include "lua_bindings.h"
+#include "lua_cl_bindings.h"
 #include "plugin.h"
 #include "cl_command_event.h"
 

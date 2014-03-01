@@ -38,7 +38,7 @@ ScriptSettingsDialogBase::ScriptSettingsDialogBase(wxWindow* parent, wxWindowID 
     wxArrayString m_listScriptsArr;
     m_listScripts = new wxListBox(m_panel313, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), m_listScriptsArr, wxLB_SINGLE);
     
-    boxSizer354->Add(m_listScripts, 1, wxALL|wxEXPAND, 5);
+    boxSizer354->Add(m_listScripts, 1, wxEXPAND, 5);
     
     wxBoxSizer* boxSizer396 = new wxBoxSizer(wxVERTICAL);
     
@@ -65,7 +65,7 @@ ScriptSettingsDialogBase::ScriptSettingsDialogBase(wxWindow* parent, wxWindowID 
     wxArrayString m_listHooksArr;
     m_listHooks = new wxListBox(m_panel3310, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), m_listHooksArr, wxLB_SINGLE);
     
-    boxSizer35711->Add(m_listHooks, 1, wxALL|wxEXPAND, 5);
+    boxSizer35711->Add(m_listHooks, 1, wxEXPAND, 5);
     
     wxBoxSizer* boxSizer39913 = new wxBoxSizer(wxVERTICAL);
     
