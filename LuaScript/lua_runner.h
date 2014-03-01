@@ -36,7 +36,6 @@ private:
 		PushOnEventFunctionAndSelf();
 		lua_pushnumber(m_lua, id);
 		lua::push(m_lua, event);
-		lua::print_stack(m_lua);
 		lua_call(m_lua, 3, 0);
 	}
 

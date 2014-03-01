@@ -55,6 +55,7 @@ ScriptPlugin::ScriptPlugin(IManager *manager)
 
 ScriptPlugin::~ScriptPlugin()
 {
+	m_scriptsFrame->Destroy();
 }
 
 clToolBar *ScriptPlugin::CreateToolBar(wxWindow *parent)
