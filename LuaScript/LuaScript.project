@@ -52,6 +52,8 @@
     <File Name="lua_event_handler.cpp"/>
     <File Name="codelite.lua"/>
     <File Name="script_settings_dlg.cpp"/>
+    <File Name="script_frame.h"/>
+    <File Name="script_frame.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <File Name="lua_runner.h"/>

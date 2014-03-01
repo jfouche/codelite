@@ -4,66 +4,12 @@
 #include "dockablepane.h"
 #include "event_notifier.h"
 #include "script_settings_dlg.h"
+#include "script_frame.h"
 
 ScriptPlugin* ScriptPlugin::thePlugin = 0;
 
-static const char* SCRIPT_PANE_TITLE = "Scripts";
-
 static const int SHOW_FRAME_ID = XRCID("script_show_frame");
 static const int SETTINGS_ID   = XRCID("script_settings");
-
-// ============================================================================
-
-class ScriptFrame : public wxMiniFrame
-{
-	wxListBox* m_scripts;
-	ScriptMgrPtr m_scriptMgr;
-
-public:
-	ScriptFrame(wxWindow* parent, ScriptMgrPtr scriptMgr);
-
-	void UpdateScripts();
-
-protected:
-	void OnRunScript(wxCommandEvent& event);
-};
-
-ScriptFrame::ScriptFrame(wxWindow* parent, ScriptMgrPtr scriptMgr)
-: wxMiniFrame(parent, wxID_ANY, _("Scripts"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxRESIZE_BORDER|wxSTAY_ON_TOP)
-, m_scriptMgr(scriptMgr)
-{
-	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	SetSizer(sizer);
-	
-	m_scripts = new wxListBox(this, wxID_ANY);
-	sizer->Add(m_scripts, 1, wxALL|wxEXPAND, 0);
-	
-	SetSizeHints(200,300);
-	sizer->Fit(this);
-	
-	SetTransparent(210);
-	
-    m_scripts->Connect(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, wxCommandEventHandler(ScriptFrame::OnRunScript), NULL, this);
-	UpdateScripts();
-
-	Show(false);
-}
-
-void ScriptFrame::UpdateScripts()
-{
-	wxArrayString scripts;
-	m_scriptMgr->GetScripts(scripts);
-	m_scripts->Set(scripts);
-}
-
-void ScriptFrame::OnRunScript(wxCommandEvent& event)
-{
-	wxString script = m_scripts->GetStringSelection();
-	if (script.IsEmpty() == false)
-	{
-		m_scriptMgr->RunScript(script);
-	}
-}
 
 // ============================================================================
 

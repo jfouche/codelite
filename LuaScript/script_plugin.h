@@ -4,7 +4,6 @@
 #include "plugin.h"
 #include "script_manager.h"
 #include "lua_runner.h"
-#include <wx/minifram.h>
 
 class ScriptFrame;
 
