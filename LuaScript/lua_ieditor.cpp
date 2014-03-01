@@ -29,11 +29,7 @@ static int GetEditorText(lua_State* L)
 static int SetEditorText(lua_State* L)
 {
 	IEditor* editor = lua::check<IEditor>(L, 1);
-	if (lua_isstring(L, 2) == 0)
-	{
-		return 0;
-	}
-	const char* content = lua_tostring(L, 2);
+	const char* content = lua::check_string(L, 2);
 	editor->SetEditorText(content);
 	return 0;
 }
@@ -51,11 +47,7 @@ static int GetSelection(lua_State* L)
 static int ReplaceSelection(lua_State* L)
 {
 	IEditor* editor = lua::check<IEditor>(L, 1);
-	if (lua_isstring(L, 2) == 0)
-	{
-		return 0;
-	}
-	const char* text = lua_tostring(L, 2);
+	const char* text = lua::check_string(L, 2);
 	editor->ReplaceSelection(text);
 	return 0;
 }
@@ -64,11 +56,7 @@ static int ReplaceSelection(lua_State* L)
 static int AppendText(lua_State* L)
 {
 	IEditor* editor = lua::check<IEditor>(L, 1);
-	if (lua_isstring(L, 2) == 0)
-	{
-		return 0;
-	}
-	const char* text = lua_tostring(L, 2);
+	const char* text = lua::check_string(L, 2);
 	editor->AppendText(text);
 	return 0;
 }
@@ -86,16 +74,8 @@ static int GetCurrentPosition(lua_State* L)
 static int InsertText(lua_State* L)
 {
 	IEditor* editor = lua::check<IEditor>(L, 1);
-	if (lua_isnumber(L, 2) == 0)
-	{
-		return 0;
-	}
-	if (lua_isstring(L, 3) == 0)
-	{
-		return 0;
-	}
-	long pos = lua_tonumber(L, 2);
-	const char* text = lua_tostring(L, 3);
+	long pos = lua::check_integer(L, 2, "Expected integer");
+	const char* text = lua::check_string(L, 3, "Expected integer");
 	editor->InsertText(pos, text);
 	return 0;
 }

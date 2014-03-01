@@ -52,3 +52,21 @@ void lua::createClass(lua_State* L, const char* name, const luaL_Reg* methods)
 	createClass(L, name);
 	luaL_setfuncs(L, methods, 0);
 }
+
+const char* lua::check_string(lua_State* L, int n, const char* error)
+{
+	if (!lua_isstring(L, n))
+	{
+		luaL_error(L, error ? error : "Expected string");
+	}
+	return lua_tostring(L, n);
+}
+
+LUA_NUMBER lua::check_integer(lua_State* L, int n, const char* error)
+{
+	if (!lua_isnumber(L, n))
+	{
+		luaL_error(L, error ? error : "Expected integer");
+	}
+	return lua_tointeger(L, n);
+}

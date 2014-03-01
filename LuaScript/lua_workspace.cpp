@@ -28,12 +28,7 @@ static int GetActiveProjectName(lua_State* L)
 static int FindProjectByName(lua_State* L)
 {
 	Workspace* workspace = lua::check<Workspace>(L, 1);
-
-	if (lua_isstring(L, 2) == 0)
-	{
-		return 0;
-	}
-	const char* name = lua_tostring(L, 2);
+	const char* name = lua::check_string(L, 2);
 	
 	wxString err;
 	ProjectPtr project = workspace->FindProjectByName(name, err);

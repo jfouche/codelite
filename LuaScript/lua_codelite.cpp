@@ -5,7 +5,7 @@
 
 static int Trace(lua_State* L)
 {
-	const char* message = lua_tostring(L, 1);
+	const char* message = lua::check_string(L, 1);
 	wxLogMessage(message);
 	return 0;
 }
