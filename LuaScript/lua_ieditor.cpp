@@ -73,12 +73,41 @@ static int AppendText(lua_State* L)
 	return 0;
 }
 
+/// @lua
+static int GetCurrentPosition(lua_State* L)
+{
+	IEditor* editor = lua::check<IEditor>(L, 1);
+	long pos = editor->GetCurrentPosition();
+	lua_pushinteger(L, pos);
+	return 1;
+}
+
+/// @lua
+static int InsertText(lua_State* L)
+{
+	IEditor* editor = lua::check<IEditor>(L, 1);
+	if (lua_isnumber(L, 2) == 0)
+	{
+		return 0;
+	}
+	if (lua_isstring(L, 3) == 0)
+	{
+		return 0;
+	}
+	long pos = lua_tonumber(L, 2);
+	const char* text = lua_tostring(L, 3);
+	editor->InsertText(pos, text);
+	return 0;
+}
+
 static const luaL_Reg METHODS[] = {
 	{"GetEditorText", GetEditorText},
 	{"SetEditorText", SetEditorText},
 	{"GetSelection", GetSelection},
 	{"ReplaceSelection", ReplaceSelection},
 	{"AppendText", AppendText},
+	{"GetCurrentPosition", GetCurrentPosition},
+	{"InsertText", InsertText},
 	{NULL, NULL}
 };
 
