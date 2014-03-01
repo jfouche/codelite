@@ -1,7 +1,7 @@
 {
 	"metadata":	{
 		"m_generatedFilesDir":	".",
-		"m_objCounter":	69,
+		"m_objCounter":	109,
 		"m_includeFiles":	[],
 		"m_bitmapFunction":	"wxC71ADInitBitmapResources",
 		"m_bitmapsFile":	"wxcrafter_lua_script_bitmaps.cpp",
@@ -12,448 +12,12 @@
 		"m_templateClasses":	[]
 	},
 	"windows":	[{
-			"m_type":	4407,
+			"m_type":	4421,
 			"proportion":	0,
 			"border":	5,
 			"gbSpan":	"1,1",
 			"gbPosition":	"0,0",
-			"m_styles":	["wxTAB_TRAVERSAL"],
-			"m_sizerFlags":	["wxALL", "wxLEFT", "wxRIGHT", "wxTOP", "wxBOTTOM"],
-			"m_properties":	[{
-					"type":	"string",
-					"m_label":	"Size:",
-					"m_value":	"200,300"
-				}, {
-					"type":	"string",
-					"m_label":	"Minimum Size:",
-					"m_value":	"-1,-1"
-				}, {
-					"type":	"string",
-					"m_label":	"Name:",
-					"m_value":	"ScriptPanelBase"
-				}, {
-					"type":	"multi-string",
-					"m_label":	"Tooltip:",
-					"m_value":	""
-				}, {
-					"type":	"colour",
-					"m_label":	"Bg Colour:",
-					"colour":	"<Default>"
-				}, {
-					"type":	"colour",
-					"m_label":	"Fg Colour:",
-					"colour":	"<Default>"
-				}, {
-					"type":	"font",
-					"m_label":	"Font:",
-					"m_value":	""
-				}, {
-					"type":	"bool",
-					"m_label":	"Hidden",
-					"m_value":	false
-				}, {
-					"type":	"bool",
-					"m_label":	"Disabled",
-					"m_value":	false
-				}, {
-					"type":	"bool",
-					"m_label":	"Focused",
-					"m_value":	false
-				}, {
-					"type":	"string",
-					"m_label":	"Class Name:",
-					"m_value":	""
-				}, {
-					"type":	"string",
-					"m_label":	"Include File:",
-					"m_value":	""
-				}, {
-					"type":	"string",
-					"m_label":	"Style:",
-					"m_value":	""
-				}, {
-					"type":	"string",
-					"m_label":	"Title:",
-					"m_value":	""
-				}, {
-					"type":	"virtualFolderPicker",
-					"m_label":	"Virtual Folder:",
-					"m_path":	""
-				}, {
-					"type":	"choice",
-					"m_label":	"Centre:",
-					"m_selection":	1,
-					"m_options":	["", "wxBOTH", "wxVERTICAL", "wxHORIZONTAL"]
-				}, {
-					"type":	"string",
-					"m_label":	"File:",
-					"m_value":	"script_panel"
-				}, {
-					"type":	"string",
-					"m_label":	"Inherited Class",
-					"m_value":	"ScriptPanel"
-				}, {
-					"type":	"string",
-					"m_label":	"Class Decorator",
-					"m_value":	""
-				}],
-			"m_events":	[],
-			"m_children":	[{
-					"m_type":	4401,
-					"proportion":	1,
-					"border":	5,
-					"gbSpan":	"1,1",
-					"gbPosition":	"0,0",
-					"m_styles":	[],
-					"m_sizerFlags":	["wxALL", "wxLEFT", "wxRIGHT", "wxTOP", "wxBOTTOM", "wxEXPAND"],
-					"m_properties":	[{
-							"type":	"string",
-							"m_label":	"Name:",
-							"m_value":	"boxSizer3"
-						}, {
-							"type":	"string",
-							"m_label":	"Style:",
-							"m_value":	""
-						}, {
-							"type":	"choice",
-							"m_label":	"Orientation:",
-							"m_selection":	0,
-							"m_options":	["wxVERTICAL", "wxHORIZONTAL"]
-						}],
-					"m_events":	[],
-					"m_children":	[{
-							"m_type":	4461,
-							"proportion":	0,
-							"border":	5,
-							"gbSpan":	"1,1",
-							"gbPosition":	"0,0",
-							"m_styles":	["wxTB_FLAT"],
-							"m_sizerFlags":	["wxALL", "wxLEFT", "wxRIGHT", "wxTOP", "wxBOTTOM"],
-							"m_properties":	[{
-									"type":	"winid",
-									"m_label":	"ID:",
-									"m_winid":	"wxID_ANY"
-								}, {
-									"type":	"string",
-									"m_label":	"Size:",
-									"m_value":	"-1,-1"
-								}, {
-									"type":	"string",
-									"m_label":	"Name:",
-									"m_value":	"m_toolbar"
-								}, {
-									"type":	"string",
-									"m_label":	"Tooltip:",
-									"m_value":	""
-								}, {
-									"type":	"string",
-									"m_label":	"Bitmap Size:",
-									"m_value":	"16,16"
-								}, {
-									"type":	"string",
-									"m_label":	"Margins:",
-									"m_value":	"-1,-1"
-								}, {
-									"type":	"string",
-									"m_label":	"Padding:",
-									"m_value":	"1"
-								}, {
-									"type":	"string",
-									"m_label":	"Separator Size:",
-									"m_value":	"5"
-								}],
-							"m_events":	[],
-							"m_children":	[{
-									"m_type":	4462,
-									"proportion":	0,
-									"border":	5,
-									"gbSpan":	"1,1",
-									"gbPosition":	"0,0",
-									"m_styles":	[],
-									"m_sizerFlags":	[],
-									"m_properties":	[{
-											"type":	"winid",
-											"m_label":	"ID:",
-											"m_winid":	"LUA_SCRIPT_ADD_SCRIPT"
-										}, {
-											"type":	"string",
-											"m_label":	"Name:",
-											"m_value":	"m_itemAddScript"
-										}, {
-											"type":	"string",
-											"m_label":	"Label:",
-											"m_value":	"Add script"
-										}, {
-											"type":	"multi-string",
-											"m_label":	"Tooltip:",
-											"m_value":	"Add script"
-										}, {
-											"type":	"string",
-											"m_label":	"Help String:",
-											"m_value":	"Add script"
-										}, {
-											"type":	"bitmapPicker",
-											"m_label":	"Bitmap File:",
-											"m_path":	"../../codelite/icons/add.png"
-										}, {
-											"type":	"filePicker",
-											"m_label":	"Disabled-Bitmap File",
-											"m_path":	""
-										}, {
-											"type":	"choice",
-											"m_label":	"Kind:",
-											"m_selection":	0,
-											"m_options":	["normal", "checkable", "radio", "separator", "dropdown"]
-										}],
-									"m_events":	[{
-											"m_eventName":	"wxEVT_COMMAND_TOOL_CLICKED",
-											"m_eventClass":	"wxCommandEvent",
-											"m_eventHandler":	"wxCommandEventHandler",
-											"m_functionNameAndSignature":	"onAddScript(wxCommandEvent& event)",
-											"m_description":	"Process a wxEVT_COMMAND_TOOL_CLICKED event (a synonym for wxEVT_COMMAND_MENU_SELECTED). Pass the id of the tool"
-										}],
-									"m_children":	[]
-								}, {
-									"m_type":	4462,
-									"proportion":	0,
-									"border":	5,
-									"gbSpan":	"1,1",
-									"gbPosition":	"0,0",
-									"m_styles":	[],
-									"m_sizerFlags":	[],
-									"m_properties":	[{
-											"type":	"winid",
-											"m_label":	"ID:",
-											"m_winid":	"LUA_SCRIPT_RUN_SCRIPT"
-										}, {
-											"type":	"string",
-											"m_label":	"Name:",
-											"m_value":	"m_itemRun"
-										}, {
-											"type":	"string",
-											"m_label":	"Label:",
-											"m_value":	"Run"
-										}, {
-											"type":	"multi-string",
-											"m_label":	"Tooltip:",
-											"m_value":	"Run script"
-										}, {
-											"type":	"string",
-											"m_label":	"Help String:",
-											"m_value":	"Run script"
-										}, {
-											"type":	"bitmapPicker",
-											"m_label":	"Bitmap File:",
-											"m_path":	"../codelite-icons-fresh-farm/toolbars/16/debugger/play.png"
-										}, {
-											"type":	"filePicker",
-											"m_label":	"Disabled-Bitmap File",
-											"m_path":	""
-										}, {
-											"type":	"choice",
-											"m_label":	"Kind:",
-											"m_selection":	0,
-											"m_options":	["normal", "checkable", "radio", "separator", "dropdown"]
-										}],
-									"m_events":	[{
-											"m_eventName":	"wxEVT_COMMAND_TOOL_CLICKED",
-											"m_eventClass":	"wxCommandEvent",
-											"m_eventHandler":	"wxCommandEventHandler",
-											"m_functionNameAndSignature":	"OnRunScript(wxCommandEvent& event)",
-											"m_description":	"Process a wxEVT_COMMAND_TOOL_CLICKED event (a synonym for wxEVT_COMMAND_MENU_SELECTED). Pass the id of the tool"
-										}],
-									"m_children":	[]
-								}, {
-									"m_type":	4462,
-									"proportion":	0,
-									"border":	5,
-									"gbSpan":	"1,1",
-									"gbPosition":	"0,0",
-									"m_styles":	[],
-									"m_sizerFlags":	[],
-									"m_properties":	[{
-											"type":	"winid",
-											"m_label":	"ID:",
-											"m_winid":	"LUA_SCRIPT_EDIT_SCRIPT"
-										}, {
-											"type":	"string",
-											"m_label":	"Name:",
-											"m_value":	"m_itemEdit"
-										}, {
-											"type":	"string",
-											"m_label":	"Label:",
-											"m_value":	"Tool Label"
-										}, {
-											"type":	"multi-string",
-											"m_label":	"Tooltip:",
-											"m_value":	"Edit script"
-										}, {
-											"type":	"string",
-											"m_label":	"Help String:",
-											"m_value":	"Edit script"
-										}, {
-											"type":	"bitmapPicker",
-											"m_label":	"Bitmap File:",
-											"m_path":	"../codelite-icons-fresh-farm/workspace/16/project-active.png"
-										}, {
-											"type":	"filePicker",
-											"m_label":	"Disabled-Bitmap File",
-											"m_path":	""
-										}, {
-											"type":	"choice",
-											"m_label":	"Kind:",
-											"m_selection":	0,
-											"m_options":	["normal", "checkable", "radio", "separator", "dropdown"]
-										}],
-									"m_events":	[{
-											"m_eventName":	"wxEVT_COMMAND_TOOL_CLICKED",
-											"m_eventClass":	"wxCommandEvent",
-											"m_eventHandler":	"wxCommandEventHandler",
-											"m_functionNameAndSignature":	"OnEditScript(wxCommandEvent& event)",
-											"m_description":	"Process a wxEVT_COMMAND_TOOL_CLICKED event (a synonym for wxEVT_COMMAND_MENU_SELECTED). Pass the id of the tool"
-										}],
-									"m_children":	[]
-								}, {
-									"m_type":	4462,
-									"proportion":	0,
-									"border":	5,
-									"gbSpan":	"1,1",
-									"gbPosition":	"0,0",
-									"m_styles":	[],
-									"m_sizerFlags":	[],
-									"m_properties":	[{
-											"type":	"winid",
-											"m_label":	"ID:",
-											"m_winid":	"LUA_SCRIPT_DELETE_SCRIPT"
-										}, {
-											"type":	"string",
-											"m_label":	"Name:",
-											"m_value":	"m_itemDelete"
-										}, {
-											"type":	"string",
-											"m_label":	"Label:",
-											"m_value":	"Tool Label"
-										}, {
-											"type":	"multi-string",
-											"m_label":	"Tooltip:",
-											"m_value":	"Delete script"
-										}, {
-											"type":	"string",
-											"m_label":	"Help String:",
-											"m_value":	"Delete script"
-										}, {
-											"type":	"bitmapPicker",
-											"m_label":	"Bitmap File:",
-											"m_path":	"../codelite-icons-fresh-farm/toolbars/16/build/clean.png"
-										}, {
-											"type":	"filePicker",
-											"m_label":	"Disabled-Bitmap File",
-											"m_path":	""
-										}, {
-											"type":	"choice",
-											"m_label":	"Kind:",
-											"m_selection":	0,
-											"m_options":	["normal", "checkable", "radio", "separator", "dropdown"]
-										}],
-									"m_events":	[{
-											"m_eventName":	"wxEVT_COMMAND_TOOL_CLICKED",
-											"m_eventClass":	"wxCommandEvent",
-											"m_eventHandler":	"wxCommandEventHandler",
-											"m_functionNameAndSignature":	"OnDeleteScript(wxCommandEvent& event)",
-											"m_description":	"Process a wxEVT_COMMAND_TOOL_CLICKED event (a synonym for wxEVT_COMMAND_MENU_SELECTED). Pass the id of the tool"
-										}],
-									"m_children":	[]
-								}]
-						}, {
-							"m_type":	4412,
-							"proportion":	1,
-							"border":	5,
-							"gbSpan":	"1,1",
-							"gbPosition":	"0,0",
-							"m_styles":	["wxLB_SINGLE"],
-							"m_sizerFlags":	["wxALL", "wxLEFT", "wxRIGHT", "wxTOP", "wxBOTTOM", "wxEXPAND"],
-							"m_properties":	[{
-									"type":	"winid",
-									"m_label":	"ID:",
-									"m_winid":	"wxID_ANY"
-								}, {
-									"type":	"string",
-									"m_label":	"Size:",
-									"m_value":	"-1,-1"
-								}, {
-									"type":	"string",
-									"m_label":	"Minimum Size:",
-									"m_value":	"-1,-1"
-								}, {
-									"type":	"string",
-									"m_label":	"Name:",
-									"m_value":	"m_listScripts"
-								}, {
-									"type":	"multi-string",
-									"m_label":	"Tooltip:",
-									"m_value":	""
-								}, {
-									"type":	"colour",
-									"m_label":	"Bg Colour:",
-									"colour":	"<Default>"
-								}, {
-									"type":	"colour",
-									"m_label":	"Fg Colour:",
-									"colour":	"<Default>"
-								}, {
-									"type":	"font",
-									"m_label":	"Font:",
-									"m_value":	""
-								}, {
-									"type":	"bool",
-									"m_label":	"Hidden",
-									"m_value":	false
-								}, {
-									"type":	"bool",
-									"m_label":	"Disabled",
-									"m_value":	false
-								}, {
-									"type":	"bool",
-									"m_label":	"Focused",
-									"m_value":	false
-								}, {
-									"type":	"string",
-									"m_label":	"Class Name:",
-									"m_value":	""
-								}, {
-									"type":	"string",
-									"m_label":	"Include File:",
-									"m_value":	""
-								}, {
-									"type":	"string",
-									"m_label":	"Style:",
-									"m_value":	""
-								}, {
-									"type":	"multi-string",
-									"m_label":	"Choices:",
-									"m_value":	""
-								}, {
-									"type":	"string",
-									"m_label":	"Selection:",
-									"m_value":	"-1"
-								}],
-							"m_events":	[{
-									"m_eventName":	"wxEVT_COMMAND_LISTBOX_DOUBLECLICKED",
-									"m_eventClass":	"wxCommandEvent",
-									"m_eventHandler":	"wxCommandEventHandler",
-									"m_functionNameAndSignature":	"OnRunScript(wxCommandEvent& event)",
-									"m_description":	"Process a wxEVT_COMMAND_LISTBOX_DOUBLECLICKED event, when the listbox is double-clicked."
-								}],
-							"m_children":	[]
-						}]
-				}]
-		}, {
-			"m_type":	4402,
-			"proportion":	0,
-			"border":	5,
-			"gbSpan":	"1,1",
-			"gbPosition":	"0,0",
-			"m_styles":	["wxDEFAULT_FRAME_STYLE"],
+			"m_styles":	["wxDEFAULT_DIALOG_STYLE"],
 			"m_sizerFlags":	["wxALL", "wxLEFT", "wxRIGHT", "wxTOP", "wxBOTTOM"],
 			"m_properties":	[{
 					"type":	"string",
@@ -466,7 +30,7 @@
 				}, {
 					"type":	"string",
 					"m_label":	"Name:",
-					"m_value":	"ScriptSettingsFrameBase"
+					"m_value":	"ScriptSettingsDialogBase"
 				}, {
 					"type":	"multi-string",
 					"m_label":	"Tooltip:",
@@ -523,20 +87,15 @@
 				}, {
 					"type":	"string",
 					"m_label":	"File:",
-					"m_value":	"script_settings_frame"
+					"m_value":	"script_settings_dlg"
 				}, {
 					"type":	"string",
 					"m_label":	"Inherited Class",
-					"m_value":	"ScriptSettingsFrame"
+					"m_value":	"ScriptSettingsDialog"
 				}, {
 					"type":	"string",
 					"m_label":	"Class Decorator",
 					"m_value":	""
-				}, {
-					"type":	"choice",
-					"m_label":	"wxFrame Type",
-					"m_selection":	0,
-					"m_options":	["wxFrame", "wxDocMDIParentFrame", "wxDocMDIChildFrame", "wxDocParentFrame", "wxDocChildFrame"]
 				}, {
 					"type":	"bitmapPicker",
 					"m_label":	"Bitmap File (16x16)  :",
@@ -544,7 +103,7 @@
 				}, {
 					"type":	"bitmapPicker",
 					"m_label":	"Bitmap File (32x32)  :",
-					"m_path":	"resources/script_gear.png"
+					"m_path":	""
 				}, {
 					"type":	"bitmapPicker",
 					"m_label":	"Bitmap File (64x64)  :",
@@ -570,7 +129,7 @@
 					"m_properties":	[{
 							"type":	"string",
 							"m_label":	"Name:",
-							"m_value":	"boxSizer27"
+							"m_value":	"boxSizer271"
 						}, {
 							"type":	"string",
 							"m_label":	"Style:",
@@ -605,7 +164,7 @@
 								}, {
 									"type":	"string",
 									"m_label":	"Name:",
-									"m_value":	"m_listbook29"
+									"m_value":	"m_listbook292"
 								}, {
 									"type":	"multi-string",
 									"m_label":	"Tooltip:",
@@ -671,7 +230,7 @@
 										}, {
 											"type":	"string",
 											"m_label":	"Name:",
-											"m_value":	"m_panel31"
+											"m_value":	"m_panel313"
 										}, {
 											"type":	"multi-string",
 											"m_label":	"Tooltip:",
@@ -741,7 +300,7 @@
 											"m_properties":	[{
 													"type":	"string",
 													"m_label":	"Name:",
-													"m_value":	"boxSizer35"
+													"m_value":	"boxSizer354"
 												}, {
 													"type":	"string",
 													"m_label":	"Style:",
@@ -754,12 +313,12 @@
 												}],
 											"m_events":	[],
 											"m_children":	[{
-													"m_type":	4413,
+													"m_type":	4412,
 													"proportion":	1,
 													"border":	5,
 													"gbSpan":	"1,1",
 													"gbPosition":	"0,0",
-													"m_styles":	["wxLC_REPORT"],
+													"m_styles":	["wxLB_SINGLE"],
 													"m_sizerFlags":	["wxALL", "wxLEFT", "wxRIGHT", "wxTOP", "wxBOTTOM", "wxEXPAND"],
 													"m_properties":	[{
 															"type":	"winid",
@@ -776,7 +335,7 @@
 														}, {
 															"type":	"string",
 															"m_label":	"Name:",
-															"m_value":	"m_listCtrlScripts"
+															"m_value":	"m_listScripts"
 														}, {
 															"type":	"multi-string",
 															"m_label":	"Tooltip:",
@@ -817,6 +376,14 @@
 															"type":	"string",
 															"m_label":	"Style:",
 															"m_value":	""
+														}, {
+															"type":	"multi-string",
+															"m_label":	"Choices:",
+															"m_value":	""
+														}, {
+															"type":	"string",
+															"m_label":	"Selection:",
+															"m_value":	"-1"
 														}],
 													"m_events":	[],
 													"m_children":	[]
@@ -831,7 +398,7 @@
 													"m_properties":	[{
 															"type":	"string",
 															"m_label":	"Name:",
-															"m_value":	"boxSizer39"
+															"m_value":	"boxSizer396"
 														}, {
 															"type":	"string",
 															"m_label":	"Style:",
@@ -866,7 +433,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button41"
+																	"m_value":	"m_button417"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -924,7 +491,13 @@
 																	"m_label":	"Margins:",
 																	"m_value":	"2,2"
 																}],
-															"m_events":	[],
+															"m_events":	[{
+																	"m_eventName":	"wxEVT_COMMAND_BUTTON_CLICKED",
+																	"m_eventClass":	"wxCommandEvent",
+																	"m_eventHandler":	"wxCommandEventHandler",
+																	"m_functionNameAndSignature":	"OnAddScripts(wxCommandEvent& event)",
+																	"m_description":	"Process a wxEVT_COMMAND_BUTTON_CLICKED event, when the button is clicked."
+																}],
 															"m_children":	[]
 														}, {
 															"m_type":	4400,
@@ -949,7 +522,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button43"
+																	"m_value":	"m_button438"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -1007,7 +580,13 @@
 																	"m_label":	"Margins:",
 																	"m_value":	"2,2"
 																}],
-															"m_events":	[],
+															"m_events":	[{
+																	"m_eventName":	"wxEVT_COMMAND_BUTTON_CLICKED",
+																	"m_eventClass":	"wxCommandEvent",
+																	"m_eventHandler":	"wxCommandEventHandler",
+																	"m_functionNameAndSignature":	"OnDeleteScript(wxCommandEvent& event)",
+																	"m_description":	"Process a wxEVT_COMMAND_BUTTON_CLICKED event, when the button is clicked."
+																}],
 															"m_children":	[]
 														}, {
 															"m_type":	4400,
@@ -1032,7 +611,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button45"
+																	"m_value":	"m_button459"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -1090,7 +669,13 @@
 																	"m_label":	"Margins:",
 																	"m_value":	"2,2"
 																}],
-															"m_events":	[],
+															"m_events":	[{
+																	"m_eventName":	"wxEVT_COMMAND_BUTTON_CLICKED",
+																	"m_eventClass":	"wxCommandEvent",
+																	"m_eventHandler":	"wxCommandEventHandler",
+																	"m_functionNameAndSignature":	"OnEditScript(wxCommandEvent& event)",
+																	"m_description":	"Process a wxEVT_COMMAND_BUTTON_CLICKED event, when the button is clicked."
+																}],
 															"m_children":	[]
 														}]
 												}]
@@ -1118,7 +703,7 @@
 										}, {
 											"type":	"string",
 											"m_label":	"Name:",
-											"m_value":	"m_panel33"
+											"m_value":	"m_panel3310"
 										}, {
 											"type":	"multi-string",
 											"m_label":	"Tooltip:",
@@ -1188,7 +773,7 @@
 											"m_properties":	[{
 													"type":	"string",
 													"m_label":	"Name:",
-													"m_value":	"boxSizer357"
+													"m_value":	"boxSizer35711"
 												}, {
 													"type":	"string",
 													"m_label":	"Style:",
@@ -1201,12 +786,12 @@
 												}],
 											"m_events":	[],
 											"m_children":	[{
-													"m_type":	4413,
+													"m_type":	4412,
 													"proportion":	1,
 													"border":	5,
 													"gbSpan":	"1,1",
 													"gbPosition":	"0,0",
-													"m_styles":	["wxLC_REPORT"],
+													"m_styles":	["wxLB_SINGLE"],
 													"m_sizerFlags":	["wxALL", "wxLEFT", "wxRIGHT", "wxTOP", "wxBOTTOM", "wxEXPAND"],
 													"m_properties":	[{
 															"type":	"winid",
@@ -1223,7 +808,7 @@
 														}, {
 															"type":	"string",
 															"m_label":	"Name:",
-															"m_value":	"m_listCtrlHooks"
+															"m_value":	"m_listHooks"
 														}, {
 															"type":	"multi-string",
 															"m_label":	"Tooltip:",
@@ -1264,6 +849,14 @@
 															"type":	"string",
 															"m_label":	"Style:",
 															"m_value":	""
+														}, {
+															"type":	"multi-string",
+															"m_label":	"Choices:",
+															"m_value":	""
+														}, {
+															"type":	"string",
+															"m_label":	"Selection:",
+															"m_value":	"-1"
 														}],
 													"m_events":	[],
 													"m_children":	[]
@@ -1278,7 +871,7 @@
 													"m_properties":	[{
 															"type":	"string",
 															"m_label":	"Name:",
-															"m_value":	"boxSizer399"
+															"m_value":	"boxSizer39913"
 														}, {
 															"type":	"string",
 															"m_label":	"Style:",
@@ -1313,7 +906,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button4110"
+																	"m_value":	"m_button411014"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -1396,7 +989,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button4311"
+																	"m_value":	"m_button431115"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -1479,7 +1072,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button4512"
+																	"m_value":	"m_button451216"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -1524,6 +1117,89 @@
 																	"type":	"string",
 																	"m_label":	"Label:",
 																	"m_value":	"Edit"
+																}, {
+																	"type":	"bool",
+																	"m_label":	"Default Button",
+																	"m_value":	false
+																}, {
+																	"type":	"bitmapPicker",
+																	"m_label":	"Bitmap File:",
+																	"m_path":	""
+																}, {
+																	"type":	"string",
+																	"m_label":	"Margins:",
+																	"m_value":	"2,2"
+																}],
+															"m_events":	[],
+															"m_children":	[]
+														}, {
+															"m_type":	4400,
+															"proportion":	0,
+															"border":	5,
+															"gbSpan":	"1,1",
+															"gbPosition":	"0,0",
+															"m_styles":	[],
+															"m_sizerFlags":	["wxALL", "wxLEFT", "wxRIGHT", "wxTOP", "wxBOTTOM"],
+															"m_properties":	[{
+																	"type":	"winid",
+																	"m_label":	"ID:",
+																	"m_winid":	"wxID_ANY"
+																}, {
+																	"type":	"string",
+																	"m_label":	"Size:",
+																	"m_value":	"-1,-1"
+																}, {
+																	"type":	"string",
+																	"m_label":	"Minimum Size:",
+																	"m_value":	"-1,-1"
+																}, {
+																	"type":	"string",
+																	"m_label":	"Name:",
+																	"m_value":	"m_button7117"
+																}, {
+																	"type":	"multi-string",
+																	"m_label":	"Tooltip:",
+																	"m_value":	"Reload all hook script, to take in account last modifications"
+																}, {
+																	"type":	"colour",
+																	"m_label":	"Bg Colour:",
+																	"colour":	"<Default>"
+																}, {
+																	"type":	"colour",
+																	"m_label":	"Fg Colour:",
+																	"colour":	"<Default>"
+																}, {
+																	"type":	"font",
+																	"m_label":	"Font:",
+																	"m_value":	""
+																}, {
+																	"type":	"bool",
+																	"m_label":	"Hidden",
+																	"m_value":	false
+																}, {
+																	"type":	"bool",
+																	"m_label":	"Disabled",
+																	"m_value":	false
+																}, {
+																	"type":	"bool",
+																	"m_label":	"Focused",
+																	"m_value":	false
+																}, {
+																	"type":	"string",
+																	"m_label":	"Class Name:",
+																	"m_value":	""
+																}, {
+																	"type":	"string",
+																	"m_label":	"Include File:",
+																	"m_value":	""
+																}, {
+																	"type":	"string",
+																	"m_label":	"Style:",
+																	"m_value":	""
+																}, {
+																	"type":	"string",
+																	"m_label":	"Label:",
+																	"m_value":	"Reload"
 																}, {
 																	"type":	"bool",
 																	"m_label":	"Default Button",

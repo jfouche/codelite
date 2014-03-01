@@ -43,7 +43,8 @@ IManager* ScriptManager::GetManager()
 bool ScriptManager::AddScript(const wxString& path)
 {
 	wxFileName file(path);
-	wxFileName newFile(GetScriptDir(), file.GetFullName());
+	wxString name = file.GetFullName();
+	wxFileName newFile(GetScriptDir(), name);
 	return ::wxCopyFile(path, newFile.GetFullPath());
 }
 

@@ -9,63 +9,40 @@
 #include <wx/settings.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/xrc/xh_bmp.h>
-#include <wx/panel.h>
+#include <wx/dialog.h>
+#include <wx/iconbndl.h>
 #include <wx/artprov.h>
 #include <wx/sizer.h>
-#include <wx/toolbar.h>
-#include <wx/listbox.h>
-#include <wx/frame.h>
-#include <wx/iconbndl.h>
 #include <wx/listbook.h>
+#include <wx/panel.h>
 #include <wx/imaglist.h>
-#include <wx/listctrl.h>
+#include <wx/listbox.h>
 #include <wx/button.h>
 
-class ScriptPanelBase : public wxPanel
+class ScriptSettingsDialogBase : public wxDialog
 {
 protected:
-    enum {
-        LUA_SCRIPT_ADD_SCRIPT = 1001,
-        LUA_SCRIPT_DELETE_SCRIPT = 1002,
-        LUA_SCRIPT_EDIT_SCRIPT = 1003,
-        LUA_SCRIPT_RUN_SCRIPT = 1004,
-    };
-protected:
-    wxToolBar* m_toolbar;
+    wxListbook* m_listbook292;
+    wxPanel* m_panel313;
     wxListBox* m_listScripts;
+    wxButton* m_button417;
+    wxButton* m_button438;
+    wxButton* m_button459;
+    wxPanel* m_panel3310;
+    wxListBox* m_listHooks;
+    wxButton* m_button411014;
+    wxButton* m_button431115;
+    wxButton* m_button451216;
+    wxButton* m_button7117;
 
 protected:
-    virtual void onAddScript(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnRunScript(wxCommandEvent& event) { event.Skip(); }
-    virtual void OnEditScript(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnAddScripts(wxCommandEvent& event) { event.Skip(); }
     virtual void OnDeleteScript(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnEditScript(wxCommandEvent& event) { event.Skip(); }
 
 public:
-    ScriptPanelBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(200,300), long style = wxTAB_TRAVERSAL);
-    virtual ~ScriptPanelBase();
-};
-
-
-class ScriptSettingsFrameBase : public wxFrame
-{
-protected:
-    wxListbook* m_listbook29;
-    wxPanel* m_panel31;
-    wxListCtrl* m_listCtrlScripts;
-    wxButton* m_button41;
-    wxButton* m_button43;
-    wxButton* m_button45;
-    wxPanel* m_panel33;
-    wxListCtrl* m_listCtrlHooks;
-    wxButton* m_button4110;
-    wxButton* m_button4311;
-    wxButton* m_button4512;
-
-protected:
-
-public:
-    ScriptSettingsFrameBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Script plugin settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500,300), long style = wxDEFAULT_FRAME_STYLE);
-    virtual ~ScriptSettingsFrameBase();
+    ScriptSettingsDialogBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("Script plugin settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(500,300), long style = wxDEFAULT_DIALOG_STYLE);
+    virtual ~ScriptSettingsDialogBase();
 };
 
 #endif

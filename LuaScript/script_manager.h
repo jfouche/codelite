@@ -7,7 +7,7 @@
 class ScriptManager
 {
 	IManager* m_manager;
-	
+
 public:
 	ScriptManager(IManager* manager);
 	~ScriptManager();
@@ -27,7 +27,7 @@ public:
 	void GetHooks(wxArrayString& hooks) const;
 
 	wxString GetHookPath(const wxString& hook) const;
-	
+
 private:
 	wxString GetScriptDir() const;
 	wxString GetHookDir() const;

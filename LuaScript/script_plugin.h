@@ -2,7 +2,6 @@
 #define CL_LUA_PLUGIN_H_INCLUDED
 
 #include "plugin.h"
-#include "script_panel.h"
 #include "script_manager.h"
 #include "lua_runner.h"
 #include <wx/minifram.h>
@@ -15,7 +14,6 @@ class ScriptPlugin : public IPlugin
 	
 	ScriptMgrPtr m_scriptMgr;
 	HookRunner m_hookRunner;
-	ScriptPanel* m_scriptPanel;
 	ScriptFrame* m_scriptsFrame;
 	
 public:
@@ -37,7 +35,6 @@ public:
 private:
 	void InitUi();
 	void InitHooks();
-	bool IsPaneDetached() const;
 	
 	void onCmdEvent(wxCommandEvent& event);
 	void onClEvent(clCommandEvent& event);

@@ -3,6 +3,7 @@
 #include "detachedpanesinfo.h"
 #include "dockablepane.h"
 #include "event_notifier.h"
+#include "script_settings_dlg.h"
 
 ScriptPlugin* ScriptPlugin::thePlugin = 0;
 
@@ -186,38 +187,14 @@ void ScriptPlugin::UnHookPopupMenu(wxMenu *menu, MenuType type)
 
 void ScriptPlugin::UnPlug()
 {
-	// Remove the tab if it's actually docked in the workspace pane
-    size_t index = m_mgr->GetWorkspacePaneNotebook()->GetPageIndex(m_scriptPanel);
-    if (index != Notebook::npos) 
-	{
-        m_mgr->GetWorkspacePaneNotebook()->RemovePage(index, false);
-    }
-    m_scriptPanel->Destroy();
 }
 
 void ScriptPlugin::InitUi()
 {
 	wxLogMessage("ScriptPlugin::InitUi");
-	
-	
+
 	// Create the mini frame
 	m_scriptsFrame	 = new ScriptFrame(wxTheApp->GetTopWindow(), m_scriptMgr);
-	
-    // create tab (possibly detached)
-    Notebook *book = m_mgr->GetWorkspacePaneNotebook();
-    if( IsPaneDetached() ) 
-	{
-        // Make the window child of the main panel (which is the grand parent of the notebook)
-		 wxWindow* gParent = book->GetParent()->GetParent();
-        DockablePane* cp = new DockablePane(gParent, book, SCRIPT_PANE_TITLE, wxNullBitmap, wxSize(200, 200));
-        m_scriptPanel = new ScriptPanel(cp, m_scriptMgr);
-        cp->SetChildNoReparent(m_scriptPanel);
-    } 
-	else
-	{
-        m_scriptPanel = new ScriptPanel(book, m_scriptMgr);
-        book->AddPage(m_scriptPanel, SCRIPT_PANE_TITLE, false);
-    }
 }
 
 void ScriptPlugin::InitHooks()
@@ -230,14 +207,6 @@ void ScriptPlugin::InitHooks()
 		wxString hook = m_scriptMgr->GetHookPath(hooks[i]);
 		m_hookRunner.Run(hook);
 	}
-}
-
-bool ScriptPlugin::IsPaneDetached() const
-{
-    DetachedPanesInfo dpi;
-    m_mgr->GetConfigTool()->ReadObject(wxT("DetachedPanesList"), &dpi);
-    wxArrayString detachedPanes = dpi.GetPanes();
-    return detachedPanes.Index(SCRIPT_PANE_TITLE) != wxNOT_FOUND;
 }
 
 void ScriptPlugin::onClEvent(clCommandEvent& event)
@@ -257,7 +226,8 @@ void ScriptPlugin::OnShowFrame(wxCommandEvent& event)
 
 void ScriptPlugin::OnSettings(wxCommandEvent& event)
 {
-	
+	ScriptSettingsDialog dlg(wxTheApp->GetTopWindow(), m_scriptMgr);
+	dlg.ShowModal();
 }
 
 void ScriptPlugin::OnShowFrameUi(wxUpdateUIEvent& event)
