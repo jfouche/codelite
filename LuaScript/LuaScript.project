@@ -52,7 +52,6 @@
     <File Name="lua_event_handler.cpp"/>
     <File Name="codelite.lua"/>
     <File Name="script_settings_dlg.cpp"/>
-    <File Name="script_frame.h"/>
     <File Name="script_frame.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
@@ -62,6 +61,7 @@
     <File Name="lua_utils.hpp"/>
     <File Name="lua_event_handler.h"/>
     <File Name="script_settings_dlg.h"/>
+    <File Name="script_frame.h"/>
   </VirtualDirectory>
   <Dependencies/>
   <VirtualDirectory Name="wxcrafter">

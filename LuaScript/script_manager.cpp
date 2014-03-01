@@ -27,12 +27,14 @@ private:
 // =============================================================================
 
 ScriptManager::ScriptManager(IManager* manager)
-: m_manager(manager)
+	: m_manager(manager)
 {
+	InitHooks();
 }
 
 ScriptManager::~ScriptManager()
 {
+	wxDELETE(m_hookRunner);
 }
 
 IManager* ScriptManager::GetManager()
@@ -40,11 +42,32 @@ IManager* ScriptManager::GetManager()
 	return m_manager;
 }
 
+void ScriptManager::InitHooks()
+{
+	wxDELETE(m_hookRunner);
+	m_hookRunner = new HookRunner(m_manager);
+	
+	wxArrayString hooks;
+	GetHooks(hooks);
+	
+	for (size_t i = 0; i < hooks.size(); ++i)
+	{
+		wxString hook = GetHookPath(hooks[i]);
+		m_hookRunner->Run(hook);
+	}
+}
+
 bool ScriptManager::AddScript(const wxString& path)
 {
-	wxFileName file(path);
-	wxString name = file.GetFullName();
+	wxString name = wxFileName(path).GetFullName();
 	wxFileName newFile(GetScriptDir(), name);
+	return ::wxCopyFile(path, newFile.GetFullPath());
+}
+
+bool ScriptManager::AddHook(const wxString& path)
+{
+	wxString name = wxFileName(path).GetFullName();
+	wxFileName newFile(GetHookDir(), name);
 	return ::wxCopyFile(path, newFile.GetFullPath());
 }
 
@@ -79,6 +102,12 @@ bool ScriptManager::DeleteScript(const wxString& script)
 	return wxRemoveFile(scriptFile);
 }
 
+bool ScriptManager::DeleteHook(const wxString& hook)
+{
+	wxString hookFile = GetHookPath(hook);
+	return wxRemoveFile(hookFile);
+}
+
 wxString ScriptManager::GetScriptPath(const wxString& script) const
 {
 	return wxFileName(GetScriptDir(), script).GetFullPath();
@@ -95,7 +124,6 @@ wxString ScriptManager::GetHookDir() const
 	return dir.GetFullPath();
 }
 
-
 void ScriptManager::GetHooks(wxArrayString& hooks) const
 {
 	ScriptTraverser traverser(hooks);
@@ -106,4 +134,19 @@ void ScriptManager::GetHooks(wxArrayString& hooks) const
 wxString ScriptManager::GetHookPath(const wxString& hook) const
 {
 	return wxFileName(GetHookDir(), hook).GetFullPath();
+}
+
+void ScriptManager::OnClEvent(clCommandEvent& event)
+{
+	m_hookRunner->onClEvent(event);
+}
+
+void ScriptManager::OnCmdEvent(wxCommandEvent& event)
+{
+	m_hookRunner->onCmdEvent(event);
+}
+
+void ScriptManager::ReloadHooks()
+{
+	InitHooks();
 }

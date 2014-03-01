@@ -39,16 +39,14 @@ extern "C" EXPORT int GetPluginInterfaceVersion()
 ScriptPlugin::ScriptPlugin(IManager *manager)
 	: IPlugin(manager)
 	, m_scriptMgr(new ScriptManager(manager))
-	, m_hookRunner(manager)
 {
 	m_longName = wxT("Lua script plugin");
 	m_shortName = wxT("Lua");
 
-	InitHooks();
 	InitUi();
 	
 	EventNotifier* evSrc = EventNotifier::Get();
-	evSrc->Connect(wxEVT_FILE_SAVED, wxCommandEventHandler(ScriptPlugin::onCmdEvent), NULL, this);
+	evSrc->Connect(wxEVT_FILE_SAVED, wxCommandEventHandler(ScriptPlugin::OnCmdEvent), NULL, this);
 }
 
 ScriptPlugin::~ScriptPlugin()
@@ -143,26 +141,14 @@ void ScriptPlugin::InitUi()
 	m_scriptsFrame	 = new ScriptFrame(wxTheApp->GetTopWindow(), m_scriptMgr);
 }
 
-void ScriptPlugin::InitHooks()
+void ScriptPlugin::OnClEvent(clCommandEvent& event)
 {
-	wxArrayString hooks;
-	m_scriptMgr->GetHooks(hooks);
-	
-	for (size_t i = 0; i < hooks.size(); ++i)
-	{
-		wxString hook = m_scriptMgr->GetHookPath(hooks[i]);
-		m_hookRunner.Run(hook);
-	}
+	m_scriptMgr->OnClEvent(event);
 }
 
-void ScriptPlugin::onClEvent(clCommandEvent& event)
+void ScriptPlugin::OnCmdEvent(wxCommandEvent& event)
 {
-	m_hookRunner.onClEvent(event);
-}
-
-void ScriptPlugin::onCmdEvent(wxCommandEvent& event)
-{
-	m_hookRunner.onCmdEvent(event);
+	m_scriptMgr->OnCmdEvent(event);
 }
 
 void ScriptPlugin::OnShowFrame(wxCommandEvent& event)

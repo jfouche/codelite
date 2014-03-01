@@ -12,7 +12,6 @@ class ScriptPlugin : public IPlugin
 	static ScriptPlugin* thePlugin;
 	
 	ScriptMgrPtr m_scriptMgr;
-	HookRunner m_hookRunner;
 	ScriptFrame* m_scriptsFrame;
 	
 public:
@@ -33,10 +32,9 @@ public:
 	
 private:
 	void InitUi();
-	void InitHooks();
 	
-	void onCmdEvent(wxCommandEvent& event);
-	void onClEvent(clCommandEvent& event);
+	void OnCmdEvent(wxCommandEvent& event);
+	void OnClEvent(clCommandEvent& event);
 
 	void OnShowFrame(wxCommandEvent& event);
 	void OnSettings(wxCommandEvent& event);

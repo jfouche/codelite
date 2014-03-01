@@ -433,7 +433,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button417"
+																	"m_value":	"m_btnAddScript"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -522,7 +522,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button438"
+																	"m_value":	"m_btnDeleteScript"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -586,6 +586,12 @@
 																	"m_eventHandler":	"wxCommandEventHandler",
 																	"m_functionNameAndSignature":	"OnDeleteScript(wxCommandEvent& event)",
 																	"m_description":	"Process a wxEVT_COMMAND_BUTTON_CLICKED event, when the button is clicked."
+																}, {
+																	"m_eventName":	"wxEVT_UPDATE_UI",
+																	"m_eventClass":	"wxUpdateUIEvent",
+																	"m_eventHandler":	"wxUpdateUIEventHandler",
+																	"m_functionNameAndSignature":	"OnUpdateUi(wxUpdateUIEvent& event)",
+																	"m_description":	"Process a wxEVT_UPDATE_UI event"
 																}],
 															"m_children":	[]
 														}, {
@@ -611,7 +617,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button459"
+																	"m_value":	"m_btnEditScript"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -675,6 +681,12 @@
 																	"m_eventHandler":	"wxCommandEventHandler",
 																	"m_functionNameAndSignature":	"OnEditScript(wxCommandEvent& event)",
 																	"m_description":	"Process a wxEVT_COMMAND_BUTTON_CLICKED event, when the button is clicked."
+																}, {
+																	"m_eventName":	"wxEVT_UPDATE_UI",
+																	"m_eventClass":	"wxUpdateUIEvent",
+																	"m_eventHandler":	"wxUpdateUIEventHandler",
+																	"m_functionNameAndSignature":	"OnUpdateUi(wxUpdateUIEvent& event)",
+																	"m_description":	"Process a wxEVT_UPDATE_UI event"
 																}],
 															"m_children":	[]
 														}]
@@ -906,7 +918,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button411014"
+																	"m_value":	"m_btnAddHook"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -964,7 +976,13 @@
 																	"m_label":	"Margins:",
 																	"m_value":	"2,2"
 																}],
-															"m_events":	[],
+															"m_events":	[{
+																	"m_eventName":	"wxEVT_COMMAND_BUTTON_CLICKED",
+																	"m_eventClass":	"wxCommandEvent",
+																	"m_eventHandler":	"wxCommandEventHandler",
+																	"m_functionNameAndSignature":	"OnAddHook(wxCommandEvent& event)",
+																	"m_description":	"Process a wxEVT_COMMAND_BUTTON_CLICKED event, when the button is clicked."
+																}],
 															"m_children":	[]
 														}, {
 															"m_type":	4400,
@@ -989,7 +1007,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button431115"
+																	"m_value":	"m_btnDeleteHook"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -1047,7 +1065,19 @@
 																	"m_label":	"Margins:",
 																	"m_value":	"2,2"
 																}],
-															"m_events":	[],
+															"m_events":	[{
+																	"m_eventName":	"wxEVT_UPDATE_UI",
+																	"m_eventClass":	"wxUpdateUIEvent",
+																	"m_eventHandler":	"wxUpdateUIEventHandler",
+																	"m_functionNameAndSignature":	"OnUpdateUi(wxUpdateUIEvent& event)",
+																	"m_description":	"Process a wxEVT_UPDATE_UI event"
+																}, {
+																	"m_eventName":	"wxEVT_COMMAND_BUTTON_CLICKED",
+																	"m_eventClass":	"wxCommandEvent",
+																	"m_eventHandler":	"wxCommandEventHandler",
+																	"m_functionNameAndSignature":	"OnDeleteHook(wxCommandEvent& event)",
+																	"m_description":	"Process a wxEVT_COMMAND_BUTTON_CLICKED event, when the button is clicked."
+																}],
 															"m_children":	[]
 														}, {
 															"m_type":	4400,
@@ -1072,7 +1102,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button451216"
+																	"m_value":	"m_btnEditHook"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -1130,7 +1160,19 @@
 																	"m_label":	"Margins:",
 																	"m_value":	"2,2"
 																}],
-															"m_events":	[],
+															"m_events":	[{
+																	"m_eventName":	"wxEVT_UPDATE_UI",
+																	"m_eventClass":	"wxUpdateUIEvent",
+																	"m_eventHandler":	"wxUpdateUIEventHandler",
+																	"m_functionNameAndSignature":	"OnUpdateUi(wxUpdateUIEvent& event)",
+																	"m_description":	"Process a wxEVT_UPDATE_UI event"
+																}, {
+																	"m_eventName":	"wxEVT_COMMAND_BUTTON_CLICKED",
+																	"m_eventClass":	"wxCommandEvent",
+																	"m_eventHandler":	"wxCommandEventHandler",
+																	"m_functionNameAndSignature":	"OnEditHook(wxCommandEvent& event)",
+																	"m_description":	"Process a wxEVT_COMMAND_BUTTON_CLICKED event, when the button is clicked."
+																}],
 															"m_children":	[]
 														}, {
 															"m_type":	4400,
@@ -1155,7 +1197,7 @@
 																}, {
 																	"type":	"string",
 																	"m_label":	"Name:",
-																	"m_value":	"m_button7117"
+																	"m_value":	"m_btnReloadHooks"
 																}, {
 																	"type":	"multi-string",
 																	"m_label":	"Tooltip:",
@@ -1213,7 +1255,13 @@
 																	"m_label":	"Margins:",
 																	"m_value":	"2,2"
 																}],
-															"m_events":	[],
+															"m_events":	[{
+																	"m_eventName":	"wxEVT_COMMAND_BUTTON_CLICKED",
+																	"m_eventClass":	"wxCommandEvent",
+																	"m_eventHandler":	"wxCommandEventHandler",
+																	"m_functionNameAndSignature":	"OnReloadHooks(wxCommandEvent& event)",
+																	"m_description":	"Process a wxEVT_COMMAND_BUTTON_CLICKED event, when the button is clicked."
+																}],
 															"m_children":	[]
 														}]
 												}]

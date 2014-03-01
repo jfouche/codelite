@@ -66,3 +66,62 @@ void ScriptSettingsDialog::OnEditScript(wxCommandEvent& event)
 		m_scriptMgr->GetManager()->OpenFile(scriptPath);
 	}
 }
+
+void ScriptSettingsDialog::OnUpdateUi(wxUpdateUIEvent& event)
+{
+	bool scriptSel = m_listScripts->GetSelection() != wxNOT_FOUND;
+	bool hookSel = m_listHooks->GetSelection() != wxNOT_FOUND;
+	
+	m_btnDeleteScript->Enable(scriptSel);
+	m_btnEditScript->Enable(scriptSel);
+	
+	m_btnDeleteHook->Enable(hookSel);
+	m_btnEditHook->Enable(hookSel);
+	m_btnReloadHooks->Enable(hookSel);
+}
+
+void ScriptSettingsDialog::OnAddHook(wxCommandEvent& event)
+{
+	wxFileDialog dlg(this, _("Add a hook script"), "", "", _("lua file|*.lua"), wxFD_OPEN|wxFD_FILE_MUST_EXIST);
+	if (dlg.ShowModal() == wxID_CANCEL)
+		return;
+	
+	wxString path = dlg.GetPath();
+	if (m_scriptMgr->AddHook(path) == false)
+	{
+		::wxMessageBox(_("Can't add hook script"), _("Script"));
+		return;
+	}
+	RefreshHooks();
+}
+
+void ScriptSettingsDialog::OnDeleteHook(wxCommandEvent& event)
+{
+	wxString hook = m_listHooks->GetStringSelection();
+	if (hook.IsEmpty() == false)
+	{
+		if (m_scriptMgr->DeleteHook(hook))
+		{
+			RefreshHooks();
+		}
+	}
+}
+
+void ScriptSettingsDialog::OnEditHook(wxCommandEvent& event)
+{
+	wxString hook = m_listHooks->GetStringSelection();
+	if (hook.IsEmpty())
+	{
+		return;
+	}
+	wxString hookPath = m_scriptMgr->GetHookPath(hook);
+	if (wxFileExists(hookPath))
+	{
+		m_scriptMgr->GetManager()->OpenFile(hookPath);
+	}
+}
+
+void ScriptSettingsDialog::OnReloadHooks(wxCommandEvent& event)
+{
+	m_scriptMgr->ReloadHooks();
+}

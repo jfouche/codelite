@@ -3,10 +3,12 @@
 
 #include <imanager.h>
 #include "smart_ptr.h"
+#include "lua_runner.h"
 
 class ScriptManager
 {
 	IManager* m_manager;
+	HookRunner* m_hookRunner;
 
 public:
 	ScriptManager(IManager* manager);
@@ -24,13 +26,24 @@ public:
 	
 	wxString GetScriptPath(const wxString& script) const;
 
+	bool AddHook(const wxString& path);
+
+	bool DeleteHook(const wxString& script);
+	
 	void GetHooks(wxArrayString& hooks) const;
 
 	wxString GetHookPath(const wxString& hook) const;
+	
+	void ReloadHooks();
+
+	void OnCmdEvent(wxCommandEvent& event);
+	void OnClEvent(clCommandEvent& event);
 
 private:
 	wxString GetScriptDir() const;
 	wxString GetHookDir() const;
+	
+	void InitHooks();
 };
 
 typedef SmartPtr<ScriptManager> ScriptMgrPtr;
