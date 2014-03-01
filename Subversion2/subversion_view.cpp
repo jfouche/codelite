@@ -95,7 +95,7 @@ SubversionView::SubversionView( wxWindow* parent, Subversion2 *plugin )
     m_themeHelper = new ThemeHandlerHelper(this);
     EventNotifier::Get()->Connect(wxEVT_WORKSPACE_LOADED,            wxCommandEventHandler(SubversionView::OnWorkspaceLoaded),           NULL, this);
     EventNotifier::Get()->Connect(wxEVT_WORKSPACE_CLOSED,            wxCommandEventHandler(SubversionView::OnWorkspaceClosed),           NULL, this);
-    EventNotifier::Get()->Connect(wxEVT_FILE_SAVED,                  wxCommandEventHandler(SubversionView::OnRefreshView),               NULL, this);
+    EventNotifier::Get()->Connect(wxEVT_FILE_SAVED,                  clCommandEventHandler(SubversionView::OnFileSaved),                 NULL, this);
     EventNotifier::Get()->Connect(wxEVT_PROJ_FILE_ADDED,             clCommandEventHandler(SubversionView::OnFileAdded  ),               NULL, this);
     EventNotifier::Get()->Connect(wxEVT_FILE_RENAMED,                wxCommandEventHandler(SubversionView::OnFileRenamed),               NULL, this);
     EventNotifier::Get()->Connect(wxEVT_ACTIVE_EDITOR_CHANGED,       wxCommandEventHandler(SubversionView::OnActiveEditorChanged),       NULL, this);
@@ -997,7 +997,7 @@ void SubversionView::OnItemActivated(wxTreeEvent& event)
         title_right = _("Working copy");
         title_left  = _("HEAD version");
         
-        DiffSideBySidePanel *diffPanel = new DiffSideBySidePanel( EventNotifier::Get()->TopFrame(), clDTL::kTwoPanes);
+        DiffSideBySidePanel *diffPanel = new DiffSideBySidePanel( EventNotifier::Get()->TopFrame());
         DiffSideBySidePanel::FileInfo l(leftFile, title_left, true);
         DiffSideBySidePanel::FileInfo r(rightFile, title_right, false);
         diffPanel->SetFilesDetails(l, r);
@@ -1117,7 +1117,7 @@ void SubversionView::DisconnectEvents()
 {
     EventNotifier::Get()->Disconnect(wxEVT_WORKSPACE_LOADED, wxCommandEventHandler(SubversionView::OnWorkspaceLoaded),          NULL, this);
     EventNotifier::Get()->Disconnect(wxEVT_WORKSPACE_CLOSED, wxCommandEventHandler(SubversionView::OnWorkspaceClosed),          NULL, this);
-    EventNotifier::Get()->Disconnect(wxEVT_FILE_SAVED,       wxCommandEventHandler(SubversionView::OnRefreshView),              NULL, this);
+    EventNotifier::Get()->Disconnect(wxEVT_FILE_SAVED,       clCommandEventHandler(SubversionView::OnFileSaved),                NULL, this);
     EventNotifier::Get()->Disconnect(wxEVT_PROJ_FILE_ADDED,  clCommandEventHandler(SubversionView::OnFileAdded),                NULL, this);
     EventNotifier::Get()->Disconnect(wxEVT_FILE_RENAMED,     wxCommandEventHandler(SubversionView::OnFileRenamed),              NULL, this);
     EventNotifier::Get()->Disconnect(wxEVT_ACTIVE_EDITOR_CHANGED, wxCommandEventHandler(SubversionView::OnActiveEditorChanged), NULL, this);
@@ -1371,4 +1371,10 @@ void SubversionView::DoCreateFileExplorerImages()
         //wxPrintf(wxT("%d\n"), newCount);
     }
 #endif
+}
+
+void SubversionView::OnFileSaved(clCommandEvent& event)
+{
+    event.Skip();
+    OnRefreshView( event );
 }

@@ -1,5 +1,7 @@
 #include "event_notifier.h"
 #include <wx/app.h>
+#include "cl_command_event.h"
+#include "../Interfaces/codelite_events.h"
 
 static EventNotifier *eventNotifier = NULL;
 
@@ -60,4 +62,25 @@ void EventNotifier::PostCommandEvent(int eventId, void* clientData)
 wxFrame* EventNotifier::TopFrame()
 {
     return static_cast<wxFrame*>(wxTheApp->GetTopWindow());
+}
+
+void EventNotifier::PostFileSavedEvent(const wxString& filename)
+{
+    clCommandEvent event( wxEVT_FILE_SAVED );
+    event.SetString( filename );
+    event.SetFileName( filename );
+    AddPendingEvent( event );
+}
+
+void EventNotifier::PostReloadExternallyModifiedEvent(bool prompt)
+{
+    wxCommandEvent event( prompt ? wxEVT_CMD_RELOAD_EXTERNALLY_MODIFIED : wxEVT_CMD_RELOAD_EXTERNALLY_MODIFIED_NOPROMPT );
+    AddPendingEvent( event );
+}
+
+void EventNotifier::PostFileRemovedEvent(const wxArrayString& files)
+{
+    clCommandEvent filesRemovedEvent(wxEVT_PROJ_FILE_REMOVED);
+    filesRemovedEvent.SetStrings( files );
+    AddPendingEvent( filesRemovedEvent );
 }

@@ -967,13 +967,8 @@ void LEditor::OnSciUpdateUI(wxStyledTextEvent &event)
             << wxT(",  Pos ")
             << pos;
 
-    message << ", ";
-    
     wxString bookmarkString = GetBookmarkLabel((sci_marker_types)GetActiveBookmarkType());
-    if (!bookmarkString.Lower().Contains("type")) {
-        message << _("Bookmark type") << ": ";
-    }
-    message << bookmarkString;
+    message << ", " << bookmarkString;
 
     // Always update the status bar with event, calling it directly causes performance degredation
     DoSetStatusMessage(message, 1);
@@ -1317,10 +1312,7 @@ bool LEditor::SaveToFile(const wxFileName &fileName)
     }
 
     // Fire a wxEVT_FILE_SAVED event
-    wxCommandEvent evtFileSaved(wxEVT_FILE_SAVED);
-    evtFileSaved.SetString( fileName.GetFullPath() );
-    EventNotifier::Get()->AddPendingEvent( evtFileSaved );
-    
+    EventNotifier::Get()->PostFileSavedEvent( fileName.GetFullPath() );
     return true;
 }
 
@@ -4652,4 +4644,9 @@ wxString LEditor::GetWordAtMousePointer()
     } else {
         return GetSelectedText();
     }
+}
+
+void LEditor::ShowRichTooltip(const wxString& tip, int pos)
+{
+    DoShowCalltip(pos, tip);
 }

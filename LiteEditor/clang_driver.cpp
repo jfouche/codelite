@@ -260,8 +260,8 @@ FileTypeCmpArgs_t ClangDriver::DoPrepareCompilationArgs(const wxString& projectN
             << cdb.GetFileName().GetFullPath() << wxT("\n\n")
             << _("This file should be created automatically for you.\nIf you don't have it, please run a full rebuild of your workspace\n\n")
             << _("If this is a custom build project (i.e. project that uses a custom makefile),\nplease set the CXX and CC environment variables like this:\n")
-            << _("CXX=codelitegcc g++\n")
-            << _("CC=codelitegcc gcc\n\n");
+            << _("CXX=codelite-cc g++\n")
+            << _("CC=codelite-cc gcc\n\n");
 
         clMainFrame::Get()->GetMainBook()->ShowMessage( msg,
                 true,
@@ -539,8 +539,16 @@ void ClangDriver::OnPrepareTUEnded(wxCommandEvent& e)
         // Display an error message if needed, but not if the code-completion box
         // is visible
         if(reply->errorMessage.IsEmpty() == false && !m_activeEditor->IsCompletionBoxShown()) {
-            CodeCompletionBox::Get().CancelTip();
-            CodeCompletionBox::Get().ShowTip(reply->errorMessage, dynamic_cast<LEditor*>(m_activeEditor));
+            // CodeCompletionBox::Get().CancelTip();
+            // CodeCompletionBox::Get().ShowTip(reply->errorMessage, dynamic_cast<LEditor*>(m_activeEditor));
+            LEditor* pEditor = dynamic_cast<LEditor*>(m_activeEditor);
+            if ( pEditor ) {
+                wxWindow* pParent = ::wxGetTopLevelParent( pEditor );
+                wxFrame* pFrame = dynamic_cast<wxFrame*>( pParent );
+                if ( pFrame ) {
+                    pFrame->SetStatusText( reply->errorMessage );
+                }
+            }
         }
         return;
     }

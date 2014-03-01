@@ -110,7 +110,7 @@ Source: "..\Runtime\plugins\resources\*"; DestDir: "{app}\plugins\resources\"; F
 Source: "..\Runtime\codelite_indexer.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\codelite_launcher.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\codelite_cppcheck.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
-Source: "..\Runtime\codelitegcc.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
+Source: "..\Runtime\codelite-cc.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\codelite-make.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\le_exec.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\makedir.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
@@ -134,10 +134,10 @@ Source: "..\Runtime\locale\*"; DestDir: "{app}\locale"; Flags: recursesubdirs ; 
 Source: "..\Runtime\gdb_printers\*"; DestDir: "{app}\gdb_printers"; Flags: recursesubdirs ; Components: Editor
 
 [Icons]
-Name: "{group}\CodeLite "; Filename: "{app}\CodeLite.exe"; WorkingDir: "{app}"
+Name: "{group}\CodeLite "; Filename: "{app}\codelite.exe"; WorkingDir: "{app}"
 Name: "{group}\{cm:UninstallProgram, CodeLite}"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\CodeLite "; Filename: "{app}\CodeLite.exe"; WorkingDir: "{app}" ;Tasks: desktopicon
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\CodeLite "; WorkingDir: "{app}"; Filename: "{app}\CodeLite.exe"; Tasks: quicklaunchicon
+Name: "{userdesktop}\CodeLite "; Filename: "{app}\codelite.exe"; WorkingDir: "{app}" ;Tasks: desktopicon
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\CodeLite"; WorkingDir: "{app}"; Filename: "{app}\codelite.exe"; Tasks: quicklaunchicon
 
 [INI]
 Filename: "{app}\registry.ini"; Section: "environment"; Key: "mingw"; String: "{code:GetMinGWInstallDir}";

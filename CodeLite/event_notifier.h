@@ -29,6 +29,22 @@ public:
     bool SendCommandEvent(int eventId, void *clientData);
     void PostCommandEvent(int eventId, void *clientData);
     bool SendCommandEvent(int eventId, void *clientData, const wxString &s);
+    
+    /**
+     * @brief post a wxEVT_FILE_SAVED event
+     */
+    void PostFileSavedEvent( const wxString &filename );
+    
+    /**
+     * @brief post a wxEVT_CMD_RELOAD_EXTERNALLY_MODIFIED_NOPROMPT or wxEVT_CMD_RELOAD_EXTERNALLY_MODIFIED
+     * @param prompt 
+     */
+    void PostReloadExternallyModifiedEvent( bool prompt = true );
+    
+    /**
+     * @brief post a wxEVT_PROJ_FILE_REMOVED event
+     */
+    void PostFileRemovedEvent( const wxArrayString &files );
 };
 
 #endif // EVENTNOTIFIER_H
