@@ -29,8 +29,6 @@ namespace lua
 	}
 }
 
-#define SET_GLOBAL_EVENT(L, e) lua_pushnumber(L, e); lua_setglobal(L, #e)
-
 static int GetString(lua_State* L)
 {
 	wxCommandEvent* event = lua::check<wxCommandEvent>(L, 1);
@@ -54,6 +52,8 @@ static const luaL_Reg CL_METHODS[] = {
 	{"GetFileName", GetFileName},
 	{NULL, NULL}
 };
+
+#define SET_GLOBAL_EVENT(L, e) lua_pushnumber(L, e); lua_setglobal(L, #e)
 
 void lua_open_Events(lua_State* L)
 {

@@ -77,7 +77,6 @@ void ScriptSettingsDialog::OnUpdateUi(wxUpdateUIEvent& event)
 	
 	m_btnDeleteHook->Enable(hookSel);
 	m_btnEditHook->Enable(hookSel);
-	m_btnReloadHooks->Enable(hookSel);
 }
 
 void ScriptSettingsDialog::OnAddHook(wxCommandEvent& event)
