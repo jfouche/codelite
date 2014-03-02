@@ -3,12 +3,7 @@
 
 #include "lua_utils.hpp"
 
-class IEditor;
 class IManager;
-class Project;
-class Workspace;
-class wxCommandEvent;
-class clCommandEvent;
 
 static const char* IMANAGER_CLASSNAME = "IManager";
 static const char* IEDITOR_CLASSNAME = "IEditor";

@@ -33,6 +33,10 @@ namespace lua
 
 	LUA_NUMBER check_integer(lua_State* L, int n, const char* error = 0);
 
+	void check_table(lua_State* L, int n, const char* error = 0);
+
+	void check_function(lua_State* L, int n, const char* error = 0);
+
 	/**
 	 * the class is on the stack at the end
 	 */

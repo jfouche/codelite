@@ -1,5 +1,3 @@
-codelite.bindings = {}
-
 function codelite.Bind(self, id, fct)
 	local functions = self.bindings[id]
 	if functions == nil then

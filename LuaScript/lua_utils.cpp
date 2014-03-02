@@ -70,3 +70,19 @@ LUA_NUMBER lua::check_integer(lua_State* L, int n, const char* error)
 	}
 	return lua_tointeger(L, n);
 }
+
+void lua::check_table(lua_State* L, int n, const char* error)
+{
+	if (!lua_istable(L, n))
+	{
+		luaL_error(L, error ? error : "Expected table");
+	}
+}
+
+void lua::check_function(lua_State* L, int n, const char* error)
+{
+	if (!lua_isfunction(L, n))
+	{
+		luaL_error(L, error ? error : "Expected function");
+	}
+}

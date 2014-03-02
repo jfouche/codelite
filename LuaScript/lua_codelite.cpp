@@ -3,6 +3,10 @@
 #include "cl_command_event.h"
 #include "plugin.h"
 
+static const char* MANAGER_FIELD = "manager";
+static const char* BINDINGS_FIELD = "__bindings";
+
+
 static int Trace(lua_State* L)
 {
 	const char* message = lua::check_string(L, 1);
@@ -20,9 +24,12 @@ void lua_open_Codelite(lua_State* L, IManager* manager, const char* name)
 	lua::createClass(L, "CODELITE", METHODS);
 
 	// add the 'manager' field
-	lua_pushstring(L, "manager");
 	lua::push(L, manager);
-	lua_settable(L, -3);
+	lua_setfield(L, -2, MANAGER_FIELD);
+	
+	// add the private '__bindings' field
+	lua_createtable(L, 0, 0);
+	lua_setfield(L, -2, BINDINGS_FIELD);
 
 	lua_setglobal(L, name);
 }
