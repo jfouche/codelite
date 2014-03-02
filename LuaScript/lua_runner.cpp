@@ -58,7 +58,7 @@ HookRunner::HookRunner(IManager* manager)
 void HookRunner::PushOnEventFunctionAndSelf()
 {
 	lua_getglobal(m_lua, "codelite");
-	lua_getfield(m_lua, -1, "on_event");
+	lua_getfield(m_lua, -1, "OnEvent");
 	lua_pushvalue(m_lua, -2); // push self
 	lua_remove(m_lua, -3);
 }

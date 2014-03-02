@@ -4,7 +4,7 @@
 #include "plugin.h"
 
 static const char* MANAGER_FIELD = "manager";
-static const char* BINDINGS_FIELD = "__bindings";
+static const char* BINDINGS_FIELD = "bindings";
 
 
 static int Trace(lua_State* L)
@@ -14,8 +14,66 @@ static int Trace(lua_State* L)
 	return 0;
 }
 
+static int Bind(lua_State* L)
+{
+	lua::check_table(L, 1);
+	lua::check_integer(L, 2);
+	lua::check_function(L, 3);
+
+	// Retrieve all bindings
+	lua_getfield(L, 1, BINDINGS_FIELD);
+
+	// Retrieve all functions binded to the event
+	lua_pushvalue(L, 2);
+	lua_gettable(L, -2);
+
+	if (lua_isnil(L, -1))
+	{
+		// Create the initial function table for this event
+		lua_remove(L, -1);
+		lua_createtable(L, 0, 0);
+		lua_pushvalue(L, 2);
+		lua_pushvalue(L, -2);
+		lua_settable(L, -4);
+	}
+
+	// insert the function at the end of the list
+	int i = luaL_len(L, -1) + 1;
+	lua_pushinteger(L, i);
+	lua_pushvalue(L, 3);
+	lua_settable(L, -3);
+
+	return 0;
+}
+
+static int OnEvent(lua_State* L)
+{
+	lua::check_table(L, 1);
+	lua::check_integer(L, 2);
+	lua::check<wxCommandEvent>(L, 3);
+
+	// Retrieve all bindings
+	lua_getfield(L, 1, BINDINGS_FIELD);
+
+	// Retrieve all functions binded to the event
+	lua_pushvalue(L, 2);
+	lua_gettable(L, -2);
+	
+	if (lua_istable(L, -1))
+	{
+		lua_pushnil(L); // first index
+		while (lua_next(L, -2))
+		{
+			lua_pushvalue(L, 3); // push the event
+			lua_call(L, 1, 0);  // call the function
+		}
+	}
+}
+
 static const luaL_Reg METHODS[] = {
 	{"Trace", Trace},
+	{"Bind", Bind},
+	{"OnEvent", OnEvent},
 	{NULL, NULL}
 };
 
