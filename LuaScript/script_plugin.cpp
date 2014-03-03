@@ -69,30 +69,18 @@ clToolBar *ScriptPlugin::CreateToolBar(wxWindow *parent)
        tb = new clToolBar(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, clTB_DEFAULT_STYLE);
        tb->SetToolBitmapSize(wxSize(size, size));
 
-       // Sample code that adds single button to the toolbar
-       // and associates an image to it
-       if (size == 24) 
-		{
-            //use the large icons set
-            tb->AddTool(SHOW_FRAME_ID, _("Show scripts"),     LoadBitmapFile("script_lightning.png"), _("Show scripts"),    wxITEM_CHECK);
-            tb->AddTool(SETTINGS_ID,   _("Scripts settings"), LoadBitmapFile("script_gear.png"),      _("Scripts settings"));
-       }
-		else 
-		{
-            //16
-            tb->AddTool(SHOW_FRAME_ID, _("Show scripts"),     LoadBitmapFile("script_lightning.png"), _("Show scripts"),    wxITEM_CHECK);
-            tb->AddTool(SETTINGS_ID,   _("Scripts settings"), LoadBitmapFile("script_gear.png"),      _("Scripts settings"));
-       }
+		tb->AddTool(SHOW_FRAME_ID, _("Show scripts"),     LoadBitmapFile("script_lightning.png"), _("Show scripts"),    wxITEM_CHECK);
+		tb->AddTool(SETTINGS_ID,   _("Scripts settings"), LoadBitmapFile("script_gear.png"),      _("Scripts settings"));
+
        tb->Realize();
+
+		// Command events
+		wxTheApp->Connect(SHOW_FRAME_ID, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(ScriptPlugin::OnShowFrame), NULL, this);
+		wxTheApp->Connect(SETTINGS_ID,   wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(ScriptPlugin::OnSettings),  NULL, this);
+
+		// UI events
+		wxTheApp->Connect(SHOW_FRAME_ID, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(ScriptPlugin::OnShowFrameUi), NULL, this);
     }
-
-    // Command events
-    wxTheApp->Connect(SHOW_FRAME_ID, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(ScriptPlugin::OnShowFrame), NULL, this);
-    wxTheApp->Connect(SETTINGS_ID,   wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(ScriptPlugin::OnSettings),  NULL, this);
-
-    // UI events
-    wxTheApp->Connect(SHOW_FRAME_ID, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(ScriptPlugin::OnShowFrameUi), NULL, this);
-
     return tb;
 }
 
@@ -126,8 +114,6 @@ void ScriptPlugin::UnPlug()
 
 void ScriptPlugin::InitUi()
 {
-	wxLogMessage("ScriptPlugin::InitUi");
-
 	// Create the mini frame
 	m_scriptsFrame	 = new ScriptFrame(wxTheApp->GetTopWindow(), m_scriptMgr);
 }
