@@ -27,7 +27,6 @@ void LuaEventHandler::Create(ScriptMgrPtr scriptMgr)
 
 void LuaEventHandler::ConnectCmdEvent(int id)
 {
-	printf("LuaEventHandler::ConnectCmdEvent(%d)\n", id), fflush(stdout);
 	EventNotifier::Get()->Connect(id, wxCommandEventHandler(LuaEventHandler::OnCmdEvent), NULL, this);
 }
 
@@ -38,6 +37,5 @@ void LuaEventHandler::OnClEvent(clCommandEvent& event)
 
 void LuaEventHandler::OnCmdEvent(wxCommandEvent& event)
 {
-	printf("LuaEventHandler::OnCmdEvent()\n"), fflush(stdout);
 	m_scriptMgr->OnCmdEvent(event);
 }
