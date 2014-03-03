@@ -2,7 +2,6 @@
 #include <wx/xrc/xmlres.h>
 #include "detachedpanesinfo.h"
 #include "dockablepane.h"
-#include "event_notifier.h"
 #include "script_settings_dlg.h"
 #include "script_frame.h"
 
@@ -48,9 +47,6 @@ ScriptPlugin::ScriptPlugin(IManager *manager)
 	m_shortName = wxT("Lua");
 
 	InitUi();
-	
-	EventNotifier* evSrc = EventNotifier::Get();
-	evSrc->Connect(wxEVT_FILE_SAVED, wxCommandEventHandler(ScriptPlugin::OnCmdEvent), NULL, this);
 }
 
 ScriptPlugin::~ScriptPlugin()

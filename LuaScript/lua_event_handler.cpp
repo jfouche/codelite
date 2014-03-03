@@ -1,9 +1,10 @@
 #include "lua_event_handler.h"
+#include "event_notifier.h"
 
 LuaEventHandler* LuaEventHandler::INSTANCE = 0;
 
-LuaEventHandler::LuaEventHandler(LuaRunner& runner)
-: m_runner(runner)
+LuaEventHandler::LuaEventHandler(ScriptMgrPtr scriptMgr)
+: m_scriptMgr(scriptMgr)
 {
 }
 
@@ -16,19 +17,27 @@ LuaEventHandler* LuaEventHandler::Get()
 	return INSTANCE;
 }
 
-void LuaEventHandler::Init(LuaRunner& runner)
+void LuaEventHandler::Create(ScriptMgrPtr scriptMgr)
 {
 	if (INSTANCE == 0)
 	{
-		INSTANCE = new LuaEventHandler(runner);
+		INSTANCE = new LuaEventHandler(scriptMgr);
 	}
 }
 
-void LuaEventHandler::onClEvent(clCommandEvent& event)
+void LuaEventHandler::ConnectCmdEvent(int id)
 {
+	printf("LuaEventHandler::ConnectCmdEvent(%d)\n", id), fflush(stdout);
+	EventNotifier::Get()->Connect(id, wxCommandEventHandler(LuaEventHandler::OnCmdEvent), NULL, this);
 }
 
-void LuaEventHandler::onCmdEvent(wxCommandEvent& event)
+void LuaEventHandler::OnClEvent(clCommandEvent& event)
 {
-	wxLogError("onCmdEvent");
+	m_scriptMgr->OnClEvent(event);
+}
+
+void LuaEventHandler::OnCmdEvent(wxCommandEvent& event)
+{
+	printf("LuaEventHandler::OnCmdEvent()\n"), fflush(stdout);
+	m_scriptMgr->OnCmdEvent(event);
 }

@@ -1,28 +1,30 @@
 #ifndef CL_LUA_EVENT_HANDLER_H_INCLUDED
 #define CL_LUA_EVENT_HANDLER_H_INCLUDED
 
-#include "lua_runner.h"
-#include <wx/event.h>
+#include "script_manager.h"
 #include "cl_command_event.h"
 
 class LuaEventHandler : public wxEvtHandler
 {
 	static LuaEventHandler* INSTANCE;
 	
-	LuaRunner& m_runner;
+	ScriptMgrPtr m_scriptMgr;
 	
 private:
-	LuaEventHandler(LuaRunner& runner);
+	LuaEventHandler(ScriptMgrPtr scriptMgr);
 	~LuaEventHandler();
 
 public:
-	static void Init(LuaRunner& runner);
+	static void Create(ScriptMgrPtr scriptMgr);
 	
 	static LuaEventHandler* Get();
+	
+	void ConnectCmdEvent(int id);
+	
+protected:
+	void OnCmdEvent(wxCommandEvent& event);
 
-	void onCmdEvent(wxCommandEvent& event);
-
-	void onClEvent(clCommandEvent& event);
+	void OnClEvent(clCommandEvent& event);
 };
 
 #endif // CL_LUA_EVENT_HANDLER_H_INCLUDED

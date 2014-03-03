@@ -1,7 +1,9 @@
 #include "lua_utils.hpp"
+#include "lua_event_handler.h"
 #include "imanager.h"
 #include "cl_command_event.h"
 #include "plugin.h"
+#include "event_notifier.h"
 
 static const char* MANAGER_FIELD = "manager";
 static const char* BINDINGS_FIELD = "bindings";
@@ -15,9 +17,9 @@ static int Trace(lua_State* L)
 
 static int Bind(lua_State* L)
 {
-	lua::check_table(L, 1);    // codelite
+	lua::check_table(L, 1);                   // codelite
 	int event_id = lua::check_integer(L, 2);  // event_id
-	lua::check_function(L, 3); // function
+	lua::check_function(L, 3);                // function
 
 	// bindings = codelite.bindings
 	lua_getfield(L, 1, BINDINGS_FIELD);
@@ -39,6 +41,9 @@ static int Bind(lua_State* L)
 		lua_pushvalue(L, 2);
 		lua_pushvalue(L, -2);
 		lua_settable(L, -4);
+
+		// Bind event on Codelite
+		LuaEventHandler::Get()->ConnectCmdEvent(event_id);
 	}
 
 	// insert the function at the end of the list
