@@ -1,5 +1,5 @@
 #include "lua_utils.hpp"
-#include "lua_event_handler.h"
+#include "script_event_handler.h"
 #include "imanager.h"
 #include "cl_command_event.h"
 #include "plugin.h"
@@ -43,7 +43,7 @@ static int Bind(lua_State* L)
 		lua_settable(L, -4);
 
 		// Bind event on Codelite
-		LuaEventHandler::Get()->ConnectCmdEvent(event_id);
+		ScriptEventHandler::Get()->ConnectCmdEvent(event_id);
 	}
 
 	// insert the function at the end of the list

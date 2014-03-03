@@ -1,5 +1,5 @@
 #include "script_manager.h"
-#include "lua_event_handler.h"
+#include "script_event_handler.h"
 #include "lua_runner.h"
 #include "cl_standard_paths.h"
 #include <wx/dir.h>
@@ -30,7 +30,7 @@ private:
 ScriptManager::ScriptManager(IManager* manager)
 	: m_manager(manager)
 {
-	LuaEventHandler::Create(this);
+	ScriptEventHandler::Create(this);
 	InitHooks();
 }
 

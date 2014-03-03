@@ -4,20 +4,20 @@
 #include "script_manager.h"
 #include "cl_command_event.h"
 
-class LuaEventHandler : public wxEvtHandler
+class ScriptEventHandler : public wxEvtHandler
 {
-	static LuaEventHandler* INSTANCE;
+	static ScriptEventHandler* INSTANCE;
 	
 	ScriptMgrPtr m_scriptMgr;
 	
 private:
-	LuaEventHandler(ScriptMgrPtr scriptMgr);
-	~LuaEventHandler();
+	ScriptEventHandler(ScriptMgrPtr scriptMgr);
+	~ScriptEventHandler();
 
 public:
 	static void Create(ScriptMgrPtr scriptMgr);
 	
-	static LuaEventHandler* Get();
+	static ScriptEventHandler* Get();
 	
 	void ConnectCmdEvent(int id);
 	
