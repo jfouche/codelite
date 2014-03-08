@@ -2,6 +2,7 @@
 #include "script_event_handler.h"
 #include "lua_runner.h"
 #include "cl_standard_paths.h"
+#include <wx/filefn.h>
 #include <wx/dir.h>
 
 class ScriptTraverser : public wxDirTraverser
@@ -79,7 +80,7 @@ wxString ScriptManager::GetScriptDir() const
 	wxFileName dir(userDir, "scripts");
 	if (dir.Exists(wxFILE_EXISTS_DIR) == false)
 	{
-		::wxMkDir(dir.GetFullPath());
+		::wxMkDir(dir.GetFullPath(), wxS_DIR_DEFAULT);
 	}
 	return dir.GetFullPath();
 }
@@ -121,7 +122,7 @@ wxString ScriptManager::GetHookDir() const
 	wxFileName dir(userDir, "hooks");
 	if (dir.Exists(wxFILE_EXISTS_DIR) == false)
 	{
-		::wxMkDir(dir.GetFullPath());
+		::wxMkDir(dir.GetFullPath(), wxS_DIR_DEFAULT);
 	}
 	return dir.GetFullPath();
 }

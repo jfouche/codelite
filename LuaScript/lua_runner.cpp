@@ -1,5 +1,7 @@
 #include "lua_runner.h"
 #include "lua_cl_bindings.h"
+#include <wx/msgdlg.h>
+#include <wx/log.h>
 
 LuaRunner::LuaRunner(IManager* manager)
 : m_manager(manager)

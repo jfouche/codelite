@@ -1,4 +1,6 @@
 #include "script_frame.h"
+#include <wx/listbox.h>
+#include <wx/log.h>
 
 ScriptFrame::ScriptFrame(wxWindow* parent, ScriptMgrPtr scriptMgr)
 : wxMiniFrame(parent, wxID_ANY, _("Scripts"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxRESIZE_BORDER|wxSTAY_ON_TOP)

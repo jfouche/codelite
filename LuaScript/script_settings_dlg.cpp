@@ -1,4 +1,6 @@
 #include "script_settings_dlg.h"
+#include <wx/filedlg.h>
+#include <wx/msgdlg.h>
 
 ScriptSettingsDialog::ScriptSettingsDialog(wxWindow* parent, ScriptMgrPtr scriptMgr)
     : ScriptSettingsDialogBase(parent)
