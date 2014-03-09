@@ -48,7 +48,6 @@ IManager* ScriptManager::GetManager()
 
 void ScriptManager::InitHooks()
 {
-	printf("ScriptManager::InitHooks()");
 	wxDELETE(m_hookRunner);
 	m_hookRunner = new HookRunner(m_manager);
 	
