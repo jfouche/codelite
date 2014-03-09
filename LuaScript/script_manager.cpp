@@ -30,6 +30,7 @@ private:
 
 ScriptManager::ScriptManager(IManager* manager)
 	: m_manager(manager)
+	, m_hookRunner(0)
 {
 	ScriptEventHandler::Create(this);
 	InitHooks();
@@ -47,6 +48,7 @@ IManager* ScriptManager::GetManager()
 
 void ScriptManager::InitHooks()
 {
+	printf("ScriptManager::InitHooks()");
 	wxDELETE(m_hookRunner);
 	m_hookRunner = new HookRunner(m_manager);
 	
