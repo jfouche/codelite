@@ -12,7 +12,10 @@ find_package(wxWidgets COMPONENTS std REQUIRED)
 include( "${wxWidgets_USE_FILE}" )
 
 # Include paths
-include_directories("${CL_SRC_ROOT}/sdk/wxsqlite3/include" "${CL_SRC_ROOT}/sdk/codelite_indexer/network" "${CL_SRC_ROOT}/PCH")
+include_directories("${CL_SRC_ROOT}/sdk/wxsqlite3/include" 
+                    "${CL_SRC_ROOT}/sdk/codelite_indexer/network" 
+                    "${CL_SRC_ROOT}/CodeLite" 
+                    "${CL_SRC_ROOT}/PCH")
 
 set( ADDITIONAL_LIBRARIES "" )
 
@@ -49,7 +52,7 @@ else ( WXC_APP )
     set (LINKER_OPTIONS -Wl,-rpath,"${PLUGINS_DIR}")
     message( "-- libcodelite.so is using RPATH set to ${PLUGINS_DIR}")
 endif ( WXC_APP )
-FILE(GLOB SRCS "*.cpp" "../sdk/codelite_indexer/network/*.cpp" )
+FILE(GLOB SRCS "*.cpp" "../sdk/codelite_indexer/network/*.cpp" "SocketAPI/*.cpp")
 
 # Define the output
 add_library(libcodelite SHARED ${SRCS})

@@ -25,14 +25,18 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 ##      -DWITH_WXPATH=<fullpath>                   // Specify a particular wxWidgets build to use. The format must be /path/to/different_wx-config/directory/   #
 ##      -DMAKE_DEB=1|0                             // When set to 1, you can use make package to create .deb file for codelite                                  #
 ##      -DENABLE_SFTP=1|0                          // When set to 1 codelite is built with SFTP support. Default is build _with_ SFTP support                   #
+##      -DENABLE_LLDB=1|0                          // When set to 0 codelite won't try to build or link to the lldb debugger. Default is 1 on Unix platforms    #
 #################################################################################################################################################################
 
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/") No, this breaks finding gtk2, so set this locally
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 #############################################
 ## Defaults
 #############################################
 project( "CodeLite" )
+
+## Generate compile_commands.json file for code completion
+set( CMAKE_EXPORT_COMPILE_COMMANDS 1 )
 
 set( CL_PREFIX "/usr" )
 if (CMAKE_CURRENT_LIST_DIR) # since cmake 2.8.3
@@ -63,6 +67,7 @@ message("-- OS name ${OS_NAME}")
 
 if ( APPLE )
   set(WX_COMPONENTS "std")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
 else ( APPLE )
   set(WX_COMPONENTS "std aui propgrid stc ribbon")
 endif()
@@ -115,6 +120,18 @@ else()
         set( CL_INSTALL_LIBDIR ${CMAKE_INSTALL_LIBDIR} )
     endif()
 endif(PREFIX)
+
+## Try to link-to or build lldb?
+if (UNIX)
+    set(WITH_LLDB 1)
+else()
+    set(WITH_LLDB 0)
+endif()
+if(ENABLE_LLDB MATCHES 0)
+    set(WITH_LLDB 0)
+    message("-- Disabling lldb support")
+endif ()
+unset(ENABLE_LLDB CACHE)
 
 #######################################
 ## Locate libssh
@@ -184,6 +201,8 @@ add_definitions(-DYY_NEVER_INTERACTIVE=1)
 add_definitions(-DINSTALL_DIR=\"${CL_PREFIX}/share/codelite\")
 add_definitions(-DPLUGINS_DIR=\"${PLUGINS_DIR}\")
 
+message("-- PLUGINS_DIR is set to ${PLUGINS_DIR}")
+
 ## Allow user to use wxAuiNotebook instead of the native notebook
 if ( GTK_USE_AUIBOOK )
     add_definitions( -DGTK_USE_NATIVEBOOK=0 )
@@ -219,9 +238,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES DebugFull)
     message("-- Executables will be written into ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
     message("-- Shared Objects will be written into ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
-    if(CMAKE_COMPILER_IS_GNUCXX)
-        set(CMAKE_CXX_FLAGS "-g -O0")        ## No optimization, debug info
-    endif(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")        ## No optimization, debug info
 
     ## In debug, only add NDEBUG if the user says so
     if (PREVENT_WX_ASSERTS MATCHES 1)
@@ -248,7 +265,7 @@ else ()
     message("-- Executables will be written into ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
     message("-- Shared Objects will be written into ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
-    set(CMAKE_CXX_FLAGS "-O2")        ## Optimize
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")        ## Optimize
     if(CMAKE_COMPILER_IS_GNUCXX)
         set(CMAKE_EXE_LINKER_FLAGS "-s")  ## Strip binary
     endif(CMAKE_COMPILER_IS_GNUCXX)
@@ -308,7 +325,7 @@ if ( MAKE_DEB )
 
     set(CPACK_GENERATOR                   "DEB")
     set(CPACK_PACKAGE_NAME                "codelite")
-    set(CPACK_PACKAGE_VERSION             "5.3")
+    set(CPACK_PACKAGE_VERSION             "6.0")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER   "Eran Ifrah <eran.ifrah@gmail.com>") #required
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "codelite IDE for C/C++")
     set(CPACK_DEBIAN_PACKAGE_SECTION      "devel")
@@ -431,11 +448,16 @@ add_subdirectory(ZoomNavigator)
 add_subdirectory(git)
 add_subdirectory(CMakePlugin)
 add_subdirectory(CodeLiteDiff)
+add_subdirectory(SpellChecker)
 add_subdirectory(LuaScript)
 
 if (WITH_SFTP)
     add_subdirectory(SFTP)
 endif(WITH_SFTP)
+
+if (WITH_LLDB)
+    add_subdirectory(LLDBDebugger)
+endif()
 
 ## Executables
 add_subdirectory(LiteEditor)
@@ -463,6 +485,12 @@ add_dependencies(wxshapeframework wxsqlite3)
 add_dependencies(libcodelite wxshapeframework databaselayersqlite wxsqlite3)
 add_dependencies(plugin libcodelite)
 add_dependencies(codelite plugin)
+
+## Include our custom plugin.cmake module
+include(plugin)
+
+## Scan for user plugins
+CL_SCAN_FOR_PLUGINS()
 
 # Don't unset this earlier: it would affect the plugins' CMakeLists.txts
 unset(PREFIX CACHE)

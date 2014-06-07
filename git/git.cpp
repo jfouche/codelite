@@ -51,7 +51,7 @@ extern "C" EXPORT IPlugin *CreatePlugin(IManager *manager)
 extern "C" EXPORT PluginInfo GetPluginInfo()
 {
     PluginInfo info;
-    info.SetAuthor(wxT("RenÃ© Kraus"));
+    info.SetAuthor(wxT("RenÃÂ© Kraus"));
     info.SetName(wxT("git"));
     info.SetDescription(wxT("Simple GIT plugin"));
     info.SetVersion(wxT("v1.1.0"));
@@ -613,10 +613,12 @@ void GitPlugin::OnPush(wxCommandEvent &e)
 /*******************************************************************************/
 void GitPlugin::OnPull(wxCommandEvent &e)
 {
-    wxString commandString = e.GetString(); // This might be user-specified e.g. pull --rebase
-    if (commandString.empty()) {
-        commandString = GetAnyDefaultCommand("git_pull");
+    wxString argumentString = e.GetString(); // This might be user-specified e.g. pull --rebase
+    if (argumentString.empty()) {
+        argumentString = GetAnyDefaultCommand("git_pull");
     }
+    argumentString.Replace("pull", "");
+    argumentString.Trim(false);
     
     wxStandardID res = ::PromptForYesNoDialogWithCheckbox(_("Save all changes and pull remote changes?"), "GitPullRemoteChanges");
     if( res == wxID_YES ) {
@@ -626,7 +628,7 @@ void GitPlugin::OnPull(wxCommandEvent &e)
             m_gitActionQueue.push(ga);
         }
         {
-            gitAction ga(gitPull, wxT(""));
+            gitAction ga(gitPull, argumentString);
             m_gitActionQueue.push(ga);
         }
         if ( m_console->IsDirty() ) { 
@@ -634,7 +636,7 @@ void GitPlugin::OnPull(wxCommandEvent &e)
             m_gitActionQueue.push(ga);
         }
         AddDefaultActions();
-        ProcessGitActionQueue(commandString);
+        ProcessGitActionQueue();
     }
 }
 
@@ -805,7 +807,7 @@ void GitPlugin::OnInitDone(wxCommandEvent& e)
     m_topWindow = m_mgr->GetTheApp()->GetTopWindow();
 }
 /*******************************************************************************/
-void GitPlugin::ProcessGitActionQueue(const wxString& commandString /*= ""*/)
+void GitPlugin::ProcessGitActionQueue()
 {
     if(m_gitActionQueue.size() == 0)
         return;
@@ -934,12 +936,7 @@ void GitPlugin::ProcessGitActionQueue(const wxString& commandString /*= ""*/)
     case gitPull:
         GIT_MESSAGE(wxT("Pull remote changes"));
         ShowProgress(wxT("Obtaining remote changes"), false);
-        command << " --no-pager ";
-        if (commandString.empty()) {
-            command << " pull ";
-        } else {
-            command << commandString;
-        }
+        command << " --no-pager pull " << ga.arguments;
         command << " --log";
         GIT_MESSAGE(wxT("%s. Repo path: %s"), command.c_str(), m_repositoryDirectory.c_str());
         break;
@@ -1359,16 +1356,32 @@ void GitPlugin::OnProcessTerminated(wxCommandEvent &event)
         dlg.AppendDiff(m_commandOutput);
         if(dlg.ShowModal() == wxID_OK) {
             wxString message = dlg.GetCommitMessage();
-            if(!message.IsEmpty()) {
+            if(!message.IsEmpty() || dlg.IsAmending() ) {
+                
+                // amending?
+                wxString arg;
+                if ( dlg.IsAmending() ) {
+                    arg << " --amend ";
+                }
+                
+                // Add the message
+                if ( !message.IsEmpty() ) {
+                    arg << "-m \"";
+                    arg << message;
+                    arg << "\" ";
+                     
+                } else {
+                    // we are amending previous commit, use the previous commit message 
+                    // by passing the --no-edit switch
+                    arg << " --no-edit ";
+                }
+                
                 wxArrayString files = dlg.GetSelectedFiles();
-                wxString arg = wxT("-m \"");
-                arg << message;
-                arg << wxT("\" ");
                 if(files.GetCount() != 0) {
                     for(unsigned i=0; i < files.GetCount(); ++i)
-                        arg << files[i] << wxT(" ");
+                        arg << files.Item(i) << wxT(" ");
                 }
-                gitAction ga(gitCommit,arg);
+                gitAction ga(gitCommit, arg);
                 m_gitActionQueue.push(ga);
                 AddDefaultActions();
 

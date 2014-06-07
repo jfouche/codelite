@@ -175,9 +175,69 @@ clDebugEvent::clDebugEvent(const clDebugEvent& event)
     *this = event;
 }
 
-clDebugEvent& clDebugEvent::operator=(const clDebugEvent& src)
+clDebugEvent& clDebugEvent::operator=(const clDebugEvent& other)
 {
-    m_projectName = src.m_projectName;
-    m_configurationName = src.m_configurationName;
+    clCommandEvent::operator =(other);
+    m_debuggerName      = other.m_debuggerName;
+    m_projectName       = other.m_projectName;
+    m_configurationName = other.m_configurationName;
+    m_executableName    = other.m_executableName;      // This will be set for wxEVT_DBG_UI_QUICK_DEBUG and wxEVT_DBG_UI_CORE_FILE
+    m_coreFile          = other.m_coreFile;            // wxEVT_DBG_UI_CORE_FILE
+    m_workingDirectory  = other.m_workingDirectory;    // wxEVT_DBG_UI_CORE_FILE, wxEVT_DBG_UI_QUICK_DEBUG
+    m_arguments         = other.m_arguments;           // wxEVT_DBG_UI_QUICK_DEBUG
+    m_startupCommands   = other.m_startupCommands;     // wxEVT_DBG_UI_QUICK_DEBUG
+    return *this;
+}
+
+//-------------------------------------------------------------------------
+// clNewProjectEvent
+//-------------------------------------------------------------------------
+
+clNewProjectEvent::clNewProjectEvent(wxEventType commandType, int winid)
+    : clCommandEvent(commandType, winid)
+{
+}
+
+clNewProjectEvent::clNewProjectEvent(const clNewProjectEvent& event)
+{
+    *this = event;
+}
+
+clNewProjectEvent::~clNewProjectEvent()
+{
+}
+
+clNewProjectEvent& clNewProjectEvent::operator=(const clNewProjectEvent& other)
+{
+    clCommandEvent::operator =(other);
+    m_templates = other.m_templates;
+    m_toolchain = other.m_toolchain;
+    m_debugger = other.m_debugger;
+    m_projectName = other.m_projectName;
+    m_projectFolder = other.m_projectFolder;
+    m_templateName = other.m_templateName;
+    return *this;
+}
+
+// --------------------------------------------------------------
+// Compiler event
+// --------------------------------------------------------------
+clCompilerEvent::~clCompilerEvent()
+{
+}
+
+clCompilerEvent::clCompilerEvent(const clCompilerEvent& event)
+{
+    *this = event;
+}
+
+clCompilerEvent::clCompilerEvent(wxEventType commandType, int winid)
+    : clCommandEvent(commandType, winid)
+{
+}
+
+clCompilerEvent& clCompilerEvent::operator=(const clCompilerEvent& src)
+{
+    clCommandEvent::operator =(src);
     return *this;
 }

@@ -49,6 +49,9 @@ private:
     MessagePane  *      m_messagePane;
     bool                m_useBuffereLimit;
     EditorFrame::List_t m_detachedEditors;
+    bool                m_isWorkspaceReloading;
+    bool                m_reloadingDoRaise;   // Prevents multiple Raises() during RestoreSession() 
+    
 public:
     enum {
         kGetAll_Default         = 0x00000000, // booked editors only
@@ -81,7 +84,8 @@ private:
     void DoPositionFindBar(int where);
     void DoHandleFrameMenu(LEditor *editor);
     void DoEraseDetachedEditor(IEditor* editor);
-
+    void OnWorkspaceReloadStarted(clCommandEvent &e);
+    void OnWorkspaceReloadEnded(clCommandEvent &e);
 public:
     MainBook(wxWindow *parent);
     ~MainBook();
@@ -152,7 +156,14 @@ public:
     bool ClosePage      (wxWindow *win);
     bool CloseAllButThis(wxWindow *win);
     bool CloseAll       (bool cancellable);
-
+    
+    // These 3 functions are meant to be used with CallAfter
+    void ClosePageVoid (wxWindow *win) ;
+    
+    void CloseAllButThisVoid (wxWindow *win) ;
+    
+    void CloseAllVoid (bool cancellable) ;
+    
     wxString GetPageTitle(wxWindow *win) const;
     void     SetPageTitle(wxWindow *page, const wxString &name);
     long     GetBookStyle();

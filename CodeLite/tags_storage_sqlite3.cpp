@@ -321,23 +321,32 @@ void TagsStorageSQLite::SelectTagsByFile(const wxString& file, std::vector<TagEn
     OpenDatabase(databaseFileName);
 
     wxString query;
-    query << wxT("select * from tags where file='") << file << wxT("' order by line asc");
-
+    query << wxT("select * from tags where file='") << file << "' ";
+#ifdef __WXMSW__
+    // Under Windows, the file-crawler changes the file path
+    // to lowercase. However, the database matches the file name
+    // by case-sensitive
+    query << "COLLATE NOCASE ";
+#endif
+    query << wxT("order by line asc");
     DoFetchTags(query, tags);
 }
 
 void TagsStorageSQLite::DeleteByFileName(const wxFileName& path, const wxString& fileName, bool autoCommit)
 {
     // make sure database is open
-
-
     try {
         OpenDatabase(path);
 
         if ( autoCommit )
             m_db->Begin();
-
-        m_db->ExecuteUpdate(wxString::Format(wxT("Delete from tags where File='%s'"), fileName.GetData()));
+        
+        wxString sql = wxString::Format(wxT("Delete from tags where File='%s'"), fileName.GetData());
+#ifdef __WXMSW__
+        sql << " COLLATE NOCASE ";
+#endif
+        CL_DEBUG("TagsStorageSQLite: DeleteByFileName: '%s'", sql);
+        m_db->ExecuteUpdate( sql );
 
         if ( autoCommit )
             m_db->Commit();
@@ -1598,5 +1607,71 @@ void TagsStorageSQLite::GetTagsByPartName(const wxString& partname, std::vector<
 
     } catch (wxSQLite3Exception &e) {
         CL_DEBUG(wxT("%s"), e.GetMessage().c_str());
+    }
+}
+
+void TagsStorageSQLite::RemoveNonWorkspaceSymbols(wxArrayString& symbols, const wxArrayString& kinds)
+{
+    try {
+        wxArrayString workspaceSymbols;
+        
+        if ( symbols.IsEmpty() ) {
+            return;
+        }
+        
+        if ( kinds.IsEmpty() ) {
+            symbols.Clear();
+            return;
+        }
+        
+        // an example query
+        // SELECT distinct name FROM 'main'.'tags' where name in ('LoadList') 
+        
+        // Split the input vector into arrays of up to 500 elements each
+        std::vector<wxArrayString> v;
+        wxArrayString tmp;
+        for(size_t i=0; i<symbols.GetCount(); ++i) {
+            tmp.Add(symbols.Item(i));
+            if ( tmp.GetCount() % 500 == 0 ) {
+                v.push_back( tmp );
+                tmp.Clear();
+            }
+        }
+        
+        if ( !tmp.IsEmpty() ) {
+            v.push_back( tmp );
+            tmp.Clear();
+        }
+        
+        for(size_t i=0; i<v.size(); ++i) {
+            wxString sql;
+            sql << "SELECT distinct name FROM tags where name in (";
+            for(size_t n=0; n<v.at(i).GetCount(); ++n) { 
+                sql << "'" << v.at(i).Item(n) << "',";
+            }
+            
+            // remove the last comma
+            sql.RemoveLast();
+            sql << ") AND KIND IN (";
+            
+            for(size_t n=0; n<kinds.GetCount(); ++n) {
+                sql << "'" << kinds.Item(n) << "',";
+            }
+            // remove the last comma
+            sql.RemoveLast();
+            sql << ")";
+            
+            // Run the query
+            wxSQLite3ResultSet res = m_db->ExecuteQuery( sql );
+            while ( res.NextRow() ) {
+                workspaceSymbols.Add( res.GetString(0) );
+            }
+        }
+        
+        workspaceSymbols.Sort();
+        symbols.swap( workspaceSymbols );
+        
+    } catch (wxSQLite3Exception &e) {
+        CL_DEBUG("SplitSymbols error: %s", e.GetMessage());
     }
 }

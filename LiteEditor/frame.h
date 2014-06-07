@@ -46,6 +46,7 @@
 #include <set>
 #include "theme_handler.h"
 #include "cl_command_event.h"
+#include "ZombieReaperPOSIX.h"
 
 // forward decls
 class TagEntry;
@@ -119,7 +120,10 @@ class clMainFrame : public wxFrame
     wxMenu*                               m_bookmarksDropDownMenu;
     ThemeHandler                          m_themeHandler;
     static clSplashScreen*                m_splashScreen;
-    
+#ifndef __WXMSW__
+    ZombieReaperPOSIX                     m_zombieReaper;
+#endif
+
 protected:
     bool IsEditorEvent(wxEvent &event);
     void DoCreateBuildDropDownMenu(wxMenu *menu);
@@ -303,7 +307,9 @@ public:
      */
     void CreateRecentlyOpenedWorkspacesMenu();
     void DoSuggestRestart();
-
+    
+    void LocateCompilersIfNeeded();
+    
 private:
     // make our frame's constructor private
     clMainFrame(wxWindow *pParent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style = wxMINIMIZE_BOX | wxMAXIMIZE_BOX | wxCLOSE_BOX | wxCAPTION | wxSYSTEM_MENU | wxRESIZE_BORDER | wxCLIP_CHILDREN);
@@ -341,7 +347,7 @@ private:
     void CreateViewAsSubMenu();
     void CreateRecentlyOpenedFilesMenu();
     void CreateWelcomePage();
-    void ReloadExternallyModifiedProjectFiles();
+    bool ReloadExternallyModifiedProjectFiles();
     void DoEnableWorkspaceViewFlag(bool enable, int flag);
     void DoUpdatePerspectiveMenu();
     bool IsWorkspaceViewFlagEnabled(int flag);
@@ -364,6 +370,8 @@ protected:
     void OnSaveAs(wxCommandEvent& event);
     void OnFileReload(wxCommandEvent& event);
     void OnFileLoadTabGroup(wxCommandEvent& event);
+    void OnNativeTBUnRedoDropdown(wxCommandEvent& event);
+    void OnTBUnRedo(wxAuiToolBarEvent& event);
     void OnCompleteWord(wxCommandEvent& event);
     void OnCompleteWordRefreshList(wxCommandEvent &event);
     void OnFunctionCalltip(wxCommandEvent& event);
@@ -500,8 +508,6 @@ protected:
     void OnCleanWorkspaceUI(wxUpdateUIEvent &e);
     void OnReBuildWorkspace(wxCommandEvent &e);
     void OnReBuildWorkspaceUI(wxUpdateUIEvent &e);
-    void OnUpdateParserPath(wxCommandEvent &e);
-    void OnNeverUpdateParserPath(wxCommandEvent &e);
 
     // Perspectives management
     void OnChangePerspective  (wxCommandEvent &e);
@@ -561,6 +567,7 @@ protected:
     void OnChangeActiveBookmarkType(wxCommandEvent &e);
     void OnShowBookmarkMenu(wxAuiToolBarEvent &e);
     void OnSettingsChanged(wxCommandEvent &e);
+    void OnEditMenuOpened(wxMenuEvent& e);
     
     DECLARE_EVENT_TABLE()
 };

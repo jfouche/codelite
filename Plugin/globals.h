@@ -38,6 +38,9 @@
 #include <wx/dcgraph.h>
 #include <wx/dc.h>
 
+class wxStyledTextCtrl;
+class IProcess;
+class IProcessCallback;
 class wxListCtrl;
 class IEditor;
 class IManager;
@@ -66,6 +69,7 @@ public:
     clEventDisabler();
     ~clEventDisabler();
 };
+
 
 /**
  * \brief send command event to the application (wxTheApp),
@@ -129,10 +133,18 @@ WXDLLIMPEXP_SDK bool ReadFileWithConversion(const wxString &fileName, wxString &
 /**
  * \brief write file using UTF8 converter
  * \param fileName file path
- * \param content file's conent
+ * \param content file's content
  * \return true on success, false otherwise
  */
 WXDLLIMPEXP_SDK bool WriteFileUTF8(const wxString &fileName, const wxString &content);
+
+/**
+ * \brief compare a file with a wxString using md5
+ * \param filePath file's full path
+ * \param str a wxString, perhaps containing an editor's content
+ * \return true if the current content of the file is identical to str, false otherwise
+ */
+WXDLLIMPEXP_SDK bool CompareFileWithString(const wxString& filePath, const wxString& str);
 
 /**
  * \brief delete directory using shell command
@@ -397,6 +409,16 @@ WXDLLIMPEXP_SDK wxArrayString SplitString(const wxString &inString, bool trim = 
 WXDLLIMPEXP_SDK  wxString MakeExecInShellCommand(const wxString& cmd, const wxString& wd, bool waitForAnyKey);
 
 /**
+ * @brief launch codelite terminal and return its TTY
+ */
+WXDLLIMPEXP_SDK  IProcess* LaunchTerminal(const wxString &title, bool forDebugger, IProcessCallback* processCB);
+
+/**
+ * @brief launch terminal for debugging purposes and return its TTY. This function does nothing under Windows
+ */
+WXDLLIMPEXP_SDK void LaunchTerminalForDebugger(const wxString &title, wxString &tty, long &pid);
+
+/**
  * @brief prompt the user with a wxRichMessageDialog with a checkbox "Don't show this message again"
  * @param message the message to show to the user
  * @param checkboxLabel the message to display next to the checkbox
@@ -407,12 +429,24 @@ WXDLLIMPEXP_SDK  wxString MakeExecInShellCommand(const wxString& cmd, const wxSt
  * @param checkboxInitialValue
  * @return wxRichMessageDialog::ShowModal() return value
  */
-WXDLLIMPEXP_SDK  wxStandardID PromptForYesNoDialogWithCheckbox( const wxString &message, 
-                                                                const wxString &dlgId,
-                                                                const wxString &yesLabel = _("Yes"), 
-                                                                const wxString &noLabel  = _("No"), 
-                                                                const wxString &checkboxLabel = _("Remember my answer and don't ask me again"),
-                                                                long style = wxYES_NO|wxICON_QUESTION|wxYES_DEFAULT, 
-                                                                bool checkboxInitialValue = false);
+WXDLLIMPEXP_SDK  wxStandardID PromptForYesNoDialogWithCheckbox( const wxString &message,
+        const wxString &dlgId,
+        const wxString &yesLabel = _("Yes"),
+        const wxString &noLabel  = _("No"),
+        const wxString &checkboxLabel = _("Remember my answer and don't ask me again"),
+        long style = wxYES_NO|wxICON_QUESTION|wxYES_DEFAULT,
+        bool checkboxInitialValue = false);
 
+/**
+ * @brief wrap string with quotes if needed
+ */
+WXDLLIMPEXP_SDK wxString& WrapWithQuotes(wxString &str);
+
+/**
+ * @brief return an expression from a given position.
+ * e.g. if the caret is on a line:
+ * variable.m_name.m_value|
+ * the | represents the cart, this function will return the entire expression: variable.m_name.m_value
+ */
+WXDLLIMPEXP_SDK wxString GetCppExpressionFromPos(long pos, wxStyledTextCtrl *ctrl, bool forCC);
 #endif //GLOBALS_H

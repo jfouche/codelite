@@ -283,9 +283,6 @@
 // User selected an option to create a new workspace
 #define wxEVT_CMD_CREATE_NEW_WORKSPACE 3506
 
-// User selected an option to create a new project
-#define wxEVT_CMD_CREATE_NEW_PROJECT 3507
-    
 // a _plugin_ sends this event to codelite to request adding 
 // a workspace to the recetly used list
 // The workspace path is sent in the evt.SetString()/GetString() 
@@ -362,18 +359,12 @@
 // the menu
 #define wxEVT_CMD_EDITOR_MARGIN_CONTEXT_MENU 3520
 
-// codelite is requesting for the find-in-files file masking.
+// Event type: clCommandEvent
+// The Find In Files dialog requests an additional file mask
 // the format should be:
 // *.a;*.b
 // and should be placed at:
-// event.SetString("*.a;*.b");
-// The plugin can also control what codelite will do with its masking by
-// setting the event.SetInt() with the following values (the plugin can use
-// bitwise OR):
-// 0x00000001 -> append the plugins' masking to the default masking
-// 0x00000002 -> prepend the plugins' masking to default masking
-// 0x00000004 -> replace default masking with the one provided by the plugin
-// 0x00000008 -> select the plugin's masking by default
+// event.GetStrings().Add("*.a;*.b");
 #define wxEVT_CMD_GET_FIND_IN_FILES_MASK 3521
 
 /////////////////////////////////////////////////////////
@@ -493,24 +484,64 @@
 // If a plugin wishes to override codelite's default debugger (gdb)
 // it simply needs to connect the event and avoid calling 'event.Skip();
 //----------------------------------------------------------------------
-#define wxEVT_DBG_UI_START_OR_CONT     3547 // Start the debugger or continue
-#define wxEVT_DBG_UI_STOP              3549 // Stop the debugger
-#define wxEVT_DBG_UI_STEP_IN           3550 // Step into function
-#define wxEVT_DBG_UI_STEP_OUT          3551 // Step out of current frame
-#define wxEVT_DBG_UI_NEXT              3552 // Next line
-#define wxEVT_DBG_UI_NEXT_INST         3553 // Next instruction
-#define wxEVT_DBG_UI_INTERRUPT         3554 // Interrupt the debugger execution
-#define wxEVT_DBG_UI_SHOW_CURSOR       3555 // Set the focus to the current debugger file/line
-#define wxEVT_DBG_UI_RESTART           3556 // Restart the debug session
-#define wxEVT_DBG_IS_RUNNING           3557 // Use evet.SetAnswer() method to reply
-#define wxEVT_DBG_UI_TOGGLE_BREAKPOINT 3558 // Toggle breakpoint. Use event.GetFileName() / event.GetInt() for the file:line
-#define wxEVT_DBG_CAN_INTERACT         3559 // Can CodeLite interact with the debugger? use event.SetAnswer(true); 
-                                            // Note: by avoid calling Skip() CodeLite will assume that the plugin is controlling the debug session
-                                            // and it will use the event.IsAnswer() as the answer to the question to : CanDbgInteract()
-#define wxEVT_DBG_EXPR_TOOLTIP         3560 // Provide a tooltip for the expression under the caret. user event.GetString() to get the expression
+#define wxEVT_DBG_UI_START_OR_CONT              3547 // Start the debugger or continue
+#define wxEVT_DBG_UI_STOP                       3549 // Stop the debugger
+#define wxEVT_DBG_UI_STEP_IN                    3550 // Step into function
+#define wxEVT_DBG_UI_STEP_OUT                   3551 // Step out of current frame
+#define wxEVT_DBG_UI_NEXT                       3552 // Next line
+#define wxEVT_DBG_UI_NEXT_INST                  3553 // Next instruction
+#define wxEVT_DBG_UI_INTERRUPT                  3554 // Interrupt the debugger execution
+#define wxEVT_DBG_UI_SHOW_CURSOR                3555 // Set the focus to the current debugger file/line
+#define wxEVT_DBG_UI_RESTART                    3556 // Restart the debug session
+#define wxEVT_DBG_IS_RUNNING                    3557 // Use evet.SetAnswer() method to reply
+#define wxEVT_DBG_UI_TOGGLE_BREAKPOINT          3558 // Toggle breakpoint. Use event.GetFileName() / event.GetInt() for the file:line
+#define wxEVT_DBG_CAN_INTERACT                  3559 // Can CodeLite interact with the debugger? use event.SetAnswer(true); 
+                                                        // Note: by avoid calling Skip() CodeLite will assume that the plugin is controlling the debug session
+                                                        // and it will use the event.IsAnswer() as the answer to the question to : CanDbgInteract()
+#define wxEVT_DBG_EXPR_TOOLTIP                  3560 // Provide a tooltip for the expression under the caret. user event.GetString() to get the expression
+            
+#define wxEVT_DBG_IS_PLUGIN_DEBUGGER            3570 // This event is sent by codelite to all plugins to determine whether a plugin is actually a debugger.
+                                                        // A plugin should *always* call event.Skip() when handling this event. If the plugin is actually a debugger
+                                                        // plugin, it should add itself like this: event.GetStrings().Add("<the-debugger-name")
+                                                        // This string is later will be availe for codelite to display it in various dialogs (e.g. Quick Debug, project settings etc)
+            
+#define wxEVT_DBG_UI_QUICK_DEBUG                3571 // User clicked on the 'Quick Debug' button. Event type is clDebugEvent
+#define wxEVT_DBG_UI_CORE_FILE                  3572 // User selected to debug a core file. Event type is clDebugEvent
+#define wxEVT_DBG_UI_ATTACH_TO_PROCESS          3573 // Attach to process. Use clDebugEvent::GetInt() to get the process ID
+#define wxEVT_DBG_UI_DELTE_ALL_BREAKPOINTS      3574 // Delete all breakpoints
+#define wxEVT_DBG_UI_ENABLE_ALL_BREAKPOINTS     3575 // Enable all breakpoints
+#define wxEVT_DBG_UI_DISABLE_ALL_BREAKPOINTS    3576 // Disable all breakpoints
 
 // -------------------Debugger events end------------------------------------------------
 #define wxEVT_CMD_OPEN_PROJ_SETTINGS   3580 // clCommandEvent. Use event.GetString() to get the project name
+
+// Workspace reload started
+// event type: clCommandEvent
+#define wxEVT_WORKSPACE_RELOAD_STARTED 3581
+
+// Workspace reload is done
+// event type: clCommandEvent
+#define wxEVT_WORKSPACE_RELOAD_ENDED   3582
+
+// event type: clNewProjectEvent
+// Use this event to add new templates / categories to the wizard
+// If you don't call event.Skip() codelite will assume that the plugin
+// is replacing the dialog with its own and will do nothing
+#define wxEVT_NEW_PROJECT_WIZARD_SHOWING 3590
+
+// event type: clNewProjectEvent
+// User clicked on the 'Finish' button of the new project wizard dialog
+// call event.Skip( false ) if the plugin wants to handle the new project, otherwise
+// call event.Skip( true ) for codelite to run the default behvior
+#define wxEVT_NEW_PROJECT_WIZARD_FINISHED 3591
+
+// --------------------------------------------------------------
+// Compiler events
+// --------------------------------------------------------------
+
+// The compiler list was updated (e.g. a compiler was deleted, renamed etc)
+// Event type: clCompilerEvent
+#define wxEVT_COMPILER_LIST_UPDATED 3600
 
 #endif // CODELITE_EVENTS_H
 

@@ -34,7 +34,7 @@
 
 /**
  * \ingroup LiteEditor
- * This class represenets a compiler entry in the configuration file
+ * This class represents a compiler entry in the configuration file
  *
  * \version 1.0
  * first version
@@ -50,7 +50,7 @@ public:
         eErrorPattern,
         eWarningPattern
     };
-    
+
     enum CmpFileKind {
         CmpFileKindSource,
         CmpFileKindResource
@@ -73,44 +73,75 @@ public:
         wxString lineNumberIndex;
         wxString fileNameIndex;
     };
+    
+    enum eRegexType {
+        kRegexVC = 0,
+        kRegexGNU
+    };
     typedef std::list<CmpInfoPattern> CmpListInfoPattern;
 
 
 private:
     void AddCmpFileType(const wxString &extension, CmpFileKind type, const wxString &compile_line);
     void AddPattern(int type, const wxString &pattern, int fileNameIndex, int lineNumberIndex);
+    void AddDefaultGnuComplierOptions();
+    void AddDefaultGnuLinkerOptions();
     
 protected:
-    wxString m_name;
-    std::map<wxString, wxString> m_switches;
+    wxString                                      m_name;
+    std::map<wxString, wxString>                  m_switches;
     std::map<wxString, Compiler::CmpFileTypeInfo> m_fileTypes;
-    CmpCmdLineOptions m_compilerOptions;
-    CmpCmdLineOptions m_linkerOptions;
-    wxString m_objectSuffix;
-    wxString m_dependSuffix;
-    wxString m_preprocessSuffix;
-
-    CmpListInfoPattern m_errorPatterns;
-    CmpListInfoPattern m_warningPatterns;
-
-    std::map<wxString, wxString> m_tools;
-    wxString m_globalIncludePath;
-    wxString m_globalLibPath;
-    wxString m_pathVariable;
-    bool m_generateDependeciesFile;
-    bool m_readObjectFilesFromList;
-    bool m_objectNameIdenticalToFileName;
-
+    CmpCmdLineOptions                             m_compilerOptions;
+    CmpCmdLineOptions                             m_linkerOptions;
+    wxString                                      m_objectSuffix;
+    wxString                                      m_dependSuffix;
+    wxString                                      m_preprocessSuffix;
+    CmpListInfoPattern                            m_errorPatterns;
+    CmpListInfoPattern                            m_warningPatterns;
+    std::map<wxString, wxString>                  m_tools;
+    wxString                                      m_globalIncludePath;
+    wxString                                      m_globalLibPath;
+    wxString                                      m_pathVariable;
+    bool                                          m_generateDependeciesFile;
+    bool                                          m_readObjectFilesFromList;
+    bool                                          m_objectNameIdenticalToFileName;
+    wxString                                      m_compilerFamily;
+    bool                                          m_isDefault;
+    wxString                                      m_installationPath;
+    
 public:
     typedef std::map<wxString, wxString>::const_iterator ConstIterator;
 
-    Compiler(wxXmlNode *node);
+    Compiler(wxXmlNode *node, Compiler::eRegexType regexType = Compiler::kRegexGNU );
     virtual ~Compiler();
-
+    
+    /**
+     * @brief return true if this compiler is compatible with GNU compilers
+     */
+    bool IsGnuCompatibleCompiler() const;
+    
     wxXmlNode *ToXml() const;
     void SetTool(const wxString &toolname, const wxString &cmd);
     void SetSwitch(const wxString &switchName, const wxString &switchValue);
-    
+
+    void SetInstallationPath(const wxString& installationPath) {
+        this->m_installationPath = installationPath;
+    }
+    const wxString& GetInstallationPath() const {
+        return m_installationPath;
+    }
+    void SetCompilerFamily(const wxString& compilerFamily) {
+        this->m_compilerFamily = compilerFamily;
+    }
+    void SetIsDefault(bool isDefault) {
+        this->m_isDefault = isDefault;
+    }
+    const wxString& GetCompilerFamily() const {
+        return m_compilerFamily;
+    }
+    bool IsDefault() const {
+        return m_isDefault;
+    }
     //iteration over switches
     Compiler::ConstIterator SwitchesBegin() const {
         return m_switches.begin();
@@ -118,13 +149,16 @@ public:
     Compiler::ConstIterator SwitchesEnd() const {
         return m_switches.end();
     }
-
+    
+    void AddCompilerOption(const wxString &name, const wxString &desc);
+    void AddLinkerOption(const wxString &name, const wxString &desc);
+    
     //---------------------------------------------------
     //setters/getters
     //---------------------------------------------------
     wxString GetTool(const wxString &name) const;
     wxString GetSwitch(const wxString &name) const;
-    
+
     const wxString &GetObjectSuffix() const {
         return m_objectSuffix;
     }

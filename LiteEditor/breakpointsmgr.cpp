@@ -30,6 +30,7 @@
 #include "frame.h"
 #include "breakpointpropertiesdlg.h"
 #include "breakpointdlg.h"
+#include "event_notifier.h"
 
 //---------------------------------------------------------
 
@@ -213,15 +214,13 @@ wxString BreakptMgr::GetTooltip(const wxString& fileName, const int lineno)
 // Done before refreshing after a delete or edit, lest it was the last bp in a file
 void BreakptMgr::DeleteAllBreakpointMarkers()
 {
-    std::set<wxString> filenames = GetFilesWithBreakpointMarkers();
-    std::set<wxString>::iterator filenames_iter = filenames.begin();
-    for (; filenames_iter != filenames.end(); ++filenames_iter) {
-        LEditor* editor = clMainFrame::Get()->GetMainBook()->FindEditor(*filenames_iter);
-        if (editor) {
-            editor->DelAllBreakpointMarkers();
-        }
+    LEditor::Vec_t editors;
+    clMainFrame::Get()->GetMainBook()->GetAllEditors(editors, MainBook::kGetAll_IncludeDetached);
+    for(size_t i=0; i<editors.size(); ++i) {
+        editors.at(i)->DelAllBreakpointMarkers();
     }
 }
+
 // Refresh all line-type breakpoint markers in all editors
 void BreakptMgr::RefreshBreakpointMarkers()
 {
@@ -458,7 +457,7 @@ void BreakptMgr::SetAllBreakpointsEnabledState(bool enabled)
     unsigned int successes = 0;
     bool debuggerIsRunning = false;
     bool contIsNeeded = false;
-
+    
     IDebugger *dbgr = DebuggerMgr::Get().GetActiveDebugger();
     if (dbgr && dbgr->IsRunning()) {
         debuggerIsRunning = true;

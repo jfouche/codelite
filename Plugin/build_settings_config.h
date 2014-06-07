@@ -25,6 +25,7 @@
 #ifndef BUILD_CONFIG_SETTINGS_H
 #define BUILD_CONFIG_SETTINGS_H
 
+#include <vector>
 #include "wx/string.h"
 #include "builder.h"
 #include "codelite_exports.h"
@@ -35,6 +36,7 @@
 #include "build_system.h"
 #include "json_node.h"
 #include "cl_config.h"
+#include <map>
 
 // Cookie class for the editor to provide reentrance operations
 // on various methods (such as iteration)
@@ -59,10 +61,12 @@ class WXDLLIMPEXP_SDK BuildSettingsConfig
     wxXmlDocument *m_doc;
     wxFileName     m_fileName;
     wxString       m_version;
+    std::map<wxString, CompilerPtr> m_compilers;
     
 protected:
     wxXmlNode* GetCompilerNode(const wxString& name) const;
-
+    void DoUpdateCompilers();
+    
 public:
     BuildSettingsConfig();
     virtual ~BuildSettingsConfig();
@@ -73,7 +77,22 @@ public:
      * codelite to override the user version
      */
     bool Load(const wxString &version);
-
+    
+    /**
+     * @brief delete all compilers
+     */
+    void DeleteAllCompilers(bool notify = true);
+    
+    /**
+     * @brief return list of all compiler names
+     */
+    wxArrayString GetAllCompilers() const;
+    
+    /**
+     * @brief replace the current compilers list with a new one
+     */
+    void SetCompilers( const std::vector<CompilerPtr> &compilers );
+    
     /**
      * Set or update a given compiler using its name as the index
      */

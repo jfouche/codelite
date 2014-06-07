@@ -38,6 +38,7 @@
 #include "procutils.h"
 #include "wx/tokenzr.h"
 #include <algorithm>
+#include "file_logger.h"
 
 #ifdef __WXMSW__
 #include "windows.h"
@@ -211,7 +212,11 @@ bool DbgGdb::Start( const DebugSessionInfo& si)
 
     wxString cmd;
 #if defined (__WXGTK__) || defined (__WXMAC__)
-    cmd << dbgExeName << wxT( " --tty=" ) << si.ttyName << wxT( " --interpreter=mi " ) << si.exeName;
+    cmd << dbgExeName;
+    if ( !si.ttyName.IsEmpty() ) {
+        cmd << wxT( " --tty=" ) << si.ttyName;
+    }
+    cmd << wxT( " --interpreter=mi " ) << si.exeName;
 #else
     cmd << dbgExeName << wxT( " --interpreter=mi " ) << si.exeName;
 #endif
@@ -691,15 +696,15 @@ void DbgGdb::Poke()
             // and are important to the CLI handler
             bool consoleStream( false );
             bool targetConsoleStream(false);
-            
+
             if ( curline.StartsWith( wxT( "~" ) ) ) {
                 consoleStream = true;
             }
-            
+
             if ( curline.StartsWith( wxT( "@" ) ) ) {
                 targetConsoleStream = true;
             }
-            
+
             // Filter out some gdb error lines...
             if ( FilterMessage( curline ) ) {
                 continue;
@@ -711,16 +716,16 @@ void DbgGdb::Poke()
             // the output view, concatenate it into the handler buffer
             if ( targetConsoleStream ) {
                 m_observer->UpdateAddLine( curline );
-                
+
             } else if ( consoleStream && GetCliHandler()) {
                 GetCliHandler()->Append( curline );
-                
+
             } else if ( consoleStream ) {
                 // log message
                 m_observer->UpdateAddLine( curline );
-                
+
             }
-            
+
         } else if ( reCommand.Matches( curline ) ) {
 
             //not a gdb message, get the command associated with the message
@@ -862,14 +867,14 @@ bool DbgGdb::EvaluateExpressionToString( const wxString &expression, const wxStr
 bool DbgGdb::ListFrames()
 {
     int max = m_info.maxCallStackFrames;
-#ifndef __WXMAC__    
+#ifndef __WXMAC__
     wxString command = wxString::Format("-stack-list-frames 0 %i", max);
-    
+
 #else
     // Under OSX GDB version is old and does not support the min-max version
     // of callstack info
     wxString command = "-stack-list-frames";
-    
+
 #endif
 
     return WriteCommand(command, new DbgCmdStackList( m_observer ));
@@ -1073,12 +1078,12 @@ bool DbgGdb::DoInitializeGdb(const DebugSessionInfo& sessionInfo)
     } else {
         SetShouldBreakAtMain(false); // Needs explicitly to be set, in case the user has just changed his options
     }
-    
+
     // Enable python based pretty printing?
     if ( sessionInfo.enablePrettyPrinting ) {
         WriteCommand( wxT( "-enable-pretty-printing" ), NULL );
     }
-    
+
     // Add the additional search paths
     for(size_t i=0; i<sessionInfo.searchPaths.GetCount(); ++i) {
         wxString dirCmd;
@@ -1171,6 +1176,7 @@ void DbgGdb::OnDataRead( wxCommandEvent& e )
     if( !m_gdbProcess || !m_gdbProcess->IsAlive() )
         return;
 
+    CL_DEBUG("GDB>> %s", bufferRead);
     wxArrayString lines = wxStringTokenize( bufferRead, wxT( "\n" ), wxTOKEN_STRTOK );
     if(lines.IsEmpty())
         return;
@@ -1306,7 +1312,7 @@ void DbgGdb::GetDebugeePID(const wxString& line)
                         wxString msg;
                         msg << wxT( ">> Debuggee process ID: " ) << m_debuggeePid;
                         m_observer->UpdateAddLine( msg );
-                        
+
                         // Now there's a known pid, the debugger can be interrupted to let any to-be-disabled bps be disabled. So...
                         m_observer->DebuggerPidValid();
                     }
@@ -1353,20 +1359,20 @@ bool DbgGdb::Disassemble(const wxString& filename, int lineNumber)
         // Use the $pc
         if ( !WriteCommand("-data-disassemble -s \"$pc -100\" -e \"$pc + 100\" -- 0", new DbgCmdHandlerDisasseble(m_observer, this)) )
             return false;
-            
+
     } else {
         // else, use the file and line provided
         wxString tmpfile = filename;
         tmpfile.Replace("\\", "/"); // gdb does not like backslashes...
-        
-        if ( !WriteCommand(wxString() << "-data-disassemble -f \"" << tmpfile << "\" -l " << lineNumber << " -n -1 -- 0", 
+
+        if ( !WriteCommand(wxString() << "-data-disassemble -f \"" << tmpfile << "\" -l " << lineNumber << " -n -1 -- 0",
                            new DbgCmdHandlerDisasseble(m_observer, this)) )
             return false;
     }
-    
+
     // get the current instruction
     if ( !WriteCommand("-data-disassemble -s \"$pc\" -e \"$pc + 1\" -- 0", new DbgCmdHandlerDisassebleCurLine(m_observer, this)) )
-            return false;
+        return false;
 
     return true;
 }
@@ -1382,9 +1388,12 @@ bool DbgGdb::Attach(const DebugSessionInfo& si)
     }
 
     wxString cmd;
-
 #if defined (__WXGTK__) || defined (__WXMAC__)
-    cmd << dbgExeName << wxT( " --tty=" ) << si.ttyName << wxT( " --interpreter=mi " );
+    cmd << dbgExeName;
+    if ( !si.ttyName.IsEmpty() ) {
+        cmd << wxT( " --tty=" ) << si.ttyName;
+    }
+    cmd << wxT( " --interpreter=mi " );
 #else
     cmd << dbgExeName << wxT( " --interpreter=mi " );
     cmd << ProcUtils::GetProcessNameByPid( si.PID ) << wxT( " " );
@@ -1412,4 +1421,9 @@ bool DbgGdb::Attach(const DebugSessionInfo& si)
     DoInitializeGdb( si );
     m_observer->UpdateGotControl( DBG_END_STEPPING );
     return true;
+}
+
+bool DbgGdb::ListRegisters()
+{
+    return WriteCommand("-data-list-register-names", new DbgCmdHandlerRegisterNames(m_observer, this));
 }

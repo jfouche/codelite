@@ -52,6 +52,7 @@
 #include "cl_config.h"
 #include "FileExplorerTab.h"
 #include "clang_code_completion.h"
+#include "debugger.h"
 
 PluginManager *PluginManager::Get()
 {
@@ -493,7 +494,7 @@ void PluginManager::FindAndSelect(const wxString& pattern, const wxString& name,
 {
     LEditor *editor = clMainFrame::Get()->GetMainBook()->GetActiveEditor();
     if (editor) {
-        editor->FindAndSelect(pattern, name, pos, NavMgr::Get());
+        editor->FindAndSelectV(pattern, name, pos, NavMgr::Get());
         editor->SetActive();
     }
 }
@@ -797,4 +798,34 @@ size_t PluginManager::GetAllEditors(IEditor::List_t& editors, bool inOrder)
     clMainFrame::Get()->GetMainBook()->GetAllEditors( tmpEditors, flags );
     editors.insert(editors.end(), tmpEditors.begin(), tmpEditors.end() );
     return editors.size();
+}
+
+size_t PluginManager::GetAllBreakpoints(BreakpointInfo::Vec_t& breakpoints)
+{
+    breakpoints.clear();
+    ManagerST::Get()->GetBreakpointsMgr()->GetBreakpoints( breakpoints );
+    return breakpoints.size();
+}
+
+void PluginManager::DeleteAllBreakpoints()
+{
+    ManagerST::Get()->GetBreakpointsMgr()->DelAllBreakpoints();
+}
+
+void PluginManager::SetBreakpoints(const BreakpointInfo::Vec_t& breakpoints)
+{
+    ManagerST::Get()->GetBreakpointsMgr()->DelAllBreakpoints();
+    for(size_t i=0; i<breakpoints.size(); ++i) {
+        ManagerST::Get()->GetBreakpointsMgr()->AddBreakpoint( breakpoints.at(i) );
+    }
+}
+
+void PluginManager::LoadPerspective(const wxString& perspectiveName)
+{
+    ManagerST::Get()->GetPerspectiveManager().LoadPerspective(perspectiveName);
+}
+
+void PluginManager::SavePerspective(const wxString& perspectiveName)
+{
+    ManagerST::Get()->GetPerspectiveManager().SavePerspective(perspectiveName, true);
 }

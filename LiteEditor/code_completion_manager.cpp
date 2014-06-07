@@ -9,6 +9,7 @@
 #include "compilation_database.h"
 #include "event_notifier.h"
 #include "plugin.h"
+#include "file_logger.h"
 
 static CodeCompletionManager *ms_CodeCompletionManager = NULL;
 
@@ -19,6 +20,7 @@ CodeCompletionManager::CodeCompletionManager()
 {
     EventNotifier::Get()->Connect(wxEVT_BUILD_ENDED, clBuildEventHandler(CodeCompletionManager::OnBuildEnded), NULL, this);
     EventNotifier::Get()->Connect(wxEVT_BUILD_STARTED, clBuildEventHandler(CodeCompletionManager::OnBuildStarted), NULL, this);
+    EventNotifier::Get()->Bind(wxEVT_COMPILE_COMMANDS_JSON_GENERATED, &CodeCompletionManager::OnCompileCommandsFileGenerated, this);
     
     wxTheApp->Bind(wxEVT_ACTIVATE_APP, &CodeCompletionManager::OnAppActivated, this );
 }
@@ -27,6 +29,7 @@ CodeCompletionManager::~CodeCompletionManager()
 {
     EventNotifier::Get()->Disconnect(wxEVT_BUILD_ENDED, clBuildEventHandler(CodeCompletionManager::OnBuildEnded), NULL, this);
     EventNotifier::Get()->Disconnect(wxEVT_BUILD_STARTED, clBuildEventHandler(CodeCompletionManager::OnBuildStarted), NULL, this);
+    EventNotifier::Get()->Unbind(wxEVT_COMPILE_COMMANDS_JSON_GENERATED, &CodeCompletionManager::OnCompileCommandsFileGenerated, this);
     
     wxTheApp->Unbind(wxEVT_ACTIVATE_APP, &CodeCompletionManager::OnAppActivated, this );
 }
@@ -217,7 +220,8 @@ bool CodeCompletionManager::DoCtagsGotoImpl(LEditor* editor)
         if(!editor) {
             return false;
         }
-        editor->FindAndSelect(tag->GetPattern(), tag->GetName());
+        // Use the async funtion here. Synchronously usually works but, if the file wasn't loaded, sometimes the EnsureVisible code is called too early and fails
+        editor->FindAndSelectV(tag->GetPattern(), tag->GetName());
         return true;
     }
     return false;
@@ -239,7 +243,8 @@ bool CodeCompletionManager::DoCtagsGotoDecl(LEditor* editor)
         if(!editor) {
             return false;
         }
-        editor->FindAndSelect(tag->GetPattern(), tag->GetName());
+        // Use the async funtion here. Synchronously usually works but, if the file wasn't loaded, sometimes the EnsureVisible code is called too early and fails
+        editor->FindAndSelectV(tag->GetPattern(), tag->GetName());
         return true;
     }
     return false;
@@ -271,17 +276,12 @@ void CodeCompletionManager::DoUpdateCompilationDatabase()
     // Create a worker thread (detached thread) that 
     // will initialize the database now that the compilation has ended
     CompilationDatabase db;
-    ClangCompilationDbThread* thr = new ClangCompilationDbThread( db.GetFileName().GetFullPath() );
-    thr->Start();
+    ClangCompilationDbThreadST::Get()->AddFile( db.GetFileName().GetFullPath() );
 }
 
 void CodeCompletionManager::OnAppActivated(wxActivateEvent& e)
 {
     e.Skip();
-    // dont start another thread while the build is in progress
-    if ( !m_buildInProgress ) {
-        DoUpdateCompilationDatabase();
-    }
 }
 
 void CodeCompletionManager::Release()
@@ -293,4 +293,13 @@ void CodeCompletionManager::OnBuildStarted(clBuildEvent& e)
 {
     e.Skip();
     m_buildInProgress = true;
+}
+
+void CodeCompletionManager::OnCompileCommandsFileGenerated(clCommandEvent& event)
+{
+    event.Skip();
+    CL_DEBUG("-- Code Completion Manager: process file 'compile_commands.json' file" );
+    CompilationDatabase db;
+    ClangCompilationDbThreadST::Get()->AddFile( db.GetFileName().GetFullPath() );
+    clMainFrame::Get()->SetStatusText("Ready");
 }

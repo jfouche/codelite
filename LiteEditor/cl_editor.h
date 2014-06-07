@@ -44,6 +44,7 @@
 #include "globals.h"
 #include "cl_defs.h"
 #include "bookmark_manager.h"
+#include "cl_unredo.h"
 
 #define DEBUGGER_INDICATOR          11
 #define MATCH_INDICATOR             10
@@ -138,6 +139,7 @@ class LEditor : public wxStyledTextCtrl, public IEditor
     std::vector< std::pair<int,int> >           m_savedMarkers;
     bool                                        m_findBookmarksActive;
     std::map<int, wxString>                     m_compilerMessagesMap;
+    CLCommandProcessor                          m_commandsProcessor;
     
 public:
     static bool                                 m_ccShowPrivateMembers;
@@ -168,6 +170,10 @@ public:
 
     bool IsFullLineCopyCut() const {
         return m_fullLineCopyCut;
+    }
+
+    CLCommandProcessor& GetCommandsProcessor() {
+        return m_commandsProcessor;
     }
 
 public:
@@ -258,6 +264,9 @@ public:
     // set this page as active, this usually happened when user changed the notebook
     // page to this one
     virtual void SetActive();
+
+    // Ditto, but asynchronously
+    virtual void DelayedSetActive();
 
     // Perform FindNext operation based on the data stored in the FindReplaceData class
     void FindNext(const FindReplaceData &data);
@@ -419,6 +428,8 @@ public:
     bool FindAndSelect();
     bool FindAndSelect(const FindReplaceData &data);
     bool FindAndSelect(const wxString &pattern, const wxString &name);
+    void FindAndSelectV(const wxString &pattern, const wxString &name, int pos = 0, NavMgr* unused = NULL); // The same but returns void, so usable with CallAfter()
+    void DoFindAndSelectV(const wxArrayString& strings, int pos); // Called with CallAfter()
 
     bool Replace();
     bool Replace(const FindReplaceData &data);

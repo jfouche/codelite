@@ -166,6 +166,8 @@ LEditor::LEditor(wxWindow* parent)
     , m_fullLineCopyCut          (false)
     , m_findBookmarksActive      (false)
 {
+    m_commandsProcessor.SetParent(this);
+    
     ms_bookmarkShapes[wxT("Small Rectangle")]   = wxSTC_MARK_SMALLRECT;
     ms_bookmarkShapes[wxT("Rounded Rectangle")] = wxSTC_MARK_ROUNDRECT;
     ms_bookmarkShapes[wxT("Small Arrow")]       = wxSTC_MARK_ARROW;
@@ -374,8 +376,8 @@ void LEditor::SetProperties()
     // Mark current line
     SetCaretLineVisible(options->GetHighlightCaretLine());
     SetCaretLineBackground(options->GetCaretLineColour());
-
-    //SetCaretLineBackAlpha(options->GetCaretLineAlpha());
+    SetCaretLineBackAlpha( 30 );
+    
     //MarkerSetAlpha(smt_bookmark, 30);
 
     SetFoldFlags(options->GetUnderlineFoldLine() ? 16 : 0);
@@ -502,6 +504,7 @@ void LEditor::SetProperties()
 
     if ( options->HasOption(OptionsConfig::Opt_Mark_Debugger_Line) ) {
         MarkerDefine(smt_indicator, wxSTC_MARK_BACKGROUND, wxNullColour, options->GetDebuggerMarkerLine());
+        MarkerSetAlpha(smt_indicator, 50);
 
     } else {
 
@@ -526,18 +529,18 @@ void LEditor::SetProperties()
 #if defined(__WXMAC__)
     // turning off these two greatly improves performance
     // on Mac
-    SetTwoPhaseDraw(false);
+    SetTwoPhaseDraw(true);
     SetBufferedDraw(false);
 
-    // Using BufferedDraw as 'false'
-    // improves performance *alot*, however
-    // the downside is that the word hightlight does
-    // not work...
-    // this is why we enable / disable it according to the "highlight word" toggle state
-    long highlightWord(1);
-    EditorConfigST::Get()->GetLongValue(wxT("highlight_word"), highlightWord);
-    SetBufferedDraw(highlightWord == 1 ? true : false);
-    //wxLogMessage("Buffered draw is set to %d", (int)highlightWord);
+//    // Using BufferedDraw as 'false'
+//    // improves performance *alot*, however
+//    // the downside is that the word hightlight does
+//    // not work...
+//    // this is why we enable / disable it according to the "highlight word" toggle state
+//    long highlightWord(1);
+//    EditorConfigST::Get()->GetLongValue(wxT("highlight_word"), highlightWord);
+//    SetBufferedDraw(highlightWord == 1 ? true : false);
+//    //wxLogMessage("Buffered draw is set to %d", (int)highlightWord);
 
 #elif defined(__WXGTK__)
     SetTwoPhaseDraw(true);
@@ -551,12 +554,19 @@ void LEditor::SetProperties()
     //indentation settings
     SetTabIndents(true);
     SetBackSpaceUnIndents (true);
-    SetUseTabs(options->GetIndentUsesTabs());
+    
+    // Should we use spaces or tabs for indenting?
+    // Usually we will ask the configuration, however
+    // when using Makefile we _must_ use the TABS
+    wxString contextName = GetContext()->GetName();
+    contextName.MakeLower();
+    SetUseTabs( (contextName == "makefile") ? true : options->GetIndentUsesTabs() );
+
     SetTabWidth(options->GetTabWidth());
     SetIndent(options->GetIndentWidth());
     SetIndentationGuides(options->GetShowIndentationGuidelines() ? 3 : 0);
 
-    SetLayoutCache(wxSTC_CACHE_DOCUMENT);
+    SetLayoutCache(wxSTC_CACHE_PAGE);
 
     size_t frame_flags = clMainFrame::Get()->GetFrameGeneralInfo().GetFlags();
     SetViewEOL(frame_flags & CL_SHOW_EOL ? true : false);
@@ -1475,15 +1485,6 @@ void LEditor::OnDwellStart(wxStyledTextEvent & event)
         }
 
     } else if (ManagerST::Get()->DbgCanInteract() && clientRect.Contains(pt)) {
-        
-        // debugger is running and responsive, query it about the current token
-        clDebugEvent evt(wxEVT_DBG_EXPR_TOOLTIP, GetId());
-        evt.SetEventObject(this);
-        evt.SetString( GetWordAtMousePointer() );
-        
-        if(EventNotifier::Get()->ProcessEvent(evt))
-            return;
-
         m_context->OnDbgDwellStart(event);
 
     } else if (TagsManagerST::Get()->GetCtagsOptions().GetFlags() & CC_DISP_TYPE_INFO) {
@@ -2024,6 +2025,23 @@ bool LEditor::FindAndSelect(const FindReplaceData &data)
 bool LEditor::FindAndSelect(const wxString &_pattern, const wxString &name)
 {
     return DoFindAndSelect(_pattern, name, 0, NavMgr::Get());
+}
+
+void LEditor::FindAndSelectV(const wxString &_pattern, const wxString &name, int pos/*=0*/, NavMgr* WXUNUSED(unused)) // Similar but returns void, so can be async
+{
+    // Use CallAfter() here. With wxGTK-3.1 (perhaps due to its scintilla update) if the file wasn't already loaded, EnsureVisible() is called too early and fails
+    wxArrayString strings; // CallAfter can only cope with 2 parameters, so combine the wxStrings
+    strings.Add(_pattern);
+    strings.Add(name);
+    CallAfter(&LEditor::DoFindAndSelectV, strings, pos);
+}
+
+void LEditor::DoFindAndSelectV(const wxArrayString& strings, int pos) // Called with CallAfter()
+{
+    wxCHECK_RET(strings.Count() == 2, "Unexpected number of wxStrings supplied");
+    wxString _pattern(strings.Item(0));
+    wxString name(strings.Item(1));
+    DoFindAndSelect(_pattern, name, pos, NavMgr::Get());
 }
 
 bool LEditor::Replace(const FindReplaceData &data)
@@ -2670,7 +2688,7 @@ void LEditor::ReloadFile()
 
     int lineNumber = GetCurrentLine();
 
-    clMainFrame::Get()->SetStatusMessage(_("Loading file..."), 0, 1);
+    clMainFrame::Get()->SetStatusMessage(_("Loading file..."), 0);
 
     wxString text;
 
@@ -2685,6 +2703,7 @@ void LEditor::ReloadFile()
 
     SetSavePoint();
     EmptyUndoBuffer();
+    GetCommandsProcessor().Reset();
 
     // remove breakpoints belongs to this file
     DelAllBreakpointMarkers();
@@ -2707,6 +2726,7 @@ void LEditor::ReloadFile()
     ManagerST::Get()->GetBreakpointsMgr()->RefreshBreakpointsForEditor(this);
     LoadMarkersFromArray(bookmarks);
     LoadCollapsedFoldsFromArray(folds);
+    clMainFrame::Get()->SetStatusMessage(_("Ready"), 0);
 }
 
 void LEditor::SetEditorText(const wxString &text)
@@ -2866,19 +2886,32 @@ void LEditor::OnContextMenu(wxContextMenuEvent &event)
 
 void LEditor::OnKeyDown(wxKeyEvent &event)
 {
-    // allways cancel the tip
+    // always cancel the tip
     CodeCompletionBox::Get().CancelTip();
+
+    bool escapeUsed = false; // If the quickfind bar is open we'll use an ESC to close it; but only if we've not already used it for something else
 
     // Hide tooltip dialog if its ON
     IDebugger *   dbgr                = DebuggerMgr::Get().GetActiveDebugger();
     bool          dbgTipIsShown       = ManagerST::Get()->GetDebuggerTip()->IsShown();
     bool          keyIsControl        = event.GetKeyCode() == WXK_CONTROL;
+    
+    if ( keyIsControl ) {
+        // Debugger tooltip is shown when clicking 'Control/CMD'
+        // while the mouse is over a word
+        clDebugEvent event(wxEVT_DBG_EXPR_TOOLTIP);
+        event.SetString( this->GetWordAtMousePointer() );
+        if ( EventNotifier::Get()->ProcessEvent( event ) ) {
+            return;
+        }
+    }
 
     if(dbgTipIsShown && !keyIsControl) {
 
         // If any key is pressed, but the CONTROL key hide the
         // debugger tip
         ManagerST::Get()->GetDebuggerTip()->HideDialog();
+        escapeUsed = true;
 
     } else if(dbgr && dbgr->IsRunning() && ManagerST::Get()->DbgCanInteract() && keyIsControl) {
 
@@ -2897,8 +2930,10 @@ void LEditor::OnKeyDown(wxKeyEvent &event)
     }
 
     //let the context process it as well
-    if (GetFunctionTip()->IsActive() && event.GetKeyCode() == WXK_ESCAPE)
+    if (GetFunctionTip()->IsActive() && event.GetKeyCode() == WXK_ESCAPE) {
         GetFunctionTip()->Deactivate();
+        escapeUsed = true;
+    }
 
     if (IsCompletionBoxShown()) {
         switch (event.GetKeyCode()) {
@@ -2952,6 +2987,12 @@ void LEditor::OnKeyDown(wxKeyEvent &event)
             break;
         }
     }
+
+    // If we've not already used ESC, there's a reasonable chance that the user wants to close the QuickFind bar
+    if (event.GetKeyCode() == WXK_ESCAPE && !escapeUsed) {
+        clMainFrame::Get()->GetMainBook()->ShowQuickBar(false); // There's no easy way to tell if it's actually showing, so just do a Close
+    }
+
     m_context->OnKeyDown(event);
 }
 
@@ -3060,7 +3101,6 @@ void LEditor::OnPopupMenuUpdateUI(wxUpdateUIEvent &event)
     //pass it to the context
     m_context->ProcessEvent(event);
 }
-
 
 BrowseRecord LEditor::CreateBrowseRecord()
 {
@@ -4037,6 +4077,12 @@ void LEditor::SetEOL()
 
 void LEditor::OnChange(wxStyledTextEvent& event)
 {
+    bool isCoalesceStart =  event.GetModificationType() & wxSTC_STARTACTION;
+    bool isInsert =         event.GetModificationType() & wxSTC_MOD_INSERTTEXT;
+    bool isDelete =         event.GetModificationType() & wxSTC_MOD_DELETETEXT;
+    bool isUndo   =         event.GetModificationType() & wxSTC_PERFORMED_UNDO;
+    bool isRedo   =         event.GetModificationType() & wxSTC_PERFORMED_REDO;
+
     if ( (m_autoAddNormalBraces && !m_disableSmartIndent) || GetOptions()->GetAutoCompleteDoubleQuotes() ) {
         if ( (event.GetModificationType() & wxSTC_MOD_BEFOREDELETE) && (event.GetModificationType() & wxSTC_PERFORMED_USER) ) {
             wxString deletedText = GetTextRange(event.GetPosition(), event.GetPosition() + event.GetLength());
@@ -4078,7 +4124,33 @@ void LEditor::OnChange(wxStyledTextEvent& event)
 #endif
     }
 
-    if (event.GetModificationType() & wxSTC_MOD_INSERTTEXT || event.GetModificationType() & wxSTC_MOD_DELETETEXT) {
+    if (isCoalesceStart && GetCommandsProcessor().HasOpenCommand()) {
+        // The user has changed mode e.g. from inserting to deleting, so the current command must be closed
+        GetCommandsProcessor().CommandProcessorBase::ProcessOpenCommand(); // Use the base-class method, as this time we don't need to tell scintilla too
+    }
+
+    if (isInsert || isDelete) {
+
+        if (!GetReloadingFile() && !isUndo && !isRedo) {
+            CLCommand::Ptr_t currentOpen = GetCommandsProcessor().GetOpenCommand();
+            if (!currentOpen) {
+                GetCommandsProcessor().StartNewTextCommand(isInsert ? CLC_insert : CLC_delete);
+            } 
+            // We need to cope with a selection being deleted by typing; this results in 0x2012 followed immediately by 0x11 i.e. with no intervening wxSTC_STARTACTION
+              else if (isInsert && currentOpen->GetCommandType() != CLC_insert) {
+                GetCommandsProcessor().ProcessOpenCommand();
+                GetCommandsProcessor().StartNewTextCommand(CLC_insert);
+                
+            } else if (isDelete && currentOpen->GetCommandType() != CLC_delete) {
+                GetCommandsProcessor().ProcessOpenCommand();
+                GetCommandsProcessor().StartNewTextCommand(CLC_delete);
+                
+            }
+
+            wxCHECK_RET(GetCommandsProcessor().HasOpenCommand(), "Trying to add to a non-existent or closed command");
+            wxCHECK_RET(GetCommandsProcessor().CanAppend(isInsert ? CLC_insert : CLC_delete), "Trying to add to the wrong type of command");
+            GetCommandsProcessor().AppendToTextCommand(event.GetText(), event.GetPosition());
+        }
 
         // Cache details of the number of lines added/removed
         // This is used to 'update' any affected FindInFiles result. See bug 3153847
@@ -4344,9 +4416,15 @@ void LEditor::HighlightWord(StringHighlightOutput* highlightOutput)
     // clear the old markers
     IndicatorClearRange(0, GetLength());
 
+    int selStart = GetSelectionStart();
+    
     for (size_t i=0; i<matches->size(); i++) {
         std::pair<int, int> p = matches->at(i);
-        IndicatorFillRange(p.first, p.second);
+        
+        // Dont highlight the current selection
+        if ( p.first != selStart ) {
+            IndicatorFillRange(p.first, p.second);
+        }
     }
 }
 
@@ -4390,6 +4468,11 @@ int LEditor::LineEnd(int line)
 wxString LEditor::GetTextRange(int startPos, int endPos)
 {
     return wxStyledTextCtrl::GetTextRange(startPos, endPos);
+}
+
+void LEditor::DelayedSetActive()
+{
+    CallAfter(&LEditor::SetActive);
 }
 
 void LEditor::OnSetActive(wxCommandEvent& e)

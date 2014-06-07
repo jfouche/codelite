@@ -273,12 +273,8 @@ FileNameVector_t CompilationDatabase::GetCompileCommandsFiles() const
         if ( fn.Exists() &&                                                                          // file exists
             (fn.GetModificationTime().GetTicks() > databaseFile.GetModificationTime().GetTicks() ) ) // and its newer than the database file
         {
-            CL_DEBUG("CompilationDatabase: found file: " + fn.GetFullPath());
+            CL_DEBUGS("CompilationDatabase: found file: " + fn.GetFullPath());
             files.push_back( fn );
-        }
-        else
-        {
-            CL_DEBUG("CompilationDatabase: will NOT use file: " + fn.GetFullPath() + " . File is older than the database");
         }
 
         // Check to see if there are more directories to recurse
@@ -369,7 +365,6 @@ wxFileName CompilationDatabase::ConvertCodeLiteCompilationDatabaseToCMake(const 
         
         wxFileName fn(compile_file.GetPath(), "compile_commands.json");
         root.save( fn );
-        CL_DEBUG("CompilationDatabase: saved file: " + fn.GetFullPath());
         // Delete the old file
         {
             wxLogNull nl;

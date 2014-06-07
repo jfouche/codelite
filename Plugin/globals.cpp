@@ -64,14 +64,21 @@
 #include <wx/settings.h>
 #include <wx/dcmemory.h>
 #include "environmentconfig.h"
+#include "wxmd5.h"
 #include <wx/graphics.h>
 #include <wx/dcmemory.h>
 #include <wx/richmsgdlg.h>
+#include "asyncprocess.h"
+#include "file_logger.h"
+#include <wx/stc/stc.h>
+#include "cpp_scanner.h"
+#include "macros.h"
 
 #ifdef __WXMSW__
 #include <Uxtheme.h>
 #else
 #include <unistd.h>
+#include <sys/wait.h>
 #endif
 
 const wxEventType wxEVT_COMMAND_CL_INTERNAL_0_ARGS = ::wxNewEventType();
@@ -559,6 +566,19 @@ bool WriteFileUTF8(const wxString& fileName, const wxString& content)
     //first try the Utf8
     return file.Write(content, wxConvUTF8) == content.Length();
 }
+
+bool CompareFileWithString(const wxString& filePath, const wxString& str)
+{
+    wxString content;
+    if (!ReadFileWithConversion(filePath, content)) {
+        return false;
+    }
+
+    wxString diskMD5 = wxMD5::GetDigest(content);
+    wxString mem_MD5 = wxMD5::GetDigest(str);
+    return diskMD5 == mem_MD5;
+}
+
 bool CopyDir(const wxString& src, const wxString& target)
 {
     wxString SLASH = wxFileName::GetPathSeparator();
@@ -717,7 +737,9 @@ void StripSemiColons(wxString &str)
 wxString NormalizePath(const wxString &path)
 {
     wxString normalized_path(path);
+    normalized_path.Trim().Trim(false);
     normalized_path.Replace(wxT("\\"), wxT("/"));
+    while ( normalized_path.Replace("//", "/") ) {}
     return normalized_path;
 }
 
@@ -1222,11 +1244,11 @@ wxFontEncoding BOM::Encoding(const char* buff)
     //----------------------------------
     wxFontEncoding encoding = wxFONTENCODING_SYSTEM; /* -1 */
 
-    static const char UTF32be[]= { 0x00, 0x00, 0xfe, 0xff};
-    static const char UTF32le[]= { 0xff, 0xfe, 0x00, 0x00};
-    static const char UTF16be[]= { 0xfe, 0xff            };
-    static const char UTF16le[]= { 0xff, 0xfe            };
-    static const char UTF8[]   = { 0xef, 0xbb, 0xbf      };
+    static const char UTF32be[]= { 0x00, 0x00, (char)0xfe, (char)0xff};
+    static const char UTF32le[]= { (char)0xff, (char)0xfe, 0x00, 0x00};
+    static const char UTF16be[]= { (char)0xfe, (char)0xff            };
+    static const char UTF16le[]= { (char)0xff, (char)0xfe            };
+    static const char UTF8[]   = { (char)0xef, (char)0xbb, (char)0xbf      };
 
     if(memcmp(buff, UTF32be, sizeof(UTF32be)) == 0) {
         encoding = wxFONTENCODING_UTF32BE;
@@ -1558,6 +1580,150 @@ wxArrayString SplitString(const wxString &inString, bool trim)
     }
     return lines;
 }
+#ifndef __WXMSW__
+static bool search_process_by_command(const wxString &name, wxString &tty, long& pid)
+{
+    CL_DEBUG("search_process_by_command is called");
+    tty.Clear();
+    pid = wxNOT_FOUND;
+    
+    // Run "ps -A -o pid,tty,command" to locate the terminal ID
+    wxString psCommand;
+    wxArrayString arrOutput;
+    psCommand << "ps -A -o pid,tty,command";
+    
+    ProcUtils::SafeExecuteCommand(psCommand, arrOutput);
+    
+    for(size_t i=0; i<arrOutput.GetCount(); ++i) {
+        wxString curline = arrOutput.Item(i).Trim().Trim(false);
+        wxArrayString tokens = ::wxStringTokenize( curline, " ", wxTOKEN_STRTOK );
+        if ( tokens.GetCount() < 3 ) {
+            continue;
+        }
+        
+        // replace tabs with spaces
+        curline.Replace("\t", " ");
+        
+        // remove any duplicate spaces
+        while ( curline.Replace("  ", " ") ) {}
+        
+        wxString tmp_pid = curline.BeforeFirst(' ');
+        curline = curline.AfterFirst(' ');
+        
+        wxString tmp_tty = curline.BeforeFirst(' ');
+        curline = curline.AfterFirst(' ');
+
+        wxString command = curline; // the remainder
+        command.Trim().Trim(false);
+        
+        if ( command == name ) {
+            // we got our match
+            tmp_tty = tmp_tty.AfterLast('/');
+#ifdef __WXMAC__
+            tmp_tty.Prepend("/dev/");
+#else
+            tmp_tty.Prepend("/dev/pts/");
+#endif
+            tty = tmp_tty;
+            tmp_pid.Trim().Trim(false).ToCLong( &pid );
+            return true;
+        }
+    }
+    return false;
+}
+#endif
+
+void LaunchTerminalForDebugger(const wxString &title, wxString &tty, long &pid)
+{
+    pid = wxNOT_FOUND;
+    tty.Clear();
+    
+#ifdef __WXMSW__
+    // Windows
+    wxUnusedVar(title);
+    
+#else
+    // Non Windows machines
+    static wxString SLEEP_COMMAND = "sleep 85765";
+    
+#if defined(__WXMAC__)
+    wxString consoleCommand;
+    wxString codelite_terminal;
+    wxFileName fnCodeLiteTerminal(wxStandardPaths::Get().GetExecutablePath());
+    fnCodeLiteTerminal.AppendDir("codelite-terminal.app");
+    
+    consoleCommand  << "/usr/bin/open "
+                    << fnCodeLiteTerminal.GetPath()
+                    << " --args "
+                    << "--dbg-terminal "
+                    << "--exit "
+                    << "--title \"" << title << "\" "
+                    << "--cmd " 
+                    << SLEEP_COMMAND;
+
+#else // Linux / FreeBSD
+    wxString consoleCommand = TERMINAL_CMD;
+    consoleCommand.Replace("$(CMD)", SLEEP_COMMAND);
+    consoleCommand.Replace("$(TITLE)", title);
+#endif
+
+    ::wxExecute( consoleCommand );
+    
+    // Let it start ... (wait for it up to 5 seconds)
+    for(size_t i=0; i<100; ++i) {
+        if ( search_process_by_command(SLEEP_COMMAND, tty, pid) ) {
+#ifdef __WXGTK__
+            // On GTK, redirection to TTY does not work with lldb
+            // as a workaround, we create a symlink with different name
+            wxString symlinkName = tty;
+            symlinkName.Replace("/dev/pts/", "/tmp/pts");
+            wxString lnCommand;
+            lnCommand << "ln -sf " << tty << " " << symlinkName;
+            if ( ::system( lnCommand.mb_str(wxConvUTF8).data() ) == 0 ) {
+                tty.swap( symlinkName );
+            }
+#endif
+            return;
+        }
+        wxThread::Sleep(50);
+    }
+
+#endif // !__WXMSW__
+}
+
+
+IProcess* LaunchTerminal(const wxString &title, bool forDebugger, IProcessCallback *processCB)
+{
+#ifdef __WXMSW__
+    // Windows
+    wxUnusedVar( title );
+    wxUnusedVar( processCB );
+    wxUnusedVar( forDebugger );
+    return NULL;
+    
+#else
+    wxString command;
+    wxFileName fnCodeliteTerminal(wxStandardPaths::Get().GetExecutablePath());
+    
+#if defined(__WXMAC__)
+    command << "/usr/bin/open \"" << fnCodeliteTerminal.GetPath(true) << "codelite-terminal.app\" --args ";
+#else 
+    command << fnCodeliteTerminal.GetPath(true) << "codelite-terminal ";
+#endif
+    // command << " --always-on-top ";
+    command << " --print-info ";
+    
+    if ( forDebugger ) {
+        command << " --dbg-terminal ";
+    }
+    command << " --title \"" << title << "\"";
+    
+    CL_DEBUG("Launching Terminal: %s", command);
+    IProcess *handle = ::CreateAsyncProcessCB(NULL, processCB, command);
+    return handle;
+
+#endif
+}
 
 wxString MakeExecInShellCommand(const wxString& cmd, const wxString& wd, bool waitForAnyKey)
 {
@@ -1571,6 +1737,18 @@ wxString MakeExecInShellCommand(const wxString& cmd, const wxString& wd, bool wa
 
     //change directory to the working directory
 #if defined(__WXMAC__)
+    wxString newCommand;
+    newCommand << fnCodeliteTerminal.GetFullPath() << " --exit ";
+    if ( waitForAnyKey ) {
+        newCommand << " --wait ";
+    }
+    newCommand << " --cmd " << title;
+    execLine = newCommand;
+
+#elif defined(__WXGTK__)
+
+    // Set a console to the execute target
+    if ( opts->HasOption(OptionsConfig::Opt_Use_CodeLite_Terminal)) {
         wxString newCommand;
         newCommand << fnCodeliteTerminal.GetFullPath() << " --exit ";
         if ( waitForAnyKey ) {
@@ -1579,71 +1757,59 @@ wxString MakeExecInShellCommand(const wxString& cmd, const wxString& wd, bool wa
         newCommand << " --cmd " << title;
         execLine = newCommand;
 
-#elif defined(__WXGTK__)
+    } else {
+        wxString term;
+        term = opts->GetProgramConsoleCommand();
+        term.Replace(wxT("$(TITLE)"), title);
 
-        // Set a console to the execute target
-        if ( opts->HasOption(OptionsConfig::Opt_Use_CodeLite_Terminal)) {
-            wxString newCommand;
-            newCommand << fnCodeliteTerminal.GetFullPath() << " --exit ";
-            if ( waitForAnyKey ) {
-                newCommand << " --wait ";
-            }
-            newCommand << " --cmd " << title;
-            execLine = newCommand;
+        // build the command
+        wxString command;
+        wxString ld_lib_path;
+        wxFileName exePath ( wxStandardPaths::Get().GetExecutablePath() );
+        wxFileName exeWrapper ( exePath.GetPath(), wxT ( "codelite_exec" ) );
 
+        if ( wxGetEnv ( wxT ( "LD_LIBRARY_PATH" ), &ld_lib_path ) && ld_lib_path.IsEmpty() == false ) {
+            command << wxT ( "/bin/sh -f " ) << exeWrapper.GetFullPath() << wxT ( " LD_LIBRARY_PATH=" ) << ld_lib_path << wxT ( " " );
         } else {
-            wxString term;
-            term = opts->GetProgramConsoleCommand();
-            term.Replace(wxT("$(TITLE)"), title);
-
-            // build the command
-            wxString command;
-            wxString ld_lib_path;
-            wxFileName exePath ( wxStandardPaths::Get().GetExecutablePath() );
-            wxFileName exeWrapper ( exePath.GetPath(), wxT ( "codelite_exec" ) );
-
-            if ( wxGetEnv ( wxT ( "LD_LIBRARY_PATH" ), &ld_lib_path ) && ld_lib_path.IsEmpty() == false ) {
-                command << wxT ( "/bin/sh -f " ) << exeWrapper.GetFullPath() << wxT ( " LD_LIBRARY_PATH=" ) << ld_lib_path << wxT ( " " );
-            } else {
-                command << wxT ( "/bin/sh -f " ) << exeWrapper.GetFullPath() << wxT ( " " );
-            }
-            command << execLine;
-            term.Replace(wxT("$(CMD)"), command);
-            execLine = term;
+            command << wxT ( "/bin/sh -f " ) << exeWrapper.GetFullPath() << wxT ( " " );
         }
+        command << execLine;
+        term.Replace(wxT("$(CMD)"), command);
+        execLine = term;
+    }
 #elif defined (__WXMSW__)
 
-        if ( opts->HasOption(OptionsConfig::Opt_Use_CodeLite_Terminal) ) {
+    if ( opts->HasOption(OptionsConfig::Opt_Use_CodeLite_Terminal) ) {
 
-            // codelite-terminal does not like forward slashes...
-            wxString commandToRun;
-            commandToRun << cmd << " ";
-            commandToRun.Replace("/", "\\");
-            commandToRun.Trim().Trim(false);
+        // codelite-terminal does not like forward slashes...
+        wxString commandToRun;
+        commandToRun << cmd << " ";
+        commandToRun.Replace("/", "\\");
+        commandToRun.Trim().Trim(false);
 
-            wxString newCommand;
-            newCommand << fnCodeliteTerminal.GetFullPath() << " --exit ";
-            if ( waitForAnyKey ) {
-                newCommand << " --wait";
-            }
-
-            newCommand << " --cmd " << commandToRun;
-            execLine = newCommand;
-
-        } else if ( waitForAnyKey ) {
-            execLine.Prepend ("le_exec.exe ");
+        wxString newCommand;
+        newCommand << fnCodeliteTerminal.GetFullPath() << " --exit ";
+        if ( waitForAnyKey ) {
+            newCommand << " --wait";
         }
+
+        newCommand << " --cmd " << commandToRun;
+        execLine = newCommand;
+
+    } else if ( waitForAnyKey ) {
+        execLine.Prepend ("le_exec.exe ");
+    }
 #endif
     return execLine;
 }
 
-wxStandardID PromptForYesNoDialogWithCheckbox(const wxString& message, 
-                                              const wxString& dlgId, 
-                                              const wxString& yesLabel, 
-                                              const wxString& noLabel, 
-                                              const wxString& checkboxLabel, 
-                                              long style, 
-                                              bool checkboxInitialValue)
+wxStandardID PromptForYesNoDialogWithCheckbox(const wxString& message,
+        const wxString& dlgId,
+        const wxString& yesLabel,
+        const wxString& noLabel,
+        const wxString& checkboxLabel,
+        long style,
+        bool checkboxInitialValue)
 {
     int res = clConfig::Get().GetAnnoyingDlgAnswer(dlgId, wxNOT_FOUND);
     if ( res == wxNOT_FOUND ) {
@@ -1659,4 +1825,184 @@ wxStandardID PromptForYesNoDialogWithCheckbox(const wxString& message,
         }
     }
     return static_cast<wxStandardID>(res);
+}
+
+static wxChar sPreviousChar(wxStyledTextCtrl *ctrl, int pos, int &foundPos, bool wantWhitespace)
+{
+    wxChar ch = 0;
+    long curpos = ctrl->PositionBefore( pos );
+    if (curpos == 0) {
+        foundPos = curpos;
+        return ch;
+    }
+
+    while ( true ) {
+        ch = ctrl->GetCharAt( curpos );
+        if (ch == wxT('\t') || ch == wxT(' ') || ch == wxT('\r') || ch == wxT('\v') || ch == wxT('\n')) {
+            //if the caller is intrested in whitepsaces,
+            //simply return it
+            if (wantWhitespace) {
+                foundPos = curpos;
+                return ch;
+            }
+
+            long tmpPos = curpos;
+            curpos = ctrl->PositionBefore( curpos );
+            if (curpos == 0 && tmpPos == curpos)
+                break;
+        } else {
+            foundPos = curpos;
+            return ch;
+        }
+    }
+    foundPos = -1;
+    return ch;
+}
+
+wxString GetCppExpressionFromPos(long pos, wxStyledTextCtrl *ctrl, bool forCC)
+{
+    bool cont(true);
+    int depth(0);
+
+    int position( pos );
+    int at(position);
+    bool prevGt(false);
+    while (cont && depth >= 0) {
+        wxChar ch = sPreviousChar(ctrl, position, at, true);
+        position = at;
+        //Eof?
+        if (ch == 0) {
+            at = 0;
+            break;
+        }
+
+        //Comment?
+        int style = ctrl->GetStyleAt(position);
+        if (style == wxSTC_C_COMMENT                    ||
+            style == wxSTC_C_COMMENTLINE            ||
+            style == wxSTC_C_COMMENTDOC             ||
+            style == wxSTC_C_COMMENTLINEDOC         ||
+            style == wxSTC_C_COMMENTDOCKEYWORD      ||
+            style == wxSTC_C_COMMENTDOCKEYWORDERROR ||
+            style == wxSTC_C_STRING                 ||
+            style == wxSTC_C_STRINGEOL              ||
+            style == wxSTC_C_CHARACTER) {
+            continue;
+        }
+
+        switch (ch) {
+        case wxT(';'):
+            // dont include this token
+            at = ctrl->PositionAfter(at);
+            cont = false;
+            break;
+        case wxT('-'):
+            if (prevGt) {
+                prevGt = false;
+                //if previous char was '>', we found an arrow so reduce the depth
+                //which was increased
+                depth--;
+            } else {
+                if (depth <= 0) {
+                    //dont include this token
+                    at =ctrl->PositionAfter(at);
+                    cont = false;
+                }
+            }
+            break;
+        case wxT(' '):
+        case wxT('\n'):
+        case wxT('\v'):
+        case wxT('\t'):
+        case wxT('\r'):
+            prevGt = false;
+            if (depth <= 0) {
+                cont = false;
+                break;
+            }
+            break;
+        case wxT('{'):
+        case wxT('='):
+            prevGt = false;
+            cont = false;
+            break;
+        case wxT('('):
+        case wxT('['):
+            depth--;
+            prevGt = false;
+            if (depth < 0) {
+                //dont include this token
+                at =ctrl->PositionAfter(at);
+                cont = false;
+            }
+            break;
+        case wxT(','):
+        case wxT('*'):
+        case wxT('&'):
+        case wxT('!'):
+        case wxT('~'):
+        case wxT('+'):
+        case wxT('^'):
+        case wxT('|'):
+        case wxT('%'):
+        case wxT('?'):
+            prevGt = false;
+            if (depth <= 0) {
+
+                //dont include this token
+                at =ctrl->PositionAfter(at);
+                cont = false;
+            }
+            break;
+        case wxT('>'):
+            prevGt = true;
+            depth++;
+            break;
+        case wxT('<'):
+            prevGt = false;
+            depth--;
+            if (depth < 0) {
+
+                //dont include this token
+                at =ctrl->PositionAfter( at );
+                cont = false;
+            }
+            break;
+        case wxT(')'):
+        case wxT(']'):
+            prevGt = false;
+            depth++;
+            break;
+        default:
+            prevGt = false;
+            break;
+        }
+    }
+
+    if (at < 0) at = 0;
+    wxString expr = ctrl->GetTextRange( at, pos );
+    if ( !forCC ) {
+        // If we do not require the expression for CodeCompletion
+        // return the un-touched buffer
+        return expr;
+    }
+
+    //remove comments from it
+    CppScanner sc;
+    sc.SetText(_C(expr));
+    wxString expression;
+    int type=0;
+    while ( (type = sc.yylex()) != 0 ) {
+        wxString token = _U(sc.YYText());
+        expression += token;
+        expression += wxT(" ");
+    }
+    return expression;
+}
+wxString& WrapWithQuotes(wxString& str)
+{
+    if ( str.Contains(" ") ) {
+        str.Prepend("\"").Append("\"");
+    }
+    return str;
 }

@@ -38,6 +38,7 @@
 #include "bitmap_loader.h"
 #include "notebook_ex.h"
 #include <vector>
+#include "debugger.h"
 
 class TagsManager;
 class Workspace;
@@ -210,21 +211,21 @@ public:
      */
     virtual bool AddFilesToVirtualFolderIntelligently(const wxString& vdFullPath, wxArrayString& paths) = 0;
 
-	/**
-	 * @brief Redefine the files / folders that make up a project
-	 * @param proj Ref to the project to modify
-	 * @param path The root directory of the files to add
-	 * @param files The list of file paths w/o separate folder entries
-	 */
-	virtual void RedefineProjFiles(ProjectPtr proj, const wxString& path, std::vector<wxString>& files) = 0;
+    /**
+     * @brief Redefine the files / folders that make up a project
+     * @param proj Ref to the project to modify
+     * @param path The root directory of the files to add
+     * @param files The list of file paths w/o separate folder entries
+     */
+    virtual void RedefineProjFiles(ProjectPtr proj, const wxString& path, std::vector<wxString>& files) = 0;
 
-	/**
-	 * @brief create virtual folder to parentPath
-	 * @param parentPath parent virtual directory full path in the form of <project>:vd1:vd2:...:vdN which must exist
-	 * @param vdName child VD name
-	 * @return true on success, false otherwise
-	 */
-	virtual bool CreateVirtualDirectory(const wxString& parentPath, const wxString& vdName) = 0;
+    /**
+     * @brief create virtual folder to parentPath
+     * @param parentPath parent virtual directory full path in the form of <project>:vd1:vd2:...:vdN which must exist
+     * @param vdName child VD name
+     * @return true on success, false otherwise
+     */
+    virtual bool CreateVirtualDirectory(const wxString& parentPath, const wxString& vdName) = 0;
 
     /**
      * @brief return the size of the icons used by CodeLite
@@ -453,6 +454,41 @@ public:
      * @brief return list of all open editors
      */
     virtual size_t GetAllEditors(IEditor::List_t& editors, bool inOrder = false) = 0;
+    
+    // ---------------------------------------------
+    // Breakpoint management
+    // ---------------------------------------------
+    /**
+     * @brief return a vector of all the current breakpoints set by the user
+     */
+    virtual size_t GetAllBreakpoints(BreakpointInfo::Vec_t& breakpoints) = 0;
+    
+    /**
+     * @brief delete all breakpoints assigned by the user
+     */
+    virtual void DeleteAllBreakpoints() = 0;
+    
+    /**
+     * @brief set breakpoints (override any existing breakpoints)
+     * this function also refreshes the editors markers
+     */
+    virtual void SetBreakpoints(const BreakpointInfo::Vec_t& breakpoints) = 0;
+    
+    // ----------------------------------------------
+    // Perspective management
+    // ----------------------------------------------
+    
+    /**
+     * @brief load perspective by name. If no such perspective exists
+     * this function does nothing
+     */
+    virtual void LoadPerspective(const wxString &perspectiveName)  = 0;
+    
+    /**
+     * @brief Save the current perspective by name
+     * this function also makes sure that the 'Perspective' menu is updated
+     */
+    virtual void SavePerspective(const wxString &perspectiveName) = 0;
 };
 
 #endif //IMANAGER_H

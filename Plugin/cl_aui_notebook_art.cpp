@@ -47,23 +47,19 @@ void clAuiGlossyTabArt::DrawBackground(wxDC& dc, wxWindow* wnd, const wxRect& re
         return;
 #endif
 
-    wxColour bgColour = wxColour(EditorConfigST::Get()->GetCurrentOutputviewBgColour());
-    wxColour penColour;
+    wxColour bgColour, penColour;
+    DoGetTabAreaBackgroundColour(bgColour, penColour);
+    m_bgColour = bgColour;
     
-    // Determine the pen colour
-    if ( DrawingUtils::IsDark(bgColour)) {
-        penColour = DrawingUtils::LightColour(bgColour, 4.0);
-    } else {
-        penColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
+    // Allow the plugins to override the default colours
+    clColourEvent colourEvent( wxEVT_GET_TAB_BORDER_COLOUR );
+    if ( EventNotifier::Get()->ProcessEvent( colourEvent ) ) {
+        penColour = colourEvent.GetBorderColour();
     }
     
-    // Now set the bg colour. It must be done after setting 
-    // the pen colour
-    bgColour = DrawingUtils::GetAUIPaneBGColour();
-    
     gdc.SetPen(bgColour);
-    gdc.SetBrush( DrawingUtils::GetStippleBrush() );
-    gdc.DrawRectangle(rect);
+    gdc.SetBrush( bgColour );
+    gdc.GradientFillLinear(rect, bgColour, bgColour, wxSOUTH);
     gdc.SetPen( penColour );
     
     wxPoint ptBottomLeft  = rect.GetBottomLeft();
@@ -87,17 +83,7 @@ void clAuiGlossyTabArt::DrawTab(wxDC& dc,
     if ( isBgColourDark ) {
         penColour = DrawingUtils::LightColour(bgColour, 4.0);
     } else {
-        if ( !page.active ) {
-            bgColour = DrawingUtils::LightColour(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE), 2.0);
-        } else {
-            // active page
-#ifdef __WXMAC__
-            bgColour = wxColour( wxMacCreateCGColorFromHITheme(kThemeBrushToolbarBackground));
-            bgColour = bgColour.ChangeLightness(88);
-#else
-            bgColour = DrawingUtils::DarkColour(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE), 0.0);
-#endif
-        }
+        bgColour = *wxWHITE;
         penColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
     }
     textColour = EditorConfigST::Get()->GetCurrentOutputviewFgColour();
@@ -115,14 +101,16 @@ void clAuiGlossyTabArt::DrawTab(wxDC& dc,
     // Allow the plugins to override the border colour
     wxColour originalPenColour = penColour;
     clColourEvent borderColourEvent( wxEVT_GET_TAB_BORDER_COLOUR );
-    if ( !page.active && EventNotifier::Get()->ProcessEvent( borderColourEvent ) ) {
+    if ( EventNotifier::Get()->ProcessEvent( borderColourEvent ) ) {
         penColour = borderColourEvent.GetBorderColour();
     }
     
     wxGCDC gdc;
     if ( !DrawingUtils::GetGCDC(dc, gdc) )
         return;
-
+    
+    m_penColour = penColour;
+    
     wxGraphicsPath path = gdc.GetGraphicsContext()->CreatePath();
     gdc.SetPen( penColour );
     
@@ -156,15 +144,26 @@ void clAuiGlossyTabArt::DrawTab(wxDC& dc,
     // since the above code above doesn't play well with WXDFB or WXCOCOA,
     // we'll just use a rectangle for the clipping region for now --
     gdc.SetClippingRegion(rr.x, rr.y, clip_width, rr.height);
-    path.AddRoundedRectangle(rr.x, rr.y, rr.width-1, rr.height, 3.0);
-    
     gdc.SetBrush( bgColour );
-    gdc.GetGraphicsContext()->FillPath( path );
-    gdc.GetGraphicsContext()->StrokePath( path );
+    gdc.SetPen( penColour );
+    
+    if ( page.active ) {
+        path.AddRoundedRectangle(rr.x, rr.y, rr.width-1, rr.height, 6.5);
+        gdc.GetGraphicsContext()->FillPath( path );
+        gdc.GetGraphicsContext()->StrokePath( path );
+        
+    } else {
+        if ( !m_bgColour.IsOk() ) {
+            wxColour b, p;
+            DoGetTabAreaBackgroundColour(b, p);
+            m_bgColour = b;
+        }
+        DoDrawInactiveTabSeparator(gdc, rr);
+    }
     
     if ( !page.active ) {
         // Draw a line at the bottom rect
-        gdc.SetPen(originalPenColour);
+        gdc.SetPen(penColour);
         gdc.DrawLine(in_rect.GetBottomLeft(), in_rect.GetBottomRight());
         
     }
@@ -227,7 +226,7 @@ void clAuiGlossyTabArt::DrawTab(wxDC& dc,
         xpath.AddLineToPoint( insideRect.GetRightBottom());
         xpath.MoveToPoint( insideRect.GetRightTop() );
         xpath.AddLineToPoint( insideRect.GetLeftBottom() );
-        gdc.SetPen( wxPen(textColour, 2) );
+        gdc.SetPen( wxPen(textColour, 1) );
         gdc.GetGraphicsContext()->StrokePath( xpath  );
         
         curx += X_DIAMETER;
@@ -297,4 +296,56 @@ wxSize clAuiGlossyTabArt::GetTabSize(wxDC& dc,
     *x_extent = tab_width;
 
     return wxSize(tab_width, tab_height);
+}
+
+void clAuiGlossyTabArt::DoDrawInactiveTabSeparator(wxGCDC& gdc, const wxRect& tabRect)
+{
+    wxRect rr = tabRect;
+    rr.SetWidth(1);
+    rr.SetHeight(tabRect.GetHeight()+2);
+    rr.x = tabRect.GetTopRight().x - 1;
+    rr.y = tabRect.GetTopRight().y - 2;
+    
+    wxColour sideColour;
+    if ( DrawingUtils::IsThemeDark() ) {
+        sideColour = m_bgColour.ChangeLightness(110);
+    } else {
+        sideColour = *wxWHITE;
+    }
+    // Draw 2 lines on the sides of the "main" line
+    wxRect rectLeft, rectRight, rectCenter;
+    wxPoint topPt = rr.GetTopLeft();
+    topPt.x -= 1;
+    rectLeft = wxRect(topPt, wxSize(1, rr.GetHeight()) );
+    gdc.GradientFillLinear(rectLeft, sideColour, m_bgColour, wxNORTH);
+    
+    topPt.x += 1;
+    rectCenter = wxRect(topPt, wxSize(1, rr.GetHeight()) );
+    gdc.GradientFillLinear(rectCenter, m_penColour.ChangeLightness(80), m_bgColour, wxNORTH);
+    
+    topPt.x += 1;
+    rectRight = wxRect(topPt, wxSize(1, rr.GetHeight()) );
+    gdc.GradientFillLinear(rectRight, sideColour, m_bgColour, wxNORTH);
+}
+
+void clAuiGlossyTabArt::DoGetTabAreaBackgroundColour(wxColour& bgColour, wxColour& penColour)
+{
+    bgColour = wxColour(EditorConfigST::Get()->GetCurrentOutputviewBgColour());
+    // Determine the pen colour
+    if ( DrawingUtils::IsDark(bgColour)) {
+        penColour = DrawingUtils::LightColour(bgColour, 4.0);
+    } else {
+        penColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
+   }
+   
+    // Now set the bg colour. It must be done after setting 
+    // the pen colour
+    bgColour = DrawingUtils::GetAUIPaneBGColour();
+    
+    // Allow the plugins to override the default colours
+    clColourEvent colourEvent( wxEVT_GET_TAB_BORDER_COLOUR );
+    if ( EventNotifier::Get()->ProcessEvent( colourEvent ) ) {
+        penColour = colourEvent.GetBorderColour();
+        bgColour = penColour.ChangeLightness(150);
+    }
 }

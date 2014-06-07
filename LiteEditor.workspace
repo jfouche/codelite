@@ -40,12 +40,15 @@
   <Project Name="SFTP" Path="SFTP/SFTP.project" Active="No"/>
   <Project Name="Tweaks" Path="Tweaks/Tweaks.project" Active="No"/>
   <Project Name="CMakePlugin" Path="CMakePlugin/CMakePlugin.project" Active="No"/>
+  <Project Name="CodeLiteDiff" Path="CodeLiteDiff/CodeLiteDiff.project" Active="No"/>
+  <Project Name="LLDBDebugger" Path="LLDBDebugger/LLDBDebugger.project" Active="No"/>
   <Project Name="LuaScript" Path="LuaScript/LuaScript.project" Active="Yes"/>
   <Project Name="lua" Path="sdk/lua/lua.project" Active="No"/>
   <Environment>
     <![CDATA[]]>
   </Environment>
-  <Project Name="CodeLiteDiff" Path="CodeLiteDiff/CodeLiteDiff.project" Active="No"/>
+  <Project Name="SpellCheck" Path="SpellChecker/SpellCheck.project" Active="No"/>
+  <Project Name="hunspell" Path="SpellChecker/hunspell/hunspell.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Win Release Unicode" Selected="yes">
       <Project Name="abbreviation" ConfigName="WinReleaseUnicode"/>
@@ -65,8 +68,10 @@
       <Project Name="ExternalTools" ConfigName="WinReleaseUnicode"/>
       <Project Name="git" ConfigName="WinReleaseUnicode"/>
       <Project Name="Gizmos" ConfigName="WinReleaseUnicode"/>
+      <Project Name="hunspell" ConfigName="Release"/>
       <Project Name="Interfaces" ConfigName="Common"/>
       <Project Name="LiteEditor" ConfigName="WinReleaseUnicode"/>
+      <Project Name="LLDBDebugger" ConfigName="WinReleaseUnicode"/>
       <Project Name="lua" ConfigName="WinRelease"/>
       <Project Name="LuaScript" ConfigName="WinReleaseUnicode"/>
       <Project Name="MacBundler" ConfigName="WinReleaseUnicode"/>
@@ -76,6 +81,7 @@
       <Project Name="QMakePlugin" ConfigName="WinReleaseUnicode"/>
       <Project Name="SFTP" ConfigName="WinReleaseUnicode"/>
       <Project Name="snipwiz" ConfigName="WinReleaseUnicode"/>
+      <Project Name="SpellCheck" ConfigName="WinReleaseUnicode"/>
       <Project Name="sqlite3" ConfigName="Common"/>
       <Project Name="Subversion2" ConfigName="WinReleaseUnicode"/>
       <Project Name="Tweaks" ConfigName="WinReleaseUnicode"/>
@@ -103,8 +109,10 @@
       <Project Name="ExternalTools" ConfigName="WinDebugUnicode"/>
       <Project Name="git" ConfigName="WinDebugUnicode"/>
       <Project Name="Gizmos" ConfigName="WinDebugUnicode"/>
+      <Project Name="hunspell" ConfigName="Debug"/>
       <Project Name="Interfaces" ConfigName="Common"/>
       <Project Name="LiteEditor" ConfigName="WinDebugUnicode"/>
+      <Project Name="LLDBDebugger" ConfigName="WinDebugUnicode"/>
       <Project Name="lua" ConfigName="WinRelease"/>
       <Project Name="LuaScript" ConfigName="WinDebugUnicode"/>
       <Project Name="MacBundler" ConfigName="WinDebugUnicode"/>
@@ -114,6 +122,7 @@
       <Project Name="QMakePlugin" ConfigName="WinDebugUnicode"/>
       <Project Name="SFTP" ConfigName="WinDebugUnicode"/>
       <Project Name="snipwiz" ConfigName="WinDebugUnicode"/>
+      <Project Name="SpellCheck" ConfigName="WinDebugUnicode"/>
       <Project Name="sqlite3" ConfigName="Common"/>
       <Project Name="Subversion2" ConfigName="WinDebugUnicode"/>
       <Project Name="Tweaks" ConfigName="WinDebugUnicode"/>
@@ -160,6 +169,9 @@
       <Project Name="LuaScript" ConfigName="DebugUnicode"/>
       <Project Name="lua" ConfigName="Debug"/>
       <Project Name="CodeLiteDiff" ConfigName="DebugUnicode"/>
+      <Project Name="LLDBDebugger" ConfigName="DebugUnicode"/>
+      <Project Name="SpellCheck" ConfigName="DebugUnicode"/>
+      <Project Name="hunspell" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="CMake_Debug" Selected="yes">
       <Project Name="ZoomNavigator" ConfigName="WinReleaseUnicode"/>
@@ -198,6 +210,9 @@
       <Project Name="LuaScript" ConfigName="DebugUnicode"/>
       <Project Name="lua" ConfigName="Debug"/>
       <Project Name="CodeLiteDiff" ConfigName="DebugUnicode"/>
+      <Project Name="LLDBDebugger" ConfigName="DebugUnicode"/>
+      <Project Name="SpellCheck" ConfigName="DebugUnicode"/>
+      <Project Name="hunspell" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="OSX_Debug" Selected="yes">
       <Project Name="ZoomNavigator" ConfigName="DebugUnicode"/>
@@ -236,6 +251,9 @@
       <Project Name="LuaScript" ConfigName="DebugUnicode"/>
       <Project Name="lua" ConfigName="Debug"/>
       <Project Name="CodeLiteDiff" ConfigName="DebugUnicode"/>
+      <Project Name="LLDBDebugger" ConfigName="DebugUnicode"/>
+      <Project Name="SpellCheck" ConfigName="DebugUnicode"/>
+      <Project Name="hunspell" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="OSX_Release" Selected="yes">
       <Project Name="ZoomNavigator" ConfigName="DebugUnicode"/>
@@ -274,6 +292,9 @@
       <Project Name="LuaScript" ConfigName="DebugUnicode"/>
       <Project Name="lua" ConfigName="Debug"/>
       <Project Name="CodeLiteDiff" ConfigName="DebugUnicode"/>
+      <Project Name="LLDBDebugger" ConfigName="DebugUnicode"/>
+      <Project Name="SpellCheck" ConfigName="DebugUnicode"/>
+      <Project Name="hunspell" ConfigName="Debug"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

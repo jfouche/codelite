@@ -33,6 +33,7 @@
 #include <wx/icon.h>
 #include <wx/pen.h>
 #include <wx/aui/auibar.h>
+#include <wx/menu.h>
 #include <wx/toolbar.h>
 #include "dataviewfilesmodel.h"
 #include <wx/gauge.h>
@@ -88,6 +89,7 @@ protected:
     wxPanel* m_panel4;
     wxStaticText* m_staticText8;
     wxStyledTextCtrl* m_stcCommitMessage;
+    wxCheckBox* m_checkBoxAmend;
     wxStdDialogButtonSizer* m_stdBtnSizer278;
     wxButton* m_buttonOK;
     wxButton* m_buttonCancel;

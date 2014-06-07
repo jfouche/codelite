@@ -298,7 +298,7 @@ bool UnixProcessImpl::Read(wxString& buff)
     memset(&rs, 0, sizeof(rs));
     FD_SET(GetReadHandle(), &rs);
     timeout.tv_sec  = 0;      // 0 seconds
-    timeout.tv_usec = 150000; // 150 ms
+    timeout.tv_usec = 50000;  // 50 ms
 
     int errCode(0);
     errno = 0;
@@ -447,6 +447,16 @@ bool UnixProcessImpl::WriteToConsole(const wxString& buff)
     tmpbuf << wxT("\n");
     int bytes = write(GetWriteHandle(), tmpbuf.mb_str(wxConvUTF8).data(), tmpbuf.Length());
     return bytes == (int)tmpbuf.length();
+}
+
+void UnixProcessImpl::Detach()
+{
+    if ( m_thr ) {
+        // Stop the reader thread
+        m_thr->Stop();
+        delete m_thr;
+    }
+    m_thr = NULL;
 }
 
 #endif //#if defined(__WXMAC )||defined(__WXGTK__)

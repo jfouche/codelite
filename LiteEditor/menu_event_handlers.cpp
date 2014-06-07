@@ -26,6 +26,9 @@
 #include "manager.h"
 #include "cl_editor.h"
 #include "frame.h"
+#include "cl_command_event.h"
+#include "event_notifier.h"
+#include "codelite_events.h"
 
 //------------------------------------
 // Handle copy events
@@ -105,17 +108,28 @@ void EditHandler::ProcessCommandEvent(wxWindow *owner, wxCommandEvent &event)
         }
 
     } else if (event.GetId() == wxID_UNDO) {
-        editor->Undo();
+        if (editor->GetCommandsProcessor().CanUndo()) {
+            editor->Undo();
+            editor->GetCommandsProcessor().DecrementCurrentCommand();
+        }
 
     } else if (event.GetId() == wxID_REDO) {
-        editor->Redo();
+        if (editor->GetCommandsProcessor().CanRedo()) {
+            editor->Redo();
+            editor->GetCommandsProcessor().IncrementCurrentCommand();
+        }
+
+    } else if (event.GetId() == XRCID("label_current_state")) {
+        wxString label = wxGetTextFromUser("What would you like to call the current state?", "Label current state", "", editor);
+        if (!label.empty()) {
+            editor->GetCommandsProcessor().SetUserLabel(label);
+        }
 
     } else if (event.GetId() == wxID_SELECTALL) {
         editor->SelectAll();
 
     } else if (event.GetId() == wxID_DUPLICATE) {
         editor->SelectionDuplicate();
-
     } else if (event.GetId() == XRCID("delete_line_end")) {
         editor->DelLineRight();
 
@@ -510,14 +524,24 @@ void DebuggerMenuHandler::ProcessCommandEvent(wxWindow *owner, wxCommandEvent &e
     }
 
     if (event.GetId() == XRCID("disable_all_breakpoints")) {
+        clDebugEvent event(wxEVT_DBG_UI_DISABLE_ALL_BREAKPOINTS);
+        EventNotifier::Get()->ProcessEvent( event );
         ManagerST::Get()->GetBreakpointsMgr()->SetAllBreakpointsEnabledState(false);
     }
 
     if (event.GetId() == XRCID("enable_all_breakpoints")) {
+        clDebugEvent event(wxEVT_DBG_UI_ENABLE_ALL_BREAKPOINTS );
+        EventNotifier::Get()->ProcessEvent( event );
         ManagerST::Get()->GetBreakpointsMgr()->SetAllBreakpointsEnabledState(true);
     }
 
     if (event.GetId() == XRCID("delete_all_breakpoints")) {
+        
+        // First let the plugins do this thing
+        clDebugEvent event(wxEVT_DBG_UI_DELTE_ALL_BREAKPOINTS);
+        EventNotifier::Get()->AddPendingEvent( event );
+        
+        // Now clear the manager
         ManagerST::Get()->GetBreakpointsMgr()->DelAllBreakpoints();
     }
 }

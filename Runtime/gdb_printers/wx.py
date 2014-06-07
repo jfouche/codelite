@@ -20,9 +20,9 @@ class wxStringPrinter:
 
         try:
             if wx29:
-                dataAsCharPointer = self.val['m_impl']['_M_dataplus']['_M_p']
+                dataAsCharPointer = '"' + self.val['m_impl']['_M_dataplus']['_M_p'].string() + '"'
             else:
-                dataAsCharPointer = self.val['m_pchData']
+                dataAsCharPointer = '"' + self.val['m_pchData'].string() + '"'
             ret = dataAsCharPointer
         except Exception:
             # swallow the exception and return empty string
@@ -56,6 +56,11 @@ class wxArrayFooPrinter:
                 # The wx2.8 way
                 elt = self.items[count]
             return ('[%d]' % count, elt)
+
+         # Python3 version
+        def __next__(self):
+            return self.next()
+
     def __init__(self, val):
         self.val = val
 

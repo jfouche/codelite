@@ -45,24 +45,7 @@
 #include "globals.h"
 #include "cl_command_event.h"
 
-wxStopWatch g_sw;
-
 static bool OS_WINDOWS = wxGetOsVersion() & wxOS_WINDOWS ? true : false;
-
-#if PERFORMANCE
-# define TIMER_START(){\
-        g_sw.Start();\
-    }
-
-# define PRINT_TIMESTAMP(msg) {\
-        wxString log_msg(msg);\
-        wxPrintf(wxT("%08d: %s"), g_sw.Time(), log_msg.c_str());\
-    }
-#else
-# define TIMER_START()
-# define PRINT_TIMESTAMP(msg)
-#endif
-
 
 static wxString GetMakeDirCmd(BuildConfigPtr bldConf, const wxString &relPath = wxEmptyString)
 {
@@ -106,13 +89,10 @@ BuilderGnuMake::~BuilderGnuMake()
 
 bool BuilderGnuMake::Export(const wxString &project, const wxString &confToBuild, bool isProjectOnly, bool force, wxString &errMsg)
 {
-    TIMER_START();
-    PRINT_TIMESTAMP(_("Exporting makefile...\n"));
+    m_projectFilesMetadata.clear();
     if (project.IsEmpty()) {
         return false;
     }
-    PRINT_TIMESTAMP(_("Exporting makefile...done\n"));
-
     ProjectPtr proj = WorkspaceST::Get()->FindProjectByName(project, errMsg);
     if (!proj) {
         errMsg << _("Cant open project '") << project << wxT("'");
@@ -141,10 +121,9 @@ bool BuilderGnuMake::Export(const wxString &project, const wxString &confToBuild
         return false;
     }
     
-    PRINT_TIMESTAMP(_("Reading project dependencies...\n"));
     wxArrayString depsArr = proj->GetDependencies(bld_conf_name);
-    PRINT_TIMESTAMP(_("Reading project dependencies...done\n"));
     
+    CL_DEBUG("Generating Makefile...");
     // Filter all disabled projects from the dependencies array
     wxArrayString updatedDepsArr;
     for(size_t i=0; i<depsArr.GetCount(); ++i) {
@@ -213,7 +192,6 @@ bool BuilderGnuMake::Export(const wxString &project, const wxString &confToBuild
 
     wxFileName wspfile(WorkspaceST::Get()->GetWorkspaceFileName());
 
-    PRINT_TIMESTAMP(_("Generating makefile...\n"));
     text << wxT(".PHONY: clean All\n\n");
     text << wxT("All:\n");
 
@@ -302,7 +280,6 @@ bool BuilderGnuMake::Export(const wxString &project, const wxString &confToBuild
                 CreateCustomPostBuildEvents(dependProjbldConf, text);
 
             } else {
-                PRINT_TIMESTAMP(wxString::Format(_("Generating makefile for project %s...\n"), dependProj->GetName().c_str()));
                 // generate the dependency project makefile
                 wxString dep_file = DoGetMarkerFileDir(wxT(""));
                 dep_file << wxFileName::GetPathSeparator() << dependProj->GetName();
@@ -310,7 +287,6 @@ bool BuilderGnuMake::Export(const wxString &project, const wxString &confToBuild
 
                 GenerateMakefile(dependProj, projectSelConf, confToBuild.IsEmpty() ? force : true, wxArrayString());
                 text << GetProjectMakeCommand(wspfile, fn, dependProj, projectSelConf);
-                PRINT_TIMESTAMP(wxString::Format(_("Generating makefile for project %s...done\n"), dependProj->GetName().c_str()));
             }
         }
     }
@@ -456,15 +432,13 @@ bool BuilderGnuMake::Export(const wxString &project, const wxString &confToBuild
         text << wxT("\t") << GetCdCmd(wspfile, projectPath) << buildTool << wxT(" \"") << proj->GetName() << wxT(".mk\" clean\n") ;
     }
 
-    PRINT_TIMESTAMP(_("Generating makefile...done\n"));
 
     //dump the content to file
-    PRINT_TIMESTAMP(_("Writing makefile...\n"));
     wxFileOutputStream output(fn);
     wxStringInputStream content(text);
     output << content;
-    PRINT_TIMESTAMP(_("Writing makefile...done\n"));
-
+    
+    CL_DEBUG("Generating Makefile...is completed");
     return true;
 }
 
@@ -518,6 +492,10 @@ void BuilderGnuMake::GenerateMakefile(ProjectPtr proj, const wxString &confToBui
             }
         }
     }
+    
+    // Load the current project files
+    m_projectFilesMetadata.clear();
+    proj->GetFilesMetadata( m_projectFilesMetadata );
 
     //generate the selected configuration for this project
     //wxTextOutputStream text(output);
@@ -603,11 +581,9 @@ void BuilderGnuMake::CreateMakeDirsTarget(BuildConfigPtr bldConf, const wxString
 void BuilderGnuMake::CreateSrcList(ProjectPtr proj, const wxString &confToBuild, wxString &text)
 {
     std::vector<wxFileName> files;
-    Project::FileInfoVector_t filesMetadata;
-    proj->GetFilesMetadata(filesMetadata);
     
-    Project::FileInfoVector_t::const_iterator iterFile = filesMetadata.begin();
-    for(; iterFile != filesMetadata.end(); ++iterFile) {
+    Project::FileInfoVector_t::const_iterator iterFile = m_projectFilesMetadata.begin();
+    for(; iterFile != m_projectFilesMetadata.end(); ++iterFile) {
         // Include only files that don't have the 'exclude from build' flag set
         if ( ! iterFile->IsExcludeFromConfiguration(confToBuild) ) {
             files.push_back( wxFileName(iterFile->GetFilenameRelpath()) );
@@ -658,10 +634,9 @@ void BuilderGnuMake::CreateObjectList(ProjectPtr proj, const wxString &confToBui
 {
     m_objectChunks = 1;
     std::vector<wxFileName> files;
-    Project::FileInfoVector_t filesMetadata;
-    proj->GetFilesMetadata(filesMetadata);
-    Project::FileInfoVector_t::const_iterator iterFile = filesMetadata.begin();
-    for(; iterFile != filesMetadata.end(); ++iterFile) {
+
+    Project::FileInfoVector_t::const_iterator iterFile = m_projectFilesMetadata.begin();
+    for(; iterFile != m_projectFilesMetadata.end(); ++iterFile) {
         // Include only files that don't have the 'exclude from build' flag set
         if ( !iterFile->IsExcludeFromConfiguration(confToBuild) ) {
             files.push_back( wxFileName(iterFile->GetFilename()) );
@@ -676,7 +651,7 @@ void BuilderGnuMake::CreateObjectList(ProjectPtr proj, const wxString &confToBui
 
     int counter = 1;
     Compiler::CmpFileTypeInfo ft;
-    wxString cwd = ::wxGetCwd();
+    wxString projectPath = proj->GetFileName().GetPath();
 
     wxString objectsList;
     size_t   objCounter = 0;
@@ -715,14 +690,8 @@ void BuilderGnuMake::CreateObjectList(ProjectPtr proj, const wxString &confToBui
             continue;
         }
 
-        wxString objPrefix = DoGetTargetPrefix(files.at(i), cwd, cmp);
-        if (ft.kind == Compiler::CmpFileKindResource) {
-            // resource files are handled differently
-            curChunk << wxT("$(IntermediateDirectory)/") << objPrefix << files[i].GetFullName() << wxT("$(ObjectSuffix) ");
-        } else {
-            // Compiler::CmpFileKindSource file
-            curChunk << wxT("$(IntermediateDirectory)/") << objPrefix << files[i].GetName() << wxT("$(ObjectSuffix) ");
-        }
+        wxString objPrefix = DoGetTargetPrefix(files.at(i), projectPath, cmp);
+        curChunk << wxT("$(IntermediateDirectory)/") << objPrefix << files[i].GetFullName() << wxT("$(ObjectSuffix) ");
         
         // for readability, break every 10 objects and start a new line
         if (counter % 10 == 0) {
@@ -750,7 +719,6 @@ void BuilderGnuMake::CreateObjectList(ProjectPtr proj, const wxString &confToBui
 
 void BuilderGnuMake::CreateFileTargets(ProjectPtr proj, const wxString &confToBuild, wxString &text)
 {
-    PRINT_TIMESTAMP(wxT("Creating file targets...\n"));
     //get the project specific build configuration for the workspace active
     //configuration
     BuildConfigPtr bldConf = WorkspaceST::Get()->GetProjBuildConf(proj->GetName(), confToBuild);
@@ -764,16 +732,11 @@ void BuilderGnuMake::CreateFileTargets(ProjectPtr proj, const wxString &confToBu
 
     std::vector<wxFileName> abs_files, rel_paths;
 
-    // support for full path
-    PRINT_TIMESTAMP(wxT("Loading file list...\n"));
-    Project::FileInfoVector_t filesMetadata;
-    proj->GetFilesMetadata(filesMetadata);
+    abs_files.reserve( m_projectFilesMetadata.size() );
+    rel_paths.reserve( m_projectFilesMetadata.size() );
     
-    abs_files.reserve( filesMetadata.size() );
-    rel_paths.reserve( filesMetadata.size() );
-    
-    Project::FileInfoVector_t::const_iterator iterFile = filesMetadata.begin();
-    for(; iterFile != filesMetadata.end(); ++iterFile) {
+    Project::FileInfoVector_t::const_iterator iterFile = m_projectFilesMetadata.begin();
+    for(; iterFile != m_projectFilesMetadata.end(); ++iterFile) {
         // Include only files that don't have the 'exclude from build' flag set
         if ( !iterFile->IsExcludeFromConfiguration(confToBuild) ) {
             abs_files.push_back( wxFileName(iterFile->GetFilename()) );
@@ -781,7 +744,6 @@ void BuilderGnuMake::CreateFileTargets(ProjectPtr proj, const wxString &confToBu
         }
     }
     
-    PRINT_TIMESTAMP(wxT("Loading file list...done\n"));
 
     text << wxT("\n\n");
     // create rule per object
@@ -796,7 +758,6 @@ void BuilderGnuMake::CreateFileTargets(ProjectPtr proj, const wxString &confToBu
 
     wxString cwd = proj->GetFileName().GetPath();
 
-    PRINT_TIMESTAMP(wxT("Looping over the file list...\n"));
     for (size_t i=0; i<abs_files.size(); i++) {
         // is this file interests the compiler?
         if (cmp->GetCmpFileType(abs_files.at(i).GetExt().Lower(), ft) ) {
@@ -824,12 +785,7 @@ void BuilderGnuMake::CreateFileTargets(ProjectPtr proj, const wxString &confToBu
             compilationLine.Replace(wxT("$(FilePath)"),     relPath);
             
             // The object name is handled differently when using resource files
-            if(ft.kind == Compiler::CmpFileKindResource)
-                compilationLine.Replace(wxT("$(ObjectName)"),   objPrefix + fullnameOnly);
-            else
-                compilationLine.Replace(wxT("$(ObjectName)"),   objPrefix + filenameOnly);
-
-            compilationLine.Replace(wxT("$(ObjectName)"),   objPrefix + filenameOnly);
+            compilationLine.Replace(wxT("$(ObjectName)"),   objPrefix + fullnameOnly);
             compilationLine.Replace(wxT("\\"),              wxT("/"));
 
             if (ft.kind == Compiler::CmpFileKindSource) {
@@ -839,12 +795,12 @@ void BuilderGnuMake::CreateFileTargets(ProjectPtr proj, const wxString &confToBu
 
                 bool isCFile = FileExtManager::GetType(rel_paths.at(i).GetFullName()) == FileExtManager::TypeSourceC;
 
-                objectName << wxT("$(IntermediateDirectory)/") << objPrefix << filenameOnly << wxT("$(ObjectSuffix)");
+                objectName << wxT("$(IntermediateDirectory)/") << objPrefix << fullnameOnly << wxT("$(ObjectSuffix)");
                 if (generateDependenciesFiles) {
-                    dependFile << wxT("$(IntermediateDirectory)/") << objPrefix << filenameOnly << wxT("$(DependSuffix)");
+                    dependFile << wxT("$(IntermediateDirectory)/") << objPrefix << fullnameOnly << wxT("$(DependSuffix)");
                 }
                 if (supportPreprocessOnlyFiles) {
-                    preprocessedFile << wxT("$(IntermediateDirectory)/") << objPrefix << filenameOnly << wxT("$(PreprocessSuffix)");
+                    preprocessedFile << wxT("$(IntermediateDirectory)/") << objPrefix << fullnameOnly << wxT("$(PreprocessSuffix)");
                 }
 
                 if(!isCFile) {
@@ -912,13 +868,23 @@ void BuilderGnuMake::CreateFileTargets(ProjectPtr proj, const wxString &confToBu
         text << wxT("-include ") << wxT("$(IntermediateDirectory)/*$(DependSuffix)\n");
     }
 
-    PRINT_TIMESTAMP(_("Looping over the file list...done\n"));
-    PRINT_TIMESTAMP(_("Creating file targets...done\n"));
+}
+static wxString GetIntermediateFolder(BuildConfigPtr bldConf)
+{
+    wxString IntermediateDirectory = bldConf->GetIntermediateDirectory();
+    if ( IntermediateDirectory == "/" || IntermediateDirectory.IsEmpty() ) {
+        return wxEmptyString;
+    }
+    
+    // not empty and does not equal to "/"
+    if ( !IntermediateDirectory.EndsWith("/") ) {
+        IntermediateDirectory.Append('/');
+    }
+    return IntermediateDirectory;
 }
 
 void BuilderGnuMake::CreateCleanTargets(ProjectPtr proj, const wxString &confToBuild, wxString &text)
 {
-    PRINT_TIMESTAMP(_("Creating clean targets...\n"));
     //get the project specific build configuration for the workspace active
     //configuration
     BuildConfigPtr bldConf = WorkspaceST::Get()->GetProjBuildConf(proj->GetName(), confToBuild);
@@ -928,31 +894,8 @@ void BuilderGnuMake::CreateCleanTargets(ProjectPtr proj, const wxString &confToB
     std::vector<wxFileName> abs_files, rel_paths;
 
     // Can we use asterisk in the clean command?
-    long asterisk(0);
-    EditorConfigST::Get()->GetLongValue(wxT("CleanTragetWithAsterisk"), asterisk);
-
-    wxString imd = bldConf->GetIntermediateDirectory();
-    imd.Trim().Trim(false);
-    bool useAsterisk = ((imd.IsEmpty() == false) && asterisk);
-
-    // support for full path
-    PRINT_TIMESTAMP(_("Loading file list for clean...\n"));
-    Project::FileInfoVector_t filesMetadata;
-    proj->GetFilesMetadata(filesMetadata);
+    wxString imd = GetIntermediateFolder(bldConf);
     
-    abs_files.reserve( filesMetadata.size() );
-    rel_paths.reserve( filesMetadata.size() );
-    
-    Project::FileInfoVector_t::const_iterator iterFile = filesMetadata.begin();
-    for(; iterFile != filesMetadata.end(); ++iterFile) {
-        // Include only files that don't have the 'exclude from build' flag set
-        if ( !iterFile->IsExcludeFromConfiguration(confToBuild) ) {
-            abs_files.push_back( wxFileName(iterFile->GetFilename()) );
-            rel_paths.push_back( wxFileName(iterFile->GetFilenameRelpath()) );
-        }
-    }
-    PRINT_TIMESTAMP(_("Loading file list...done\n"));
-
     //add clean target
     text << wxT("##\n");
     text << wxT("## Clean\n");
@@ -961,38 +904,7 @@ void BuilderGnuMake::CreateCleanTargets(ProjectPtr proj, const wxString &confToB
 
     wxString cwd = proj->GetFileName().GetPath();
     if (OS_WINDOWS) {
-
-        // Windows clean command
-        if( !useAsterisk ) {
-            for (size_t i=0; i<abs_files.size(); i++) {
-
-                Compiler::CmpFileTypeInfo ft;
-                if (cmp->GetCmpFileType(abs_files[i].GetExt(), ft)) {
-                    wxString objPrefix = DoGetTargetPrefix(abs_files.at(i), cwd, cmp);
-
-                    if (ft.kind == Compiler::CmpFileKindSource) {
-
-                        wxString objectName, dependFile, preprocessFile;
-                        objectName     << objPrefix << abs_files[i].GetName() << wxT("$(ObjectSuffix)");
-                        dependFile     << objPrefix << abs_files[i].GetName() << wxT("$(DependSuffix)");
-                        preprocessFile << objPrefix << abs_files[i].GetName() << wxT("$(PreprocessSuffix)");
-
-                        text << wxT("\t") << wxT("$(RM) ") << wxT("$(IntermediateDirectory)/") << objectName     << wxT("\n");
-                        text << wxT("\t") << wxT("$(RM) ") << wxT("$(IntermediateDirectory)/") << dependFile     << wxT("\n");
-                        text << wxT("\t") << wxT("$(RM) ") << wxT("$(IntermediateDirectory)/") << preprocessFile << wxT("\n");
-
-                    } else if (ft.kind == Compiler::CmpFileKindResource && OS_WINDOWS) {
-                        wxString ofile = abs_files[i].GetFullName() + wxT("$(ObjectSuffix)");
-                        text << wxT("\t") << wxT("$(RM) ") << wxT("$(IntermediateDirectory)/") << ofile << wxT("\n");
-
-                    }
-                }
-            }
-        } else {
-            // We can use asterisk (intermediat directory is not empty)
-            text << wxT("\t") << wxT("$(RM) ") << wxT("$(IntermediateDirectory)/*.*") << wxT("\n");
-        }
-
+        text << wxT("\t") << wxT("$(RM) ") << imd << "*$(ObjectSuffix)" << wxT("\n");
         //delete the output file as well
         wxString exeExt(wxEmptyString);
         if (proj->GetSettings()->GetProjectType(bldConf->GetName()) == Project::EXECUTABLE) {
@@ -1014,35 +926,8 @@ void BuilderGnuMake::CreateCleanTargets(ProjectPtr proj, const wxString &confToB
             text << wxT("\t") << wxT("$(RM) ") << pchFile << wxT(".gch") << wxT("\n");
         }
     } else {
-        //on linux we dont really need resource compiler...
-        if(!useAsterisk) {
-            for (size_t i=0; i<abs_files.size(); i++) {
-
-                wxString objPrefix = DoGetTargetPrefix( abs_files.at(i), cwd, cmp );
-
-                Compiler::CmpFileTypeInfo ft;
-                if (cmp->GetCmpFileType(abs_files[i].GetExt(), ft) && ft.kind == Compiler::CmpFileKindSource) {
-
-                    wxString relPath;
-                    relPath = rel_paths.at(i).GetPath(true, wxPATH_UNIX);
-                    relPath.Trim().Trim(false);
-
-                    wxString objectName, dependFile, preprocessFile;
-
-                    objectName     << objPrefix << abs_files[i].GetName() << wxT("$(ObjectSuffix)");
-                    dependFile     << objPrefix << abs_files[i].GetName() << wxT("$(DependSuffix)");
-                    preprocessFile << objPrefix << abs_files[i].GetName() << wxT("$(PreprocessSuffix)");
-
-                    text << wxT("\t") << wxT("$(RM) ") << wxT("$(IntermediateDirectory)/") << objectName     << wxT("\n");
-                    text << wxT("\t") << wxT("$(RM) ") << wxT("$(IntermediateDirectory)/") << dependFile     << wxT("\n");
-                    text << wxT("\t") << wxT("$(RM) ") << wxT("$(IntermediateDirectory)/") << preprocessFile << wxT("\n");
-                }
-            }
-
-        } else {
-            text << wxT("\t") << wxT("$(RM) ") << wxT("$(IntermediateDirectory)/*.*") << wxT("\n");
-        }
-
+        text << wxT("\t") << wxT("$(RM) ") << imd << "*$(ObjectSuffix)" << wxT("\n");
+        
         //delete the output file as well
         text << wxT("\t") << wxT("$(RM) ") << wxT("$(OutputFile)\n");
         text << wxT("\t") << wxT("$(RM) ") << DoGetMarkerFileDir(proj->GetName(), proj->GetFileName().GetPath()) << wxT("\n");
@@ -1058,7 +943,6 @@ void BuilderGnuMake::CreateCleanTargets(ProjectPtr proj, const wxString &confToB
     }
 
     text << wxT("\n\n");
-    PRINT_TIMESTAMP(wxT("Creating clean targets...done\n"));
 }
 
 void BuilderGnuMake::CreateListMacros(ProjectPtr proj, const wxString &confToBuild, wxString &text)
@@ -1075,7 +959,6 @@ void BuilderGnuMake::CreateLinkTargets(const wxString &type, BuildConfigPtr bldC
     //this is to workaround bug in the generated makefiles
     //which causes the makefile to report 'nothing to be done'
     //even when a dependency was modified
-
     text << wxT(".PHONY: all clean PreBuild PrePreBuild PostBuild\n");
 
     wxString extraDeps;
@@ -1086,8 +969,8 @@ void BuilderGnuMake::CreateLinkTargets(const wxString &type, BuildConfigPtr bldC
 
     for(size_t i=0; i<depsProj.GetCount(); i++) {
         wxFileName fn(depsProj.Item(i));
-        CL_DEBUG(wxT("making %s relative to %s"), fn.GetFullPath().c_str(), proj->GetFileName().GetPath().c_str());
-        fn.MakeRelativeTo(proj->GetFileName().GetPath());
+        //CL_DEBUG(wxT("making %s relative to %s"), fn.GetFullPath().c_str(), proj->GetFileName().GetPath().c_str());
+        fn.MakeRelativeTo( proj->GetProjectPath() );
         extraDeps << "\"" << fn.GetFullPath() << wxT("\" ");
 
         depsRules << "\"" << fn.GetFullPath() << wxT("\":\n");
@@ -1494,8 +1377,8 @@ wxString BuilderGnuMake::ParseLibs(const wxString &libs)
         }
 
         //remove known suffixes
-        if (	lib.EndsWith(wxT(".a")) ||
-                lib.EndsWith(wxT(".so")) ||
+        if (    lib.EndsWith(wxT(".a"))     ||
+                lib.EndsWith(wxT(".so"))    ||
                 lib.EndsWith(wxT(".dylib")) ||
                 lib.EndsWith(wxT(".dll"))
            ) {
@@ -1605,7 +1488,7 @@ wxString BuilderGnuMake::GetSingleFileCmd(const wxString &project, const wxStrin
 
     wxString relPath = fn.GetPath(true, wxPATH_UNIX);
     wxString objNamePrefix = DoGetTargetPrefix(fn, proj->GetFileName().GetPath(), cmp);
-    target << bldConf->GetIntermediateDirectory() << wxT("/") << objNamePrefix << fn.GetName() << cmp->GetObjectSuffix();
+    target << bldConf->GetIntermediateDirectory() << wxT("/") << objNamePrefix << fn.GetFullName() << cmp->GetObjectSuffix();
 
     target = ExpandAllVariables(target, WorkspaceST::Get(), proj->GetName(), confToBuild, wxEmptyString);
     cmd    = GetProjectMakeCommand(proj, confToBuild, target, false, false);
@@ -1886,9 +1769,12 @@ wxString BuilderGnuMake::DoGetCompilerMacro(const wxString& filename)
 wxString BuilderGnuMake::DoGetTargetPrefix(const wxFileName& filename, const wxString &cwd, CompilerPtr cmp)
 {
     size_t        count = filename.GetDirCount();
-    wxArrayString dirs  = filename.GetDirs();
+    const wxArrayString &dirs  = filename.GetDirs();
     wxString      lastDir;
-
+    
+    if ( cwd == filename.GetPath() )
+        return wxEmptyString;
+        
     if(cmp && cmp->GetObjectNameIdenticalToFileName())
         return wxEmptyString;
 

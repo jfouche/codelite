@@ -31,6 +31,9 @@
 #include "wx/filename.h"
 #include "project.h"
 #include <map>
+#include "json_node.h"
+#include <wx/event.h>
+#include <cl_command_event.h>
 //#include "ctags_manager.h"
 #include "configuration_mapping.h"
 #include "optionsconfig.h"
@@ -43,32 +46,58 @@
  * Workspace manager class
  *
  */
+class CompileCommandsCreateor;
 class WXDLLIMPEXP_SDK Workspace
 {
     friend class WorkspaceST;
+    friend class CompileCommandsCreateor;
+    
+public:
+    typedef std::map<wxString, ProjectPtr> ProjectMap_t;
+    
+protected:
     wxXmlDocument m_doc;
     wxFileName m_fileName;
-    std::map<wxString, ProjectPtr> m_projects;
+    Workspace::ProjectMap_t m_projects;
     wxString m_startupDir;
     time_t m_modifyTime;
+    bool  m_saveOnExit;
+    BuildMatrixPtr m_buildMatrix;
 
 private:
-
     /// Constructor
     Workspace();
 
     /// Destructor
     virtual ~Workspace();
-
+    
+    void DoUpdateBuildMatrix();
+    
 public:
-
+    
+    /**
+     * @brief createa 'compile_commands' json object for the workspace projects (only the enabled ones)
+     */
+    void CreateCompileCommandsJSON(JSONElement &compile_commands) const;
+    
     void SetStartupDir(const wxString& startupDir) {
         this->m_startupDir = startupDir;
     }
     const wxString& GetStartupDir() const {
         return m_startupDir;
     }
-
+    
+    /**
+     * @brief return list of compilers used by all the projects (this is done for the active configuration only)
+     */
+    void GetCompilers(wxStringSet_t& compilers);
+    
+    /**
+     * @brief replace compilers for all projects and build configurations
+     * @param compilers a map of compilers where the key is the old compiler and the value is the new compiler
+     */
+    void ReplaceCompilers(wxStringMap_t &compilers);
+    
     /**
      * Returns the workspace file name
      */
@@ -102,7 +131,16 @@ public:
      * true on success false otherwise
      */
     bool OpenWorkspace(const wxString &fileName, wxString &errMsg);
-
+    
+    /**
+     * @brief this function opens the workspace, but does not open the tags 
+     * completion database etc. It only loads the XML and then adds all the 
+     * projects XML. It is mainly needed when you just need to explore the 
+     * workspace from a secondary thread with no events / UI to get in the
+     * way
+     */
+    bool OpenReadOnly(const wxString &fileName, wxString &errMsg);
+    
     /**
      * Close the currently opened workspace
      */
@@ -170,7 +208,7 @@ public:
     /**
      * \return The active project name or wxEmptyString
      */
-    wxString GetActiveProjectName();
+    wxString GetActiveProjectName() const;
 
     /**
      * @brief return the paths of all projects in the workspace (full paths)
@@ -318,6 +356,16 @@ public:
      * @brief return the tags database full path
      */
     wxFileName GetTagsFileName() const;
+    
+    /**
+     * @brief return project by name
+     */
+    ProjectPtr GetProject( const wxString &name ) const;
+    
+    /**
+     * @brief return the active project
+     */
+    ProjectPtr GetActiveProject() const;
     
 private:
     /**

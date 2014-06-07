@@ -132,7 +132,7 @@ static bool _IsCppKeyword(const wxString &word)
 
 TagsOptionsData::TagsOptionsData()
     : clConfigItem("code-completion")
-    , m_ccFlags       (CC_DISP_FUNC_CALLTIP | CC_LOAD_EXT_DB | CC_CPP_KEYWORD_ASISST | CC_COLOUR_VARS | CC_ACCURATE_SCOPE_RESOLVING | CC_PARSE_EXT_LESS_FILES)
+    , m_ccFlags       (CC_DISP_FUNC_CALLTIP | CC_CPP_KEYWORD_ASISST | CC_COLOUR_VARS | CC_ACCURATE_SCOPE_RESOLVING)
     , m_ccColourFlags (CC_COLOUR_DEFAULT)
     , m_fileSpec(wxT  ("*.cpp;*.cc;*.cxx;*.h;*.hpp;*.c;*.c++;*.tcc;*.hxx;*.h++"))
     , m_minWordLen    (3)
@@ -249,7 +249,8 @@ TagsOptionsData::TagsOptionsData()
     m_tokens.Add(wxT("_GLIBCXX_PURE"));
     m_tokens.Add(wxT("_GLIBCXX_THROW(%0)"));
     m_tokens.Add(wxT("_GLIBCXX_DEPRECATED"));
-
+    m_tokens.Add("LLDB_API");
+    m_tokens.Add("PYTHON_API");
 
     m_types.Add(wxT("std::vector::reference=_Tp"));
     m_types.Add(wxT("std::vector::const_reference=_Tp"));

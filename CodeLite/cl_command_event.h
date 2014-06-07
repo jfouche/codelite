@@ -6,6 +6,7 @@
 #include "codelite_exports.h"
 #include "entry.h"
 #include <wx/arrstr.h>
+#include <vector>
 
 // Set of flags that can be passed within the 'S{G}etInt' function of clCommandEvent
 enum {
@@ -52,6 +53,9 @@ public:
         this->m_strings = strings;
     }
     const wxArrayString& GetStrings() const {
+        return m_strings;
+    }
+    wxArrayString& GetStrings() {
         return m_strings;
     }
 };
@@ -249,19 +253,61 @@ typedef void (wxEvtHandler::*clBuildEventFunction)(clBuildEvent&);
 // -------------------------------------------------------------------------
 class WXDLLIMPEXP_CL clDebugEvent : public clCommandEvent
 {
-    wxString m_projectName;
-    wxString m_configurationName;
+    wxString m_projectName;         // wxEVT_DBG_UI_START_OR_CONT
+    wxString m_configurationName;   // wxEVT_DBG_UI_START_OR_CONT
+    wxString m_debuggerName;        // holds the selected debugger name. wxEVT_DBG_UI_START_OR_CONT, wxEVT_DBG_UI_QUICK_DEBUG, wxEVT_DBG_UI_CORE_FILE
+    wxString m_executableName;      // This will be set for wxEVT_DBG_UI_QUICK_DEBUG and wxEVT_DBG_UI_CORE_FILE
+    wxString m_coreFile;            // wxEVT_DBG_UI_CORE_FILE
+    wxString m_workingDirectory;    // wxEVT_DBG_UI_CORE_FILE, wxEVT_DBG_UI_QUICK_DEBUG
+    wxString m_arguments;           // wxEVT_DBG_UI_QUICK_DEBUG
+    wxString m_startupCommands;     // wxEVT_DBG_UI_QUICK_DEBUG
 
 public:
     clDebugEvent(wxEventType commandType = wxEVT_NULL, int winid = 0);
     clDebugEvent(const clDebugEvent& event);
-    clDebugEvent& operator=(const clDebugEvent& src);
-    
+    clDebugEvent& operator=(const clDebugEvent& other);
+
     virtual ~clDebugEvent();
     virtual wxEvent *Clone() const {
         return new clDebugEvent(*this);
     };
 
+    void SetDebuggerName(const wxString& debuggerName) {
+        this->m_debuggerName = debuggerName;
+    }
+    const wxString& GetDebuggerName() const {
+        return m_debuggerName;
+    }
+    void SetArguments(const wxString& arguments) {
+        this->m_arguments = arguments;
+    }
+    void SetCoreFile(const wxString& coreFile) {
+        this->m_coreFile = coreFile;
+    }
+    void SetExecutableName(const wxString& executableName) {
+        this->m_executableName = executableName;
+    }
+    void SetStartupCommands(const wxString& startupCommands) {
+        this->m_startupCommands = startupCommands;
+    }
+    void SetWorkingDirectory(const wxString& workingDirectory) {
+        this->m_workingDirectory = workingDirectory;
+    }
+    const wxString& GetArguments() const {
+        return m_arguments;
+    }
+    const wxString& GetCoreFile() const {
+        return m_coreFile;
+    }
+    const wxString& GetExecutableName() const {
+        return m_executableName;
+    }
+    const wxString& GetStartupCommands() const {
+        return m_startupCommands;
+    }
+    const wxString& GetWorkingDirectory() const {
+        return m_workingDirectory;
+    }
     void SetConfigurationName(const wxString& configurationName) {
         this->m_configurationName = configurationName;
     }
@@ -280,4 +326,102 @@ typedef void (wxEvtHandler::*clDebugEventFunction)(clDebugEvent&);
 #define clDebugEventHandler(func) \
     wxEVENT_HANDLER_CAST(clDebugEventFunction, func)
 
+// ------------------------------------------------------------------
+// clNewProjectEvent
+// ------------------------------------------------------------------
+class WXDLLIMPEXP_CL clNewProjectEvent : public clCommandEvent
+{
+public:
+    struct Template {
+        wxString m_category;
+        wxString m_categoryPng;
+        wxString m_template;
+        wxString m_templatePng;
+        wxString m_toolchain;
+        wxString m_debugger;
+        typedef std::vector<clNewProjectEvent::Template> Vec_t;
+    };
+
+protected:
+    clNewProjectEvent::Template::Vec_t m_templates;
+    wxString m_toolchain;
+    wxString m_debugger;
+    wxString m_projectName;
+    wxString m_projectFolder;
+    wxString m_templateName;
+public:
+    clNewProjectEvent(wxEventType commandType = wxEVT_NULL, int winid = 0);
+    clNewProjectEvent(const clNewProjectEvent& event);
+    clNewProjectEvent& operator=(const clNewProjectEvent& src);
+    virtual ~clNewProjectEvent();
+    virtual wxEvent *Clone() const {
+        return new clNewProjectEvent(*this);
+    };
+
+    void SetTemplates(const clNewProjectEvent::Template::Vec_t& templates) {
+        this->m_templates = templates;
+    }
+    const clNewProjectEvent::Template::Vec_t& GetTemplates() const {
+        return m_templates;
+    }
+    clNewProjectEvent::Template::Vec_t& GetTemplates() {
+        return m_templates;
+    }
+
+    void SetDebugger(const wxString& debugger) {
+        this->m_debugger = debugger;
+    }
+    void SetProjectFolder(const wxString& projectFolder) {
+        this->m_projectFolder = projectFolder;
+    }
+    void SetProjectName(const wxString& projectName) {
+        this->m_projectName = projectName;
+    }
+    void SetToolchain(const wxString& toolchain) {
+        this->m_toolchain = toolchain;
+    }
+    const wxString& GetDebugger() const {
+        return m_debugger;
+    }
+    const wxString& GetProjectFolder() const {
+        return m_projectFolder;
+    }
+    const wxString& GetProjectName() const {
+        return m_projectName;
+    }
+    const wxString& GetToolchain() const {
+        return m_toolchain;
+    }
+    void SetTemplateName(const wxString& templateName) {
+        this->m_templateName = templateName;
+    }
+    const wxString& GetTemplateName() const {
+        return m_templateName;
+    }
+};
+
+typedef void (wxEvtHandler::*clNewProjectEventFunction)(clNewProjectEvent&);
+#define clNewProjectEventHandler(func) \
+    wxEVENT_HANDLER_CAST(clNewProjectEventFunction, func)
+
+
+// --------------------------------------------------------------
+// Compiler event
+// --------------------------------------------------------------
+class WXDLLIMPEXP_CL clCompilerEvent : public clCommandEvent
+{
+public:
+    clCompilerEvent(wxEventType commandType = wxEVT_NULL, int winid = 0);
+    clCompilerEvent(const clCompilerEvent& event);
+    clCompilerEvent& operator=(const clCompilerEvent& src);
+    virtual ~clCompilerEvent();
+    virtual wxEvent *Clone() const {
+        return new clCompilerEvent(*this);
+    } 
+};
+
+typedef void (wxEvtHandler::*clCompilerEventFunction)(clCompilerEvent&);
+#define clCompilerEventHandler(func) \
+    wxEVENT_HANDLER_CAST(clCompilerEventFunction, func)
+    
 #endif // CLCOMMANDEVENT_H

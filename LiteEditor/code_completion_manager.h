@@ -31,6 +31,7 @@
 #include "cl_editor.h"
 #include "cl_command_event.h"
 #include <wx/event.h>
+#include "CompileCommandsCreateor.h"
 
 class CodeCompletionManager : public wxEvtHandler
 {
@@ -62,6 +63,7 @@ protected:
     void OnBuildEnded(clBuildEvent &e);
     void OnBuildStarted(clBuildEvent &e);
     void OnAppActivated(wxActivateEvent &e);
+    void OnCompileCommandsFileGenerated(clCommandEvent &event);
     
 public:
     CodeCompletionManager();

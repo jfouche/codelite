@@ -39,6 +39,8 @@
 #include "breakpointsmgr.h"
 #include "perspectivemanager.h"
 #include "ctags_manager.h"
+#include "clDebuggerTerminal.h"
+#include "cl_command_event.h"
 
 class LEditor;
 
@@ -118,7 +120,8 @@ protected:
     bool                    m_repositionEditor; //flag used for debugging, should editor be repositioned after user updates like "add watch"
     DbgStackInfo            m_dbgCurrentFrameInfo;
     PerspectiveManager      m_perspectiveManager;
-
+    clDebuggerTerminalPOSIX m_debuggerTerminal;
+    
 protected:
     Manager(void);
     virtual ~Manager(void);
@@ -176,6 +179,8 @@ public:
 
     void SetCodeLiteLauncherPath(const wxString &path);
     void OnRestart(wxCommandEvent &event);
+    void GenerateCompileCommands();
+    
 protected:
     void DoRestartCodeLite();
 
@@ -254,6 +259,7 @@ protected:
     void AddToRecentlyOpenedWorkspaces(const wxString &fileName);
     
     void OnAddWorkspaceToRecentlyUsedList(wxCommandEvent &e);
+    void OnParserThreadSuggestColourTokens(clCommandEvent &event);
     
 
     //--------------------------- Workspace Projects Mgmt -----------------------------
@@ -612,7 +618,13 @@ public:
 
 protected:
     void OnProcessEnd(wxProcessEvent &event);
-
+    void OnBuildEnded(clBuildEvent &event);
+    
+    /**
+     * @brief react to a build starting event
+     */
+    void OnBuildStarting(clBuildEvent &event);
+    
 
     //--------------------------- Debugger Support -----------------------------
 protected:
@@ -623,7 +635,15 @@ public:
     BreakptMgr* GetBreakpointsMgr() {
         return m_breakptsmgr;
     }
-
+    
+    /**
+     * @brief start a terminal for the debugger and return its TTY
+     * @param title terminal title
+     * @param tty [output] the terminal TTY
+     * @return true on success, false otherwise
+     */
+    bool StartTTY( const wxString &title, wxString &tty );
+    
     void UpdateDebuggerPane();
 
     void SetMemory(const wxString &address, size_t count, const wxString &hex_value);
@@ -648,6 +668,7 @@ public:
 
     void         DbgStart(long pid = wxNOT_FOUND);
     void         DbgStop();
+    void         DbgContinue();
     void         DbgMarkDebuggerLine(const wxString &fileName, int lineno);
     void         DbgUnMarkDebuggerLine();
     void         DbgDoSimpleCommand(int cmd);

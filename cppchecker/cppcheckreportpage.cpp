@@ -5,6 +5,8 @@
 #include <wx/regex.h>
 #include <wx/log.h>
 #include "event_notifier.h"
+#include "lexer_configuration.h"
+#include "editor_config.h"
 
 static size_t sErrorCount (0);
 
@@ -15,19 +17,16 @@ CppCheckReportPage::CppCheckReportPage(wxWindow* parent, IManager* mgr, CppCheck
 {
     DoInitStyle();
     EventNotifier::Get()->Connect(wxEVT_CL_THEME_CHANGED, wxCommandEventHandler(CppCheckReportPage::OnThemeChanged), NULL, this);
-    // Connect events
-    m_outputText->Connect(wxEVT_STC_DOUBLECLICK, wxStyledTextEventHandler(CppCheckReportPage::OnOpenFile), NULL, this);
 }
 
 CppCheckReportPage::~CppCheckReportPage()
 {
     EventNotifier::Get()->Disconnect(wxEVT_CL_THEME_CHANGED, wxCommandEventHandler(CppCheckReportPage::OnThemeChanged), NULL, this);
-    m_outputText->Disconnect(wxEVT_STC_DOUBLECLICK, wxStyledTextEventHandler(CppCheckReportPage::OnOpenFile), NULL, this);
 }
 
 void CppCheckReportPage::OnClearReportUI(wxUpdateUIEvent& event)
 {
-    event.Enable( m_outputText->GetLength() > 0 && !m_plugin->AnalysisInProgress());
+    event.Enable( m_stc->GetLength() > 0 && !m_plugin->AnalysisInProgress());
 }
 
 void CppCheckReportPage::OnStopCheckingUI(wxUpdateUIEvent& event)
@@ -37,20 +36,18 @@ void CppCheckReportPage::OnStopCheckingUI(wxUpdateUIEvent& event)
 
 void CppCheckReportPage::Clear()
 {
-    m_outputText->SetReadOnly(false);
-    m_outputText->ClearAll();
-    m_outputText->SetReadOnly(true);
-
-    m_gauge->SetValue(0);
-    m_staticTextFile->SetLabel(wxEmptyString);
+    m_stc->SetReadOnly(false);
+    m_stc->ClearAll();
+    m_stc->SetReadOnly(true);
+    
+    m_mgr->SetStatusMessage("");
     sErrorCount = 0;
 }
 
 void CppCheckReportPage::OnStopChecking(wxCommandEvent& event)
 {
     m_plugin->StopAnalysis();
-    m_staticTextFile->SetLabel(_("Check Interrupted!"));
-    m_gauge->SetValue( m_gauge->GetRange() );
+    m_mgr->SetStatusMessage("CppCheck Stopped");
 }
 
 void CppCheckReportPage::OnClearReport(wxCommandEvent& event)
@@ -79,14 +76,13 @@ void CppCheckReportPage::AppendLine(const wxString& line)
             long fileNo(0);
             currentLine.ToLong(&fileNo);
 
-            m_gauge->SetValue( fileNo );
         }
 
         if(reFileName.Matches(arrLines.Item(i))) {
 
             // Get the file name
             wxString filename = reFileName.GetMatch(arrLines.Item(i), 2);
-            m_staticTextFile->SetLabel(filename);
+            m_mgr->SetStatusMessage("CppCheck: checking file " + filename);
         }
     }
 
@@ -95,11 +91,11 @@ void CppCheckReportPage::AppendLine(const wxString& line)
     tmpLine.Replace(wxT("\r"), wxT(""));
     tmpLine.Replace(wxT("\n\n"), wxT("\n"));
 
-    m_outputText->SetReadOnly(false);
-    m_outputText->AppendText(tmpLine);
-    m_outputText->SetReadOnly(true);
+    m_stc->SetReadOnly(false);
+    m_stc->AppendText(tmpLine);
+    m_stc->SetReadOnly(true);
 
-    m_outputText->ScrollToLine( m_outputText->GetLineCount() - 1);
+    m_stc->ScrollToLine( m_stc->GetLineCount() - 1);
 }
 
 // Lexing function
@@ -140,7 +136,7 @@ void CppCheckReportPage::OnOpenFile(wxStyledTextEvent& e)
     static int fileIndex     = 1;
     static int lineIndex     = 3;
 
-    wxString txt = m_outputText->GetLine( m_outputText->LineFromPosition(e.GetPosition()) );
+    wxString txt = m_stc->GetLine( m_stc->LineFromPosition(e.GetPosition()) );
 
     if(gccPattern.Matches(txt)) {
         wxString file       = gccPattern.GetMatch(txt, fileIndex);
@@ -152,15 +148,7 @@ void CppCheckReportPage::OnOpenFile(wxStyledTextEvent& e)
 
             // Zero based line number
             if(n) n--;
-
-            if ( m_mgr->OpenFile(file, wxEmptyString, n) ) {
-                IEditor * editor = m_mgr->GetActiveEditor();
-                if ( editor ) {
-                    int posStart = editor->GetSTC()->PositionFromLine(n);
-                    int lineLen  = editor->GetSTC()->LineLength(n);
-                    editor->SelectText( posStart, lineLen );
-                }
-            }
+            m_mgr->OpenFile(file, wxEmptyString, n);
         }
     }
 }
@@ -184,36 +172,46 @@ void CppCheckReportPage::PrintStatusMessage()
 
 void CppCheckReportPage::SetGaugeRange(int range)
 {
-    m_gauge->SetRange(range);
-    m_gauge->SetValue(1); // We are starting a test
+    wxUnusedVar( range );
 }
 
 void CppCheckReportPage::SetMessage(const wxString& msg)
 {
-    m_staticTextFile->SetLabel(msg);
+    m_mgr->SetStatusMessage( msg );
 }
 
 void CppCheckReportPage::DoInitStyle()
 {
-    m_outputText->SetReadOnly(true);
-    // Initialize the output text style
-    m_outputText->SetLexer(wxSTC_LEX_NULL);
-    m_outputText->StyleClearAll();
-    
-    m_outputText->HideSelection(true);
-    
-    // Use font
-    for (int i=0; i<=wxSTC_STYLE_DEFAULT; i++) {
-        wxFont defFont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
-        defFont.SetFamily(wxFONTFAMILY_TELETYPE);
-        m_outputText->StyleSetBackground(i, DrawingUtils::GetOutputPaneBgColour());
-        m_outputText->StyleSetForeground(i, DrawingUtils::GetOutputPaneFgColour());
-        m_outputText->StyleSetFont(i, defFont);
-    }
+    m_stc->SetReadOnly(true);
+	LexerConfPtr config = EditorConfigST::Get()->GetLexer("text");
+	if ( config ) {
+		config->Apply( m_stc, true );
+		m_stc->HideSelection(true);
+		
+	} else {
+		// Initialize the output text style
+		m_stc->SetLexer(wxSTC_LEX_NULL);
+		m_stc->StyleClearAll();
+		
+		m_stc->HideSelection(true);
+		
+		// Use font
+		for (int i=0; i<=wxSTC_STYLE_DEFAULT; i++) {
+			wxFont defFont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
+			defFont.SetFamily(wxFONTFAMILY_TELETYPE);
+			m_stc->StyleSetBackground(i, DrawingUtils::GetOutputPaneBgColour());
+			m_stc->StyleSetForeground(i, DrawingUtils::GetOutputPaneFgColour());
+			m_stc->StyleSetFont(i, defFont);
+		}
+	}
 }
 
 void CppCheckReportPage::OnThemeChanged(wxCommandEvent& e)
 {
     e.Skip();
     DoInitStyle();
+}
+
+void CppCheckReportPage::OnStyleNeeded(wxStyledTextEvent& event)
+{
 }

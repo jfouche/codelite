@@ -45,10 +45,24 @@ class SFTPTreeView : public SFTPTreeViewBase
     SFTP*          m_plugin;
 
 public:
+    enum {
+        ID_SFTP_BOOKMARK_FIRST    = 13000,
+        ID_SFTP_BOOKMARK_LAST     = 13100,
+        ID_SFTP_BOOKMARK_SETTINGS = 13101,
+    };
+    
+public:
     SFTPTreeView(wxWindow* parent, SFTP* plugin);
     virtual ~SFTPTreeView();
 
 protected:
+    virtual void OnSelectionChanged(wxTreeListEvent& event);
+    virtual void OnChoiceAccount(wxCommandEvent& event);
+    virtual void OnChoiceAccountUI(wxUpdateUIEvent& event);
+    virtual void OnGotoLocation(wxCommandEvent& event);
+    virtual void OnGotoLocationUI(wxUpdateUIEvent& event);
+    virtual void OnAddBookmark(wxAuiToolBarEvent& event);
+    virtual void OnAddBookmarkUI(wxUpdateUIEvent& event);
     virtual void OnContextMenu(wxTreeListEvent& event);
     virtual void OnDisconnect(wxCommandEvent& event);
     virtual void OnDisconnectUI(wxUpdateUIEvent& event);
@@ -58,10 +72,15 @@ protected:
     virtual void OnMenuOpen(wxCommandEvent &event);
     virtual void OnMenuDelete(wxCommandEvent &event);
     virtual void OnMenuRename(wxCommandEvent &event);
+    virtual void OnMenuNewFile(wxCommandEvent &event);
 
     void DoCloseSession();
     bool DoExpandItem(const wxTreeListItem& item);
+    void DoBuildTree(const wxString &initialFolder);
+    void ManageBookmarks();
+    
     wxTreeListItem DoAddFolder(const wxTreeListItem& parent, const wxString &path);
+    wxTreeListItem DoAddFile(const wxTreeListItem& parent, const wxString &path);
 
     MyClientData* GetItemData(const wxTreeListItem& item);
     MyClientDataVect_t GetSelectionsItemData();

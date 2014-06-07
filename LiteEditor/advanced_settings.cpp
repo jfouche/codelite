@@ -50,6 +50,8 @@
 #include <wx/textdlg.h>
 #include "advance_settings_base.h"
 #include "NewCompilerDlg.h"
+#include <CompilersDetectorManager.h>
+#include "CompilersFoundDlg.h"
 
 BEGIN_EVENT_TABLE(AdvancedDlg, AdvancedDlgBase)
     EVT_MENU(XRCID("delete_compiler"), AdvancedDlg::OnDeleteCompiler)
@@ -75,6 +77,9 @@ AdvancedDlg::AdvancedDlg( wxWindow* parent, size_t selected_page, int id, wxStri
     m_buttonNewCompiler = new wxButton( m_compilersPage, wxID_ANY, _("New..."), wxDefaultPosition, wxDefaultSize, 0 );
     bSizer4->Add( m_buttonNewCompiler, 0, wxALL|wxALIGN_RIGHT, 5 );
 
+    m_buttonAutoDetect = new wxButton( m_compilersPage, wxID_ANY, _("Auto Detect Compilers..."), wxDefaultPosition, wxDefaultSize, 0 );
+    bSizer4->Add( m_buttonAutoDetect, 0, wxALL|wxALIGN_RIGHT, 5 );
+
     bSizer5->Add( bSizer4, 0, wxALIGN_RIGHT|wxEXPAND, 5 );
 
     m_compilersNotebook = new wxTreebook(m_compilersPage, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBK_DEFAULT );
@@ -85,9 +90,6 @@ AdvancedDlg::AdvancedDlg( wxWindow* parent, size_t selected_page, int id, wxStri
     m_compilersPage->Layout();
     bSizer5->Fit( m_compilersPage );
     m_notebook->AddPage( m_compilersPage, _("Compilers"), true );
-
-    wxBoxSizer* btnSizer;
-    btnSizer = new wxBoxSizer( wxHORIZONTAL );
 
     m_buildSettings = new BuildTabSetting(m_notebook);
     m_notebook->AddPage(m_buildSettings, _("Build Output Appearance"), false);
@@ -107,6 +109,7 @@ AdvancedDlg::AdvancedDlg( wxWindow* parent, size_t selected_page, int id, wxStri
     }
     
     m_buttonNewCompiler->Bind(wxEVT_BUTTON, &AdvancedDlg::OnButtonNewClicked, this);
+    m_buttonAutoDetect->Bind(wxEVT_BUTTON, &AdvancedDlg::OnAutoDetectCompilers, this);
     
     // center the dialog
     Centre();
@@ -310,6 +313,28 @@ void AdvancedDlg::OnRestoreDefaults(wxCommandEvent&)
         // restore the default settings of the build configuration
         BuildSettingsConfigST::Get()->RestoreDefaults();
 
+        // Dismiss this dialog and reload it
+        wxCommandEvent event(wxEVT_COMMAND_MENU_SELECTED, XRCID("advance_settings"));
+        clMainFrame::Get()->GetEventHandler()->AddPendingEvent(event);
+        EndModal(wxID_OK);
+    }
+}
+
+void AdvancedDlg::OnAutoDetectCompilers(wxCommandEvent&)
+{
+    // Launch the auto detect compilers code
+    if ( m_compilersDetector.Locate() ) {
+        CallAfter( &AdvancedDlg::OnCompilersDetected, m_compilersDetector.GetCompilersFound() );
+    }
+}
+
+void AdvancedDlg::OnCompilersDetected(const ICompilerLocator::CompilerVec_t& compilers)
+{
+    CompilersFoundDlg dlg(this, compilers);
+    if ( dlg.ShowModal() == wxID_OK ) {
+        // Replace the current compilers with a new one
+        BuildSettingsConfigST::Get()->SetCompilers( compilers );
+        
         // Dismiss this dialog and reload it
         wxCommandEvent event(wxEVT_COMMAND_MENU_SELECTED, XRCID("advance_settings"));
         clMainFrame::Get()->GetEventHandler()->AddPendingEvent(event);

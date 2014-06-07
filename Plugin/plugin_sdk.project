@@ -58,6 +58,10 @@
     <File Name="VirtualDirectorySelectorDlg.cpp"/>
     <File Name="bookmark_manager.h"/>
     <File Name="bookmark_manager.cpp"/>
+    <File Name="unredobase.cpp"/>
+    <File Name="unredobase.h"/>
+    <File Name="CompileCommandsCreateor.h"/>
+    <File Name="CompileCommandsCreateor.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <File Name="async_executable_cmd.h"/>
@@ -265,6 +269,10 @@
     <File Name="wxterminal.cpp"/>
     <File Name="wxterminal.h"/>
     <File Name="wxterminalbase.cpp"/>
+    <File Name="console_frame.cpp"/>
+    <File Name="console_frame.h"/>
+    <File Name="clDebuggerTerminal.h"/>
+    <File Name="clDebuggerTerminal.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="md5">
     <File Name="md5.cpp"/>
@@ -353,7 +361,7 @@
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
-    <Configuration Name="Custom" CompilerType="cobra" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Custom" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g -Wall" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
         <IncludePath Value="."/>
       </Compiler>
@@ -550,4 +558,26 @@
     </Configuration>
   </Settings>
   <Dependencies Name="WinDebugUnicode"/>
+  <VirtualDirectory Name="Compilers">
+    <File Name="ICompilerLocator.h"/>
+    <File Name="ICompilerLocator.cpp"/>
+    <File Name="CompilerLocatorMinGW.h"/>
+    <File Name="CompilerLocatorMinGW.cpp"/>
+    <File Name="CompilersDetectorManager.h"/>
+    <File Name="CompilersDetectorManager.cpp"/>
+    <File Name="CompilerLocatorGCC.h"/>
+    <File Name="CompilerLocatorGCC.cpp"/>
+    <File Name="CompilerLocatorMSVC10.cpp"/>
+    <File Name="CompilerLocatorMSVC10.h"/>
+    <File Name="CompilerLocatorMSVCBase.h"/>
+    <File Name="CompilerLocatorMSVCBase.cpp"/>
+    <File Name="CompilerLocatorMSVC11.h"/>
+    <File Name="CompilerLocatorMSVC11.cpp"/>
+    <File Name="CompilerLocatorMSVC12.h"/>
+    <File Name="CompilerLocatorMSVC12.cpp"/>
+    <File Name="CompilerLocatorCLANG.h"/>
+    <File Name="CompilerLocatorCLANG.cpp"/>
+    <File Name="CompilerLocatorMSVC9.h"/>
+    <File Name="CompilerLocatorMSVC9.cpp"/>
+  </VirtualDirectory>
 </CodeLite_Project>

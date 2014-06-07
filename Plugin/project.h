@@ -42,6 +42,7 @@
 #include <vector>
 #include <queue>
 #include "macros.h"
+#include "json_node.h"
 
 struct VisualWorkspaceNode {
     wxString name;
@@ -179,13 +180,19 @@ public:
     friend class Workspace;
 
 private:
-    wxXmlDocument m_doc;
-    wxFileName    m_fileName;
-    bool          m_tranActive;
-    bool          m_isModified;
-    NodeMap_t     m_vdCache;
-    time_t        m_modifyTime;
-
+    wxXmlDocument      m_doc;
+    wxFileName         m_fileName;
+    wxString           m_projectPath;
+    bool               m_tranActive;
+    bool               m_isModified;
+    NodeMap_t          m_vdCache;
+    time_t             m_modifyTime;
+    Workspace*         m_workspace;
+    ProjectSettingsPtr m_settings;
+    
+private:
+    void DoUpdateProjectSettings();
+    
 public:
     // -----------------------------------------
     // File meta data
@@ -209,7 +216,7 @@ public:
             this->m_excludeConfigs.clear();
             this->m_excludeConfigs.insert(excludeConfigs.begin(), excludeConfigs.end());
         }
-        
+
         const wxStringSet_t& GetExcludeConfigs() const {
             return m_excludeConfigs;
         }
@@ -244,13 +251,37 @@ public:
             return m_excludeConfigs.count(config);
         }
     };
-    typedef std::vector<FileInfo> FileInfoVector_t;
+    typedef std::vector<Project::FileInfo> FileInfoVector_t;
 
 public:
+    /**
+     * @brief return the workspace associated with the project
+     * If no workspace is associated, then the global workspace is returned
+     */
+    Workspace* GetWorkspace();
+
+    /**
+     * @brief return set of compilers used by this project for the active build configuraion
+     */
+    void GetCompilers(wxStringSet_t &compilers);
+
+    /**
+     * @brief replace compilers by name. compilers contains a map of the "olbd" compiler
+     * name and the new compiler name
+     */
+    void ReplaceCompilers(wxStringMap_t &compilers);
+
+    /**
+     * @brief the const version of the above
+     */
+    const Workspace* GetWorkspace() const;
     const wxFileName &GetFileName() const {
         return m_fileName;
     }
 
+    const wxString& GetProjectPath() const {
+        return m_projectPath;
+    }
     /**
      * \brief copy this project and all the files under to new_path
      * \param file_name the new path of the project
@@ -391,7 +422,7 @@ public:
      * @brief return the file meta data. The file names on the list
      * are in fullpath
      */
-    void GetFilesMetadata(Project::FileInfoVector_t &files);
+    void GetFilesMetadata(Project::FileInfoVector_t &files) const;
 
     /**
      * Return list of files in this project - in both absolute and relative path
@@ -410,7 +441,7 @@ public:
      * \param files the set in which to return the paths
      * \param relativePath the path to which to make-relative
      */
-    void GetFiles(wxStringSet_t& files, const wxString& relativePath);
+    //void GetFiles(wxStringSet_t& files, const wxString& relativePath);
 
     /**
      * Return a node pointing to any project-wide editor preferences
@@ -582,7 +613,15 @@ public:
      * The include paths are returned as an array in the order they appear in the
      * project settings
      */
-    wxArrayString GetIncludePaths();
+    wxArrayString GetIncludePaths(bool clearCache = false);
+
+    /**
+     * @brief return the compilation line for a C++ file in the project. This function returns the same
+     * compilation line for all CXX or C files. So instead of hardcoding the file name it uses a placeholder for the file
+     * name which can later be replaced by the caller with the actual file name
+     */
+    wxString GetCompileLineForCXXFile(const wxString &filenamePlaceholder = "$FileName", bool cxxFile = true) const;
+
     void ClearAllVirtDirs();
 
     /**
@@ -615,11 +654,29 @@ public:
      */
     void SetExcludeConfigForFile(const wxString &filename, const wxString& virtualDirPath, const wxArrayString& configs);
 
+    /**
+     * @brief add this project files into the 'compile_commands' json object
+     */
+    void CreateCompileCommandsJSON( JSONElement &compile_commands );
+
+    /**
+     * @brief return the build configuration
+     * @param configName configuration name. If non provided, returns the build configuration
+     * that matches the current workspace configuration
+     */
+    BuildConfigPtr GetBuildConfiguration(const wxString &configName = "");
+
 private:
+    /**
+     * @brief associate this project with a workspace
+     */
+    void AssociateToWorkspace( Workspace *workspace );
+
     wxString DoFormatVirtualFolderName(const wxXmlNode* node) const;
 
     void DoDeleteVDFromCache(const wxString &vd);
     wxArrayString DoBacktickToIncludePath(const wxString &backtick);
+    wxString DoExpandBacktick(const wxString &backtick) const;
     void DoGetVirtualDirectories(wxXmlNode* parent, TreeNode<wxString, VisualWorkspaceNode>* tree);
     wxXmlNode *FindFile(wxXmlNode* parent, const wxString &file);
 
@@ -652,10 +709,12 @@ private:
 class WXDLLIMPEXP_SDK ProjectData
 {
 public:
-    wxString m_name;	//< project name
-    wxString m_path;	//< project directoy
-    ProjectPtr m_srcProject;
-    wxString m_cmpType; //< Project compiler type
+    wxString m_name;            //< project name
+    wxString m_path;            //< project directoy
+    ProjectPtr m_srcProject;    //< source project
+    wxString m_cmpType;         //< Project compiler type
+    wxString m_debuggerType;    //< Selected debugger
+    wxString m_sourceTemplate;  //< The template selected by the user in the wizard
 };
 
 //-----------------------------------------------------------------

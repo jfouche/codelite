@@ -7,6 +7,8 @@
 #include "SettingsDlg.h"
 #include <wx/filedlg.h>
 #include <wx/clipbrd.h>
+#include <wx/ffile.h>
+#include <wx/filename.h>
 
 #ifndef __WXMSW__
 #if defined(__WXGTK__)
@@ -44,8 +46,8 @@ static void WrapInShell(wxString& cmd)
 
 #define MARKER_ID 1
 
-MainFrame::MainFrame(wxWindow* parent, const TerminalOptions &options)
-    : MainFrameBaseClass(parent)
+MainFrame::MainFrame(wxWindow* parent, const TerminalOptions &options, long style)
+    : MainFrameBaseClass(parent, wxID_ANY, "codelite-terminal", wxDefaultPosition, wxDefaultSize, style)
     , m_process(NULL)
     , m_ptyCllback(this)
     , m_fromPos(0)
@@ -54,9 +56,9 @@ MainFrame::MainFrame(wxWindow* parent, const TerminalOptions &options)
 {
     SetTitle( m_options.GetTitle() );
     m_stc->SetFont( wxSystemSettings::GetFont(wxSYS_SYSTEM_FIXED_FONT) );
-    StartTTY();
+    wxString tty = StartTTY();
     SetCartAtEnd();
-    m_stc->MarkerDefine(MARKER_ID, wxSTC_MARK_DOTDOTDOT);
+    m_stc->MarkerDefine(MARKER_ID, wxSTC_MARK_ARROWS);
     m_stc->MarkerSetBackground(MARKER_ID, *wxBLACK);
     //m_stc->MarkerSetAlpha(MARKER_ID, 5);
     SetSize( m_config.GetTerminalSize() );
@@ -82,9 +84,9 @@ MainFrame::~MainFrame()
     m_config.SetBgColour( m_stc->StyleGetBackground(0) );
     m_config.SetFgColour( m_stc->StyleGetForeground(0) );
     m_config.Save();
-    
+
     // Call this so the clipboard is still available after codelite-terminal exits
-    wxTheClipboard->Flush(); 
+    wxTheClipboard->Flush();
 }
 
 void MainFrame::OnExit(wxCommandEvent& event)
@@ -107,26 +109,33 @@ void MainFrame::OnAbout(wxCommandEvent& event)
 void MainFrame::OnKeyDown(wxKeyEvent& event)
 {
     if ( m_exitOnNextKey ) {
-        
+
         if ( event.GetKeyCode() == WXK_RETURN || event.GetKeyCode() == WXK_NUMPAD_ENTER ) {
             Close();
-            
+
         } else if ( event.GetModifiers() == wxMOD_CONTROL && event.GetKeyCode() == 'C') {
             // allow copy
             event.Skip();
-            
+
         } else {
             return;
         }
-        
+
     }
 
     if ( event.GetKeyCode() == WXK_RETURN || event.GetKeyCode() == WXK_NUMPAD_ENTER ) {
+        if ( m_dummyProcess && m_options.HasFlag( TerminalOptions::kDebuggerTerminal ) ) {
+            // write the output to the dummy process
+            wxString cmd = GetCurrentLine();
+            AppendNewLine();
+            m_dummyProcess->Write( cmd );
+        }
+        
         if ( m_process ) {
             wxString cmd = GetCurrentLine();
             AppendNewLine();
             m_process->Write( cmd );
-
+            
         } else {
             DoExecuteCurrentLine();
 
@@ -282,8 +291,9 @@ void MainFrame::DoExecStartCommand()
 void MainFrame::Exit()
 {
     if ( m_options.HasFlag( TerminalOptions::kPauseBeforeExit ) ) {
-        m_stc->AppendText("Hit ENTER to continue...");
-        SetCartAtEnd();
+        
+        m_outoutBuffer << "\nHit ENTER to continue...";
+        FlushOutputBuffer();
         m_exitOnNextKey = true;
 
     } else {
@@ -443,4 +453,29 @@ void MainFrame::OnSaveContent(wxCommandEvent& event)
 void MainFrame::OnSaveContentUI(wxUpdateUIEvent& event)
 {
     event.Enable( !m_stc->IsEmpty() );
+}
+
+void MainFrame::OnIdle(wxIdleEvent& event)
+{
+    event.Skip();
+    FlushOutputBuffer();
+}
+
+#define wxMEGA_BYTE 1024*1024
+
+void MainFrame::AppendOutputText(const wxString& text)
+{
+    m_outoutBuffer << text;
+    if ( m_outoutBuffer.length() > wxMEGA_BYTE ) {
+        FlushOutputBuffer();
+    }
+}
+
+void MainFrame::FlushOutputBuffer()
+{
+    if ( !m_outoutBuffer.IsEmpty() ) {
+        m_stc->AppendText( m_outoutBuffer );
+        SetCartAtEnd();
+        m_outoutBuffer.Clear();
+    }
 }

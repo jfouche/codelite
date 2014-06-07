@@ -65,12 +65,16 @@ extern WXDLLIMPEXP_SDK const wxEventType wxEVT_DEBUGGER_QUERY_FILELINE;
 // sent by the debugger in case "ResolveType" command failed (i.e. gdb could not resolve its type)
 extern WXDLLIMPEXP_SDK const wxEventType wxEVT_DEBUGGER_TYPE_RESOLVE_ERROR;
 
+// sent by the debugger when 'ListRegisters' function completed
+extern WXDLLIMPEXP_SDK const wxEventType wxEVT_DEBUGGER_LIST_REGISTERS;
+
 //extern WXDLLIMPEXP_SDK const wxEventType wxEVT_DEBUGGER_QUERY_FUNCARGS;
 //extern WXDLLIMPEXP_SDK const wxEventType wxEVT_DEBUGGER_UPDATE_VAROBJECT;
 
 class WXDLLIMPEXP_SDK DebuggerMgr
 {
     std::map<wxString, IDebugger*>   m_debuggers;
+    wxArrayString                    m_pluginsDebuggers;
     wxString                         m_baseDir;
     std::vector< clDynamicLibrary* > m_dl;
     wxString                         m_activeDebuggerName;
@@ -91,6 +95,9 @@ public:
         m_env = env;
     }
 
+    const wxString& GetActiveDebuggerName() const {
+        return m_activeDebuggerName;
+    }
     /**
      * Load all available debuggers. This functions searches for dll/so/sl
      * which are located udner $(HOME)/.liteeditor/debuggers/ on Linux, and on Windows

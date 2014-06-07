@@ -21,8 +21,9 @@ class MainFrame : public MainFrameBaseClass
     TerminalOptions m_options;
     bool            m_exitOnNextKey;
     MyConfig        m_config;
-
+    wxString        m_outoutBuffer;
 protected:
+    virtual void OnIdle(wxIdleEvent& event);
     virtual void OnSaveContentUI(wxUpdateUIEvent& event);
     virtual void OnSaveContent(wxCommandEvent& event);
     virtual void OnSettings(wxCommandEvent& event);
@@ -49,9 +50,11 @@ protected:
     void DoSetColour(const wxColour& colour, bool bgColour = false);
     void DoSetFont(wxFont font);
     void DoApplySettings();
-
+    void AppendOutputText(const wxString &text);
+    void FlushOutputBuffer();
+    
 public:
-    MainFrame(wxWindow* parent, const TerminalOptions &options);
+    MainFrame(wxWindow* parent, const TerminalOptions &options, long style = wxDEFAULT_FRAME_STYLE);
     virtual ~MainFrame();
 
     void OnExit(wxCommandEvent& event);

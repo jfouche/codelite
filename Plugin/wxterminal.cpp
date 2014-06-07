@@ -5,6 +5,8 @@
 #include "processreaderthread.h"
 #include "drawingutils.h"
 
+#define OUTPUT_BUFFER_MAX_SIZE 1024*1024 /* 1MB of buffer */
+
 #ifdef __WXMSW__
 #include "windows.h"
 #define SHELL_PREFIX  wxT("cmd /c ")
@@ -47,6 +49,7 @@ static wxString WrapInShell(const wxString &cmd)
 BEGIN_EVENT_TABLE(wxTerminal, wxTerminalBase)
     EVT_COMMAND(wxID_ANY, wxEVT_PROC_DATA_READ,  wxTerminal::OnReadProcessOutput)
     EVT_COMMAND(wxID_ANY, wxEVT_PROC_TERMINATED, wxTerminal::OnProcessEnd       )
+    EVT_IDLE(wxTerminal::OnIdle)
 END_EVENT_TABLE()
 
 wxTerminal::wxTerminal( wxWindow* parent )
@@ -184,10 +187,11 @@ void wxTerminal::OnProcessEnd(wxCommandEvent& event)
 {
     ProcessEventData *ped = (ProcessEventData *)event.GetClientData();
     delete ped;
-    if( m_process ) {
-        delete m_process;
-        m_process = NULL;
-    }
+    wxDELETE(m_process);
+    
+    // Make sure we flush everything
+    DoFlushOutputBuffer();
+
     if(m_exitWhenProcessDies) {
         m_textCtrl->SetInsertionPointEnd();
         m_textCtrl->AppendText(wxString(wxT("\n")) +_("Press any key to continue..."));
@@ -198,14 +202,13 @@ void wxTerminal::OnProcessEnd(wxCommandEvent& event)
 void wxTerminal::OnReadProcessOutput(wxCommandEvent& event)
 {
     ProcessEventData *ped = (ProcessEventData *)event.GetClientData();
-    m_textCtrl->SetInsertionPointEnd();
-
-    wxString s;
-    s = ped->GetData();
-    m_textCtrl->AppendText(s);
-    m_textCtrl->SetSelection(m_textCtrl->GetLastPosition(), m_textCtrl->GetLastPosition());
-    m_inferiorEnd = m_textCtrl->GetLastPosition();
-    delete ped;
+    m_outputBuffer << ped->GetData();
+    wxDELETE(ped);
+    
+    // Incase we hit the limit of the output buffer, flush it now
+    // if ( m_outputBuffer.length() > OUTPUT_BUFFER_MAX_SIZE ) {
+    //     DoFlushOutputBuffer();
+    // }
 }
 
 void wxTerminal::DoCtrlC()
@@ -222,7 +225,6 @@ void wxTerminal::DoCtrlC()
 #else
     //int status(0); Commented out as 'Unused variable'
     wxKill(m_process->GetPid(), wxSIGKILL, NULL, wxKILL_CHILDREN);
-//	waitpid(m_process->GetPid(), &status, 0);
 #endif
 }
 
@@ -286,23 +288,32 @@ void wxTerminal::Clear()
 wxString wxTerminal::StartTTY()
 {
     m_process = NULL;
+    // Open the master side of a pseudo terminal
+    int master = ::posix_openpt (O_RDWR|O_NOCTTY);
+    if (master < 0) {
+        return "";
+    }
 
-    char __name[128];
-    memset(__name, 0, sizeof(__name));
+    // Grant access to the slave pseudo terminal
+    if (::grantpt (master) < 0) {
+        ::close(master);
+        return "";
+    }
 
-    int master(-1);
-    m_slave = -1;
-    if(openpty(&master, &m_slave, __name, NULL, NULL) != 0)
-        return wxT("");
-
+    // Clear the lock flag on the slave pseudo terminal
+    if (::unlockpt (master) < 0) {
+        ::close(master);
+        return "";
+    }
+    
+    m_tty = ::ptsname(master);
+    
     // disable ECHO
     struct termios termio;
     tcgetattr(master, &termio);
     termio.c_lflag = ICANON;
     termio.c_oflag = ONOCR | ONLRET;
     tcsetattr(master, TCSANOW, &termio);
-
-    m_tty = wxString(__name, wxConvUTF8);
 
     // Start a listener on the tty
     m_dummyProcess = new UnixProcessImpl(this);
@@ -315,13 +326,27 @@ wxString wxTerminal::StartTTY()
 
 void wxTerminal::StopTTY()
 {
-    if(m_dummyProcess) {
-        delete m_dummyProcess;
-    }
-
-    m_dummyProcess = NULL;
+    wxDELETE(m_dummyProcess);
     m_tty.Clear();
-    close(m_slave);
-    m_slave = -1;
+    // close(m_slave);
+    // m_slave = -1;
 }
+
 #endif
+
+void wxTerminal::OnIdle(wxIdleEvent& event)
+{
+    event.Skip();
+    DoFlushOutputBuffer();
+}
+
+void wxTerminal::DoFlushOutputBuffer()
+{
+    if ( !m_outputBuffer.IsEmpty() ) {
+        m_textCtrl->SetInsertionPointEnd();
+        m_textCtrl->AppendText( m_outputBuffer );
+        m_textCtrl->SetSelection(m_textCtrl->GetLastPosition(), m_textCtrl->GetLastPosition());
+        m_inferiorEnd = m_textCtrl->GetLastPosition();
+        m_outputBuffer.Clear();
+    }
+}

@@ -31,6 +31,9 @@
 #include "debuggerconfigtool.h"
 #include "cl_defs.h"
 #include "codelite_exports.h"
+#include "codelite_events.h"
+#include "cl_command_event.h"
+#include "event_notifier.h"
 
 //---------------------------------------------------------
 static DebuggerMgr *ms_instance = NULL;
@@ -44,6 +47,7 @@ const wxEventType wxEVT_DEBUGGER_DISASSEBLE_OUTPUT  = ::wxNewEventType();
 const wxEventType wxEVT_DEBUGGER_DISASSEBLE_CURLINE = ::wxNewEventType();
 const wxEventType wxEVT_DEBUGGER_QUERY_FILELINE     = ::wxNewEventType();
 const wxEventType wxEVT_DEBUGGER_TYPE_RESOLVE_ERROR = ::wxNewEventType();
+const wxEventType wxEVT_DEBUGGER_LIST_REGISTERS     = ::wxNewEventType();
 
 //const wxEventType wxEVT_DEBUGGER_QUERY_FUNCARGS    = ::wxNewEventType();
 //const wxEventType wxEVT_DEBUGGER_UPDATE_VAROBJECT  = ::wxNewEventType();
@@ -167,6 +171,12 @@ bool DebuggerMgr::LoadDebuggers()
         //keep the dynamic load library
         m_dl.push_back(dl);
     }
+    
+    // Load all debuggers in the form of plugin (i.e. they dont implement the IDebugger interface)
+    // and append them to a special list
+    clDebugEvent queryPlugins(wxEVT_DBG_IS_PLUGIN_DEBUGGER);
+    EventNotifier::Get()->ProcessEvent( queryPlugins );
+    m_pluginsDebuggers.swap( queryPlugins.GetStrings() );
     return true;
 }
 
@@ -177,6 +187,9 @@ wxArrayString DebuggerMgr::GetAvailableDebuggers()
     for(; iter != m_debuggers.end(); iter++) {
         dbgs.Add(iter->first);
     }
+    
+    // append all the plugins that were registered themself as debugger
+    dbgs.insert(dbgs.end(), m_pluginsDebuggers.begin(), m_pluginsDebuggers.end());
     return dbgs;
 }
 

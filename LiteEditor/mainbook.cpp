@@ -38,6 +38,7 @@
 #include "message_pane.h"
 #include "theme_handler.h"
 #include "editorframe.h"
+#include "FilesModifiedDlg.h"
 
 #if CL_USE_NATIVEBOOK
 #ifdef __WXGTK20__
@@ -55,6 +56,8 @@ MainBook::MainBook(wxWindow *parent)
     , m_book           (NULL)
     , m_quickFindBar   (NULL)
     , m_useBuffereLimit(true)
+    , m_isWorkspaceReloading(false)
+    , m_reloadingDoRaise(true)
 {
     CreateGuiControls();
     ConnectEvents();
@@ -104,9 +107,9 @@ void MainBook::ConnectEvents()
     EventNotifier::Get()->Connect(wxEVT_WORKSPACE_CLOSED,  wxCommandEventHandler(MainBook::OnWorkspaceClosed),    NULL, this);
     EventNotifier::Get()->Connect(wxEVT_DEBUG_ENDED,       wxCommandEventHandler(MainBook::OnDebugEnded),         NULL, this);
     EventNotifier::Get()->Connect(wxEVT_INIT_DONE,         wxCommandEventHandler(MainBook::OnInitDone),           NULL, this);
-    
+
     EventNotifier::Get()->Bind(wxEVT_DETACHED_EDITOR_CLOSED, &MainBook::OnDetachedEditorClosed, this);
-    
+
     // Highlight Job
     Connect(wxEVT_CMD_JOB_STATUS_VOID_PTR,         wxCommandEventHandler(MainBook::OnStringHighlight),      NULL, this);
 }
@@ -126,7 +129,7 @@ MainBook::~MainBook()
     EventNotifier::Get()->Disconnect(wxEVT_WORKSPACE_CLOSED,  wxCommandEventHandler(MainBook::OnWorkspaceClosed),    NULL, this);
     EventNotifier::Get()->Disconnect(wxEVT_DEBUG_ENDED,       wxCommandEventHandler(MainBook::OnDebugEnded),         NULL, this);
     EventNotifier::Get()->Disconnect(wxEVT_INIT_DONE,         wxCommandEventHandler(MainBook::OnInitDone),           NULL, this);
-    
+
     EventNotifier::Get()->Unbind(wxEVT_DETACHED_EDITOR_CLOSED, &MainBook::OnDetachedEditorClosed, this);
     Disconnect(wxEVT_CMD_JOB_STATUS_VOID_PTR,         wxCommandEventHandler(MainBook::OnStringHighlight),      NULL, this);
 }
@@ -316,6 +319,7 @@ void MainBook::RestoreSession(SessionEntry &session)
     const std::vector<TabInfo> &vTabInfoArr = session.GetTabInfoArr();
     for (size_t i = 0; i < vTabInfoArr.size(); i++) {
         const TabInfo &ti = vTabInfoArr[i];
+        m_reloadingDoRaise = (i == vTabInfoArr.size()-1); // Raise() when opening only the last editor
         LEditor *editor = OpenFile(ti.GetFileName());
         if (!editor) {
             if (i < sel) {
@@ -349,7 +353,7 @@ LEditor *MainBook::GetActiveEditor(bool includeDetachedEditors)
             }
         }
     }
-    
+
     if ( !GetCurrentPage() ) {
         return NULL;
     }
@@ -371,7 +375,7 @@ void MainBook::GetAllEditors(LEditor::Vec_t& editors, size_t flags)
             }
         } else {
             std::vector<wxWindow*> windows;
-    #if !CL_USE_NATIVEBOOK
+#if !CL_USE_NATIVEBOOK
             m_book->GetEditorsInOrder(windows);
             for (size_t i = 0; i < windows.size(); i++) {
                 LEditor *editor = dynamic_cast<LEditor*>(windows.at(i));
@@ -379,14 +383,14 @@ void MainBook::GetAllEditors(LEditor::Vec_t& editors, size_t flags)
                     editors.push_back(editor);
                 }
             }
-    #else
+#else
             for(size_t i=0; i<m_book->GetPageCount(); i++) {
                 LEditor *editor = dynamic_cast<LEditor*>(m_book->GetPage(i));
                 if(editor) {
                     editors.push_back(editor);
                 }
             }
-    #endif
+#endif
         }
     }
     if ( (flags & kGetAll_IncludeDetached) || (flags & kGetAll_DetachedOnly) ) {
@@ -428,7 +432,7 @@ LEditor *MainBook::FindEditor(const wxString &fileName)
 #endif
         }
     }
-    
+
     // try the detached editors
     EditorFrame::List_t::iterator iter = m_detachedEditors.begin();
     for(; iter != m_detachedEditors.end(); ++iter ) {
@@ -487,9 +491,9 @@ LEditor *MainBook::NewEditor()
 static bool IsFileExists(const wxFileName &filename)
 {
 #ifdef __WXMSW__
-/*    wxString drive  = filename.GetVolume();
-    if(drive.Length()>1)
-        return false;*/
+    /*    wxString drive  = filename.GetVolume();
+        if(drive.Length()>1)
+            return false;*/
 
     return filename.FileExists();
 #else
@@ -588,10 +592,12 @@ LEditor *MainBook::OpenFile(const wxString &file_name, const wxString &projectNa
 
     }
 
-    if (GetActiveEditor() == editor) {
-        editor->SetActive();
-    } else {
-        SelectPage(editor);
+    if (m_reloadingDoRaise) {
+        if (GetActiveEditor() == editor) {
+            editor->SetActive();
+        } else {
+            SelectPage(editor);
+        }
     }
 
     // Add this file to the history. Don't check for uniqueness:
@@ -725,8 +731,13 @@ bool MainBook::SaveAll(bool askUser, bool includeUntitled)
 
 void MainBook::ReloadExternallyModified(bool prompt)
 {
+    if ( m_isWorkspaceReloading )
+        return;
+
     LEditor::Vec_t editors;
     GetAllEditors(editors, MainBook::kGetAll_IncludeDetached);
+
+    time_t workspaceModifiedTimeBefore = WorkspaceST::Get()->GetFileLastModifiedTime();
 
     // filter list of editors for any whose files have been modified
     std::vector<std::pair<wxFileName, bool> > files;
@@ -735,20 +746,52 @@ void MainBook::ReloadExternallyModified(bool prompt)
         time_t diskTime = editors[i]->GetFileLastModifiedTime();
         time_t editTime = editors[i]->GetEditorLastModifiedTime();
         if (diskTime != editTime) {
-            files.push_back(std::make_pair(editors[i]->GetFileName(), !editors[i]->GetModify()));
             // update editor last mod time so that we don't keep bugging the user over the same file,
             // unless it gets changed again
             editors[i]->SetEditorLastModifiedTime(diskTime);
-            editors[n++] = editors[i];
+
+            // A last check: see if the content of the file has actually changed. This avoids unnecessary reload offers after e.g. git stash
+            if (!CompareFileWithString(editors[i]->GetFileName().GetFullPath(), editors[i]->GetText())) {
+                files.push_back(std::make_pair(editors[i]->GetFileName(), !editors[i]->GetModify()));
+                editors[n++] = editors[i];
+            }
         }
     }
     editors.resize(n);
+    if ( n == 0 )
+        return;
 
     if(prompt) {
-        UserSelectFiles(files, _("Reload Modified Files"), _("Files have been modified outside the editor.\nChoose which files you would like to reload."), false);
+
+        int res = clConfig::Get().GetAnnoyingDlgAnswer("FilesModifiedDlg", wxNOT_FOUND);
+        if ( res == wxNOT_FOUND ) {
+            // User did not ticked the 'Remember my answer' checkbox
+            // Show the dialog
+            FilesModifiedDlg dlg( clMainFrame::Get() );
+            res = dlg.ShowModal();
+            
+            if ( res == wxID_CANCEL ) {
+                return;
+            }
+            
+            if ( dlg.GetRememberMyAnswer() ) {
+                clConfig::Get().SetAnnoyingDlgAnswer("FilesModifiedDlg", res);
+            }
+        }
+
+        if ( res == FilesModifiedDlg::kID_BUTTON_CHOOSE ) {
+            UserSelectFiles(files, _("Reload Modified Files"), _("Files have been modified outside the editor.\nChoose which files you would like to reload."), false);
+        }
+
     }
 
-    
+    time_t workspaceModifiedTimeAfter = WorkspaceST::Get()->GetFileLastModifiedTime();
+    if ( workspaceModifiedTimeBefore != workspaceModifiedTimeAfter ) {
+        // a workspace reload occured between the "Reload Modified Files" and
+        // the "Reload WOrkspace" dialog, cancel this it's not needed anymore
+        return;
+    }
+
     std::vector<wxFileName> filesToRetag;
     for (size_t i = 0; i < files.size(); i++) {
         if (files[i].second) {
@@ -832,8 +875,10 @@ bool MainBook::CloseAll(bool cancellable)
 
     SendCmdEvent(wxEVT_ALL_EDITORS_CLOSING);
 
+    m_reloadingDoRaise = false;
     m_book->DeleteAllPages(false);
-    
+    m_reloadingDoRaise = true;
+
     // Delete all detached editors
     EditorFrame::List_t::iterator iter = m_detachedEditors.begin();
     for(; iter != m_detachedEditors.end(); ++iter ) {
@@ -890,7 +935,7 @@ void MainBook::ApplySettingsChanges()
     }
 
     clMainFrame::Get()->UpdateAUI();
-    
+
     // Last: reposition the findBar
     DoPositionFindBar(2);
 }
@@ -985,7 +1030,7 @@ bool MainBook::DoSelectPage(wxWindow* win)
     if ( editor ) {
         editor->SetActive();
         m_quickFindBar->SetEditor( editor );
-        
+
     } else {
         m_quickFindBar->ShowForPlugins();
     }
@@ -1026,7 +1071,7 @@ void MainBook::ShowMessage( const wxString &message,
 void MainBook::OnPageChanged(NotebookEvent& e)
 {
     int newSel = e.GetSelection();
-    if(newSel != wxNOT_FOUND) {
+    if (newSel != wxNOT_FOUND && m_reloadingDoRaise) {
         wxWindow *win = m_book->GetPage((size_t)newSel);
         if(win) {
             SelectPage(win);
@@ -1187,3 +1232,29 @@ void MainBook::DoEraseDetachedEditor(IEditor* editor)
     }
 }
 
+void MainBook::OnWorkspaceReloadEnded(clCommandEvent& e)
+{
+    e.Skip();
+    m_isWorkspaceReloading = false;
+}
+
+void MainBook::OnWorkspaceReloadStarted(clCommandEvent& e)
+{
+    e.Skip();
+    m_isWorkspaceReloading = true;
+}
+
+void MainBook::ClosePageVoid(wxWindow* win)
+{
+    ClosePage(win);
+}
+
+void MainBook::CloseAllButThisVoid(wxWindow* win)
+{
+    CloseAllButThis(win);
+}
+
+void MainBook::CloseAllVoid(bool cancellable)
+{
+    CloseAll(cancellable);
+}
