@@ -4733,3 +4733,22 @@ void LEditor::ShowRichTooltip(const wxString& tip, int pos)
 {
     DoShowCalltip(pos, tip);
 }
+
+wxString LEditor::GetFirstSelection()
+{
+    int nNumSelections = GetSelections();
+    if ( nNumSelections > 1 ) {
+        for(int i=0; i<nNumSelections; ++i) {
+            int startPos = GetSelectionNStart(i);
+            int endPos   = GetSelectionNEnd(i);
+            if ( endPos > startPos ) {
+                return wxStyledTextCtrl::GetTextRange(startPos, endPos);
+            }
+        }
+        // default
+        return wxEmptyString;
+        
+    } else {
+        return wxStyledTextCtrl::GetSelectedText();
+    }
+}
