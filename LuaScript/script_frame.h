@@ -17,6 +17,7 @@ public:
 	void UpdateScripts();
 
 protected:
+	void OnScriptsChanged(wxCommandEvent& event);
 	void OnRunScript(wxCommandEvent& event);
 };
 

@@ -25,10 +25,10 @@ extern "C" EXPORT IPlugin* CreatePlugin(IManager *manager)
 extern "C" EXPORT PluginInfo GetPluginInfo()
 {
 	PluginInfo info;
-	info.SetAuthor(wxT("Jérémie Fouché"));
-	info.SetName(wxT("Lua"));
-	info.SetDescription(wxT("Lua script"));
-	info.SetVersion(wxT("v1.0"));
+	info.SetAuthor("Jérémie Fouché");
+	info.SetName("Lua");
+	info.SetDescription("Lua script");
+	info.SetVersion("v1.0");
 	return info;
 }
 
@@ -65,8 +65,15 @@ clToolBar *ScriptPlugin::CreateToolBar(wxWindow *parent)
        tb = new clToolBar(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, clTB_DEFAULT_STYLE);
        tb->SetToolBitmapSize(wxSize(size, size));
 
-		tb->AddTool(SHOW_FRAME_ID, _("Show scripts"),     LoadBitmapFile("script_lightning.png"), _("Show scripts"),    wxITEM_CHECK);
-		tb->AddTool(SETTINGS_ID,   _("Scripts settings"), LoadBitmapFile("script_gear.png"),      _("Scripts settings"));
+		wxString bmpShowScript = "script_lightning_16.png";
+		wxString bmpConfScript = "script_gear_16.png";
+		if (size == 24)
+		{
+			bmpShowScript = "script_lightning_24.png";
+			bmpConfScript = "script_gear_24.png";
+		}
+		tb->AddTool(SHOW_FRAME_ID, _("Show scripts"),     LoadBitmapFile(bmpShowScript), _("Show scripts"),    wxITEM_CHECK);
+		tb->AddTool(SETTINGS_ID,   _("Scripts settings"), LoadBitmapFile(bmpConfScript), _("Scripts settings"));
 
        tb->Realize();
 

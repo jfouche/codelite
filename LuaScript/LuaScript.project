@@ -299,8 +299,6 @@
       <PreBuild/>
       <PostBuild>
         <Command Enabled="yes">copy "$(IntermediateDirectory)\LuaScript.dll" ..\Runtime\plugins</Command>
-        <Command Enabled="yes">copy resources\*.* ..\Runtime\plugins\resources</Command>
-        <Command Enabled="yes"/>
         <Command Enabled="yes"/>
       </PostBuild>
       <CustomBuild Enabled="no">

@@ -5,7 +5,12 @@
 #include "smart_ptr.h"
 #include "lua_runner.h"
 
-class ScriptManager
+#define wxEVT_SCRIPT_ADDED    8001
+#define wxEVT_SCRIPT_REMOVED  8002
+#define wxEVT_HOOK_ADDED      8003
+#define wxEVT_HOOK_REMOVED    8004
+
+class ScriptManager : public wxEvtHandler
 {
 	IManager* m_manager;
 	HookRunner* m_hookRunner;
@@ -44,6 +49,8 @@ private:
 	wxString GetHookDir() const;
 	
 	void InitHooks();
+	
+	void Process(int eventId, const wxString& name);
 };
 
 typedef SmartPtr<ScriptManager> ScriptMgrPtr;

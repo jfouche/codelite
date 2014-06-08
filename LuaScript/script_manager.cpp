@@ -61,18 +61,35 @@ void ScriptManager::InitHooks()
 	}
 }
 
+void ScriptManager::ScriptManager::Process(int eventId, const wxString& name)
+{
+	wxCommandEvent event(eventId);
+	event.SetString(name);
+	ProcessEvent(event);
+}
+
 bool ScriptManager::AddScript(const wxString& path)
 {
 	wxString name = wxFileName(path).GetFullName();
 	wxFileName newFile(GetScriptDir(), name);
-	return ::wxCopyFile(path, newFile.GetFullPath());
+	if (::wxCopyFile(path, newFile.GetFullPath()) == false)
+	{
+		return false;
+	}
+	Process(wxEVT_SCRIPT_ADDED, name);
+	return true;
 }
 
 bool ScriptManager::AddHook(const wxString& path)
 {
 	wxString name = wxFileName(path).GetFullName();
 	wxFileName newFile(GetHookDir(), name);
-	return ::wxCopyFile(path, newFile.GetFullPath());
+	if (::wxCopyFile(path, newFile.GetFullPath()) == false)
+	{
+		return false;
+	}
+	Process(wxEVT_HOOK_ADDED, name);
+	return true;
 }
 
 wxString ScriptManager::GetScriptDir() const
@@ -103,13 +120,23 @@ void ScriptManager::RunScript(const wxString& script)
 bool ScriptManager::DeleteScript(const wxString& script)
 {
 	wxString scriptFile = GetScriptPath(script);
-	return wxRemoveFile(scriptFile);
+	if (wxRemoveFile(scriptFile) == false)
+	{
+		return false;
+	}
+	Process(wxEVT_SCRIPT_REMOVED, script);
+	return true;
 }
 
 bool ScriptManager::DeleteHook(const wxString& hook)
 {
 	wxString hookFile = GetHookPath(hook);
-	return wxRemoveFile(hookFile);
+	if (wxRemoveFile(hookFile) == false)
+	{
+		return false;
+	}
+	Process(wxEVT_HOOK_REMOVED, hook);
+	return true;
 }
 
 wxString ScriptManager::GetScriptPath(const wxString& script) const

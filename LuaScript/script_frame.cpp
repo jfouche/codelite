@@ -20,6 +20,9 @@ ScriptFrame::ScriptFrame(wxWindow* parent, ScriptMgrPtr scriptMgr)
     m_scripts->Connect(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, wxCommandEventHandler(ScriptFrame::OnRunScript), NULL, this);
 	UpdateScripts();
 
+	m_scriptMgr->Connect(wxEVT_SCRIPT_ADDED,   wxCommandEventHandler(ScriptFrame::OnScriptsChanged), NULL, this);
+	m_scriptMgr->Connect(wxEVT_SCRIPT_REMOVED, wxCommandEventHandler(ScriptFrame::OnScriptsChanged), NULL, this);
+
 	Show(false);
 }
 
@@ -37,4 +40,9 @@ void ScriptFrame::OnRunScript(wxCommandEvent& event)
 	{
 		m_scriptMgr->RunScript(script);
 	}
+}
+
+void ScriptFrame::OnScriptsChanged(wxCommandEvent& event)
+{
+	UpdateScripts();
 }
