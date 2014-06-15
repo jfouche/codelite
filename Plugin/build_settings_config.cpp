@@ -32,6 +32,8 @@
 #include <event_notifier.h>
 #include <cl_command_event.h>
 #include "codelite_events.h"
+#include <wx/sstream.h>
+#include <globals.h>
 
 
 BuildSettingsConfig::BuildSettingsConfig()
@@ -104,7 +106,7 @@ void BuildSettingsConfig::SetCompiler(CompilerPtr cmp)
         node->AddChild(cmp->ToXml());
     }
 
-    m_doc->Save(m_fileName.GetFullPath());
+    SaveXmlFile();
     DoUpdateCompilers();
 }
 
@@ -171,7 +173,7 @@ void BuildSettingsConfig::DeleteCompiler(const wxString &name)
     if(node) {
         node->GetParent()->RemoveChild(node);
         delete node;
-        m_doc->Save(m_fileName.GetFullPath());
+        SaveXmlFile();
         DoUpdateCompilers();
     }
 }
@@ -185,7 +187,7 @@ void BuildSettingsConfig::SetBuildSystem(BuilderConfigPtr bs)
         delete node;
     }
     m_doc->GetRoot()->AddChild(bs->ToXml());
-    m_doc->Save(m_fileName.GetFullPath());
+    SaveXmlFile();
     DoUpdateCompilers();
 }
 
@@ -251,7 +253,7 @@ void BuildSettingsConfig::DeleteAllCompilers(bool notify)
         wxDELETE(node);
         node = GetCompilerNode("");
     }
-    m_doc->Save(m_fileName.GetFullPath());
+    SaveXmlFile();
     m_compilers.clear();
     
     if ( notify ) {
@@ -270,7 +272,7 @@ void BuildSettingsConfig::SetCompilers(const std::vector<CompilerPtr>& compilers
             cmpsNode->AddChild(compilers.at(i)->ToXml());
         }
     }
-    m_doc->Save(m_fileName.GetFullPath());
+    SaveXmlFile();
     DoUpdateCompilers();
 
     clCommandEvent event(wxEVT_COMPILER_LIST_UPDATED);
@@ -303,6 +305,11 @@ void BuildSettingsConfig::DoUpdateCompilers()
     }
 }
 
+bool BuildSettingsConfig::SaveXmlFile()
+{
+    return ::SaveXmlToFile( m_doc, m_fileName.GetFullPath() );
+}
+
 static BuildSettingsConfig* gs_buildSettingsInstance = NULL;
 void BuildSettingsConfigST::Free()
 {
@@ -317,4 +324,22 @@ BuildSettingsConfig* BuildSettingsConfigST::Get()
     if(gs_buildSettingsInstance == NULL)
         gs_buildSettingsInstance = new BuildSettingsConfig;
     return gs_buildSettingsInstance;
+}
+
+CompilerPtr BuildSettingsConfig::GetDefaultCompiler(const wxString& compilerFamilty) const
+{
+    CompilerPtr defaultComp;
+    std::map<wxString, CompilerPtr>::const_iterator iter = m_compilers.begin();
+    for(; iter != m_compilers.end(); ++iter ) {
+        if ( iter->second->GetCompilerFamily() == compilerFamilty ) {
+            if ( !defaultComp ) {
+                // keep the first one, just incase
+                defaultComp = iter->second;
+            }
+            if ( iter->second->IsDefault() ) {
+                return iter->second;
+            }
+        }
+    }
+    return defaultComp;
 }

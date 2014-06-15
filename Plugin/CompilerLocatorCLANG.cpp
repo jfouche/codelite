@@ -1,6 +1,9 @@
 #include "CompilerLocatorCLANG.h"
 #include <globals.h>
 #include "procutils.h"
+#include "includepathlocator.h"
+#include "build_settings_config.h"
+
 #ifdef __WXMSW__
 #   include <wx/msw/registry.h>
 #endif
@@ -18,7 +21,7 @@ bool CompilerLocatorCLANG::Locate()
 {
     m_compilers.clear();
     MSWLocate();
-    
+
     // POSIX locate
     wxFileName clang("/usr/bin", "clang");
     if ( clang.FileExists() ) {
@@ -34,6 +37,52 @@ bool CompilerLocatorCLANG::Locate()
     return true;
 }
 
+CompilerPtr CompilerLocatorCLANG::Locate(const wxString& folder)
+{
+    m_compilers.clear();
+    wxFileName clang(folder, "clang");
+#ifdef __WXMSW__
+    clang.SetExt("exe");
+#endif
+    bool found = clang.FileExists();
+    if ( ! found ) {
+        // try to see if we have a bin folder here
+        clang.AppendDir("bin");
+        found = clang.FileExists();
+    }
+    
+    if ( found ) {
+        CompilerPtr compiler( new Compiler(NULL) );
+        compiler->SetCompilerFamily(COMPILER_FAMILY_CLANG);
+        // get the compiler version
+        compiler->SetName( GetCompilerFullName(clang.GetFullPath() ) );
+        compiler->SetGenerateDependeciesFile(true);
+        m_compilers.push_back( compiler );
+        clang.RemoveLastDir();
+        AddTools(compiler, clang.GetPath());
+        
+        // Update the toolchain (if Windows)
+#ifdef __WXMSW__
+        CompilerPtr defaultMinGWCmp = BuildSettingsConfigST::Get()->GetDefaultCompiler(COMPILER_FAMILY_MINGW);
+        if ( defaultMinGWCmp ) {
+            compiler->SetTool("MAKE", defaultMinGWCmp->GetTool("MAKE"));
+            compiler->SetTool("ResourceCompiler", defaultMinGWCmp->GetTool("ResourceCompiler"));
+            
+            // Update the include paths
+            IncludePathLocator locator(NULL);
+            wxArrayString includePaths, excludePaths;
+            locator.Locate(includePaths, excludePaths, false, defaultMinGWCmp->GetTool("CXX"));
+            
+            // Convert the include paths to semi colon separated list
+            wxString mingwIncludePaths = wxJoin(includePaths, ';');
+            compiler->SetGlobalIncludePath( mingwIncludePaths );
+        }
+#endif
+        return compiler;
+    }
+    return NULL;
+}
+
 void CompilerLocatorCLANG::MSWLocate()
 {
 #ifdef __WXMSW__
@@ -46,7 +95,7 @@ void CompilerLocatorCLANG::MSWLocate()
             found = true;
             reg.QueryValue("DisplayIcon",    llvmInstallPath);
             reg.QueryValue("DisplayVersion", llvmVersion);
-            
+
             CompilerPtr compiler( new Compiler(NULL) );
             compiler->SetCompilerFamily(COMPILER_FAMILY_CLANG);
             compiler->SetGenerateDependeciesFile(true);
@@ -62,7 +111,7 @@ void CompilerLocatorCLANG::MSWLocate()
         if ( reg.Exists() ) {
             reg.QueryValue("DisplayIcon",    llvmInstallPath);
             reg.QueryValue("DisplayVersion", llvmVersion);
-            
+
             CompilerPtr compiler( new Compiler(NULL) );
             compiler->SetCompilerFamily(COMPILER_FAMILY_CLANG);
             compiler->SetGenerateDependeciesFile(true);
@@ -113,7 +162,7 @@ void CompilerLocatorCLANG::AddTools(CompilerPtr compiler, const wxString &instal
 #endif
     toolFile.SetName("llvm-as");
     AddTool(compiler, "AS", toolFile.GetFullPath());
-    
+
     wxString makeExtraArgs;
     if ( wxThread::GetCPUCount() > 1 ) {
         makeExtraArgs << "-j" << wxThread::GetCPUCount();

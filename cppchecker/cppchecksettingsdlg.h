@@ -24,6 +24,7 @@ protected:
 	virtual void OnChecksUntickAll(wxCommandEvent& e);
 	virtual void OnChecksTickAllUI(wxUpdateUIEvent& e);
 	virtual void OnChecksUntickAllUI(wxUpdateUIEvent& e);
+    virtual void OnJobsUpdateUI(wxUpdateUIEvent& event);
 
 	// Exclude-files page
 	virtual void OnAddFile     (wxCommandEvent& e);
@@ -41,6 +42,12 @@ protected:
 	virtual void OnRemoveSuppressionUI(wxUpdateUIEvent& e);
 	virtual void OnSuppressTickAllUI(wxUpdateUIEvent& e);
 	virtual void OnSuppressUntickAllUI(wxUpdateUIEvent& e);
+
+	// Extra include dirs page
+    virtual void OnIncludeDirsUpdateUI(wxUpdateUIEvent& event);
+    virtual void OnAddIncludeDir(wxCommandEvent& event);
+    virtual void OnRemoveIncludeDir(wxCommandEvent& event);
+    virtual void OnRemoveIncludeDirUI(wxUpdateUIEvent& event);
 
 	// Definitions page
 	virtual void OnAddDefinition(wxCommandEvent& e);

@@ -21,6 +21,7 @@
 #include <wx/checklst.h>
 #include <wx/button.h>
 #include <wx/checkbox.h>
+#include <wx/spinctrl.h>
 #include <wx/listbox.h>
 #include <wx/statline.h>
 #include <wx/textctrl.h>
@@ -35,13 +36,16 @@ protected:
     wxButton* m_buttonAllChecks;
     wxButton* m_buttonClearChecks;
     wxCheckBox* m_cbOptionForce;
+    wxCheckBox* m_cbJobs;
+    wxSpinCtrl* m_spinCtrlJobs;
+    wxCheckBox* m_cbCheckConfig;
     wxPanel* m_ExcludePanel;
     wxStaticText* m_staticText1;
     wxListBox* m_listBoxExcludelist;
     wxButton* m_buttonAdd;
     wxButton* m_buttonRemove;
     wxButton* m_buttonClearList;
-    wxPanel* m_SupressPanel;
+    wxPanel* m_SuppressPanel;
     wxStaticText* m_staticText11;
     wxCheckListBox* m_checkListSuppress;
     wxButton* m_buttonAddSuppression;
@@ -49,6 +53,13 @@ protected:
     wxButton* m_buttonSuppressAll;
     wxButton* m_buttonClearSuppressions;
     wxCheckBox* m_checkBoxSerialise;
+    wxPanel* m_IncludeDirs;
+    wxStaticText* m_staticText113;
+    wxListBox* m_listBoxIncludeDirs;
+    wxButton* m_buttonAddIncludeDir;
+    wxButton* m_buttonRemoveIncludeDir;
+    wxCheckBox* m_checkBoxSuppressSystemIncludes;
+    wxCheckBox* m_checkBoxSerialiseIncludeDirs;
     wxPanel* m_DefinesPanel;
     wxStaticText* m_staticText11428;
     wxStaticLine* m_staticLine18;
@@ -71,6 +82,7 @@ protected:
     virtual void OnChecksTickAllUI(wxUpdateUIEvent& event) { event.Skip(); }
     virtual void OnChecksUntickAll(wxCommandEvent& event) { event.Skip(); }
     virtual void OnChecksUntickAllUI(wxUpdateUIEvent& event) { event.Skip(); }
+    virtual void OnJobsUpdateUI(wxUpdateUIEvent& event) { event.Skip(); }
     virtual void OnAddFile(wxCommandEvent& event) { event.Skip(); }
     virtual void OnRemoveFile(wxCommandEvent& event) { event.Skip(); }
     virtual void OnRemoveFileUI(wxUpdateUIEvent& event) { event.Skip(); }
@@ -83,6 +95,10 @@ protected:
     virtual void OnSuppressTickAllUI(wxUpdateUIEvent& event) { event.Skip(); }
     virtual void OnSuppressUntickAll(wxCommandEvent& event) { event.Skip(); }
     virtual void OnSuppressUntickAllUI(wxUpdateUIEvent& event) { event.Skip(); }
+    virtual void OnIncludeDirsUpdateUI(wxUpdateUIEvent& event) { event.Skip(); }
+    virtual void OnAddIncludeDir(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnRemoveIncludeDir(wxCommandEvent& event) { event.Skip(); }
+    virtual void OnRemoveIncludeDirUI(wxUpdateUIEvent& event) { event.Skip(); }
     virtual void OnAddDefinition(wxCommandEvent& event) { event.Skip(); }
     virtual void OnRemoveDefinition(wxCommandEvent& event) { event.Skip(); }
     virtual void OnRemoveDefinitionUI(wxUpdateUIEvent& event) { event.Skip(); }
