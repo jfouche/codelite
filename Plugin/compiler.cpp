@@ -30,6 +30,10 @@
 #include "build_system.h"
 #include "build_settings_config.h"
 #include <ICompilerLocator.h>
+#include <wx/regex.h>
+#include <procutils.h>
+#include "globals.h"
+#include <wx/tokenzr.h>
 
 Compiler::Compiler(wxXmlNode *node, Compiler::eRegexType regexType)
     : m_objectNameIdenticalToFileName(false)
@@ -61,6 +65,12 @@ Compiler::Compiler(wxXmlNode *node, Compiler::eRegexType regexType)
     if (node) {
         m_name = XmlUtils::ReadString(node, wxT("Name"));
         m_compilerFamily = XmlUtils::ReadString(node, "CompilerFamily");
+        
+        if ( m_compilerFamily == "GNU GCC" ) {
+            // fix wrong name 
+            m_compilerFamily = COMPILER_FAMILY_GCC;
+        }
+        
         m_isDefault = XmlUtils::ReadBool(node, "IsDefault");
         
         if (!node->HasProp(wxT("GenerateDependenciesFiles"))) {
@@ -543,4 +553,95 @@ void Compiler::AddDefaultGnuLinkerOptions()
     AddLinkerOption("-mwindows",  "Prevent a useless terminal console appearing with MSWindows GUI programs");
     AddLinkerOption("-pg",        "Profile code when executed");
     AddLinkerOption("-s",         "Remove all symbol table and relocation information from the executable");
+}
+
+wxArrayString Compiler::GetDefaultIncludePaths() const
+{
+    wxArrayString defaultPaths;
+    if ( GetCompilerFamily() == COMPILER_FAMILY_MINGW ) {
+        wxString ver = GetGCCVersion();
+        if ( ver.IsEmpty() ) {
+            return defaultPaths;
+        }
+        
+        // FIXME : support 64 bit compilers
+        defaultPaths.Add( GetIncludePath("lib/gcc/mingw32/" + ver + "/include/c++") );
+        defaultPaths.Add( GetIncludePath("lib/gcc/mingw32/" + ver + "/include/c++/mingw32") );
+        defaultPaths.Add( GetIncludePath("lib/gcc/mingw32/" + ver + "/include/c++/backward") );
+        defaultPaths.Add( GetIncludePath("lib/gcc/mingw32/" + ver + "/include") );
+        defaultPaths.Add( GetIncludePath("include") );
+        defaultPaths.Add( GetIncludePath("lib/gcc/mingw32/" + ver + "/include-fixed") );
+
+    } else if ( GetCompilerFamily() == COMPILER_FAMILY_CLANG || GetCompilerFamily() == COMPILER_FAMILY_GCC) {
+#ifndef __WXMSW__
+        defaultPaths = POSIXGetIncludePaths();
+#endif
+    }
+    return defaultPaths;
+}
+
+wxString Compiler::GetGCCVersion() const
+{
+    // Get the compiler version
+    static wxRegEx reVersion("([0-9]+\\.[0-9]+\\.[0-9]+)");
+    wxString command;
+    command << GetTool("CXX") << " --version";
+    wxArrayString out;
+    ProcUtils::SafeExecuteCommand(command, out);
+    if ( out.IsEmpty() ) {
+        return "";
+    }
+    
+    if ( reVersion.Matches( out.Item(0) ) ) {
+        return reVersion.GetMatch( out.Item(0) );
+    }
+    return "";
+}
+
+wxString Compiler::GetIncludePath(const wxString& pathSuffix) const
+{
+    wxString fullpath;
+    fullpath << GetInstallationPath() << "/" << pathSuffix;
+    wxFileName fn(fullpath, "");
+    return fn.GetPath();
+}
+
+wxArrayString Compiler::POSIXGetIncludePaths() const
+{
+    wxString command;
+    command << GetTool("CXX") << " -v -x c++ /dev/null -fsyntax-only";
+
+    wxString outputStr = ::wxShellExec(command, wxEmptyString);
+    
+    wxArrayString arr;
+    wxArrayString outputArr = ::wxStringTokenize(outputStr, wxT("\n\r"), wxTOKEN_STRTOK);
+    
+    // Analyze the output
+    bool collect(false);
+    for(size_t i=0; i<outputArr.GetCount(); i++) {
+        if(outputArr[i].Contains(wxT("#include <...> search starts here:"))) {
+            collect = true;
+            continue;
+        }
+
+        if(outputArr[i].Contains(wxT("End of search list."))) {
+            break;
+        }
+
+        if(collect) {
+
+            wxString file = outputArr.Item(i).Trim().Trim(false);
+
+            // on Mac, (framework directory) appears also,
+            // but it is harmless to use it under all OSs
+            file.Replace(wxT("(framework directory)"), wxT(""));
+            file.Trim().Trim(false);
+
+            wxFileName includePath(file, "");
+            includePath.Normalize();
+
+            arr.Add( includePath.GetPath() );
+        }
+    }
+    return arr;
 }

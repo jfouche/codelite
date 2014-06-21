@@ -44,11 +44,11 @@
   <Project Name="LLDBDebugger" Path="LLDBDebugger/LLDBDebugger.project" Active="No"/>
   <Project Name="LuaScript" Path="LuaScript/LuaScript.project" Active="Yes"/>
   <Project Name="lua" Path="sdk/lua/lua.project" Active="No"/>
+  <Project Name="SpellCheck" Path="SpellChecker/SpellCheck.project" Active="No"/>
+  <Project Name="hunspell" Path="SpellChecker/hunspell/hunspell.project" Active="No"/>
   <Environment>
     <![CDATA[]]>
   </Environment>
-  <Project Name="SpellCheck" Path="SpellChecker/SpellCheck.project" Active="No"/>
-  <Project Name="hunspell" Path="SpellChecker/hunspell/hunspell.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Win Release Unicode" Selected="yes">
       <Project Name="abbreviation" ConfigName="WinReleaseUnicode"/>

@@ -37,6 +37,10 @@
 #include "globals.h"
 #include "includepathlocator.h"
 #include "clang_code_completion.h"
+#include <build_settings_config.h>
+#include <compiler.h>
+#include <ICompilerLocator.h>
+#include <wx/msgdlg.h>
 
 //---------------------------------------------------------
 
@@ -374,27 +378,47 @@ void TagsOptionsDlg::OnParse(wxCommandEvent& event)
 void TagsOptionsDlg::OnSuggestSearchPaths(wxCommandEvent& event)
 {
     wxUnusedVar(event);
-    IncludePathLocator locator(PluginManager::Get());
-    wxArrayString paths, excludes;
-    locator.Locate(paths, excludes, false);
-
-    wxString suggestedPaths;
-    for(size_t i=0; i<paths.GetCount(); i++) {
-        suggestedPaths << paths.Item(i) << wxT("\n");
-    }
-
-    suggestedPaths.Trim().Trim(false);
-    if(m_textCtrlClangSearchPaths->GetValue().Contains(suggestedPaths) == false) {
-        wxString newVal = m_textCtrlClangSearchPaths->GetValue();
-        newVal.Trim().Trim(false);
-        if(newVal.IsEmpty() == false)
-            newVal << wxT("\n");
-        newVal << suggestedPaths;
-        m_textCtrlClangSearchPaths->SetValue(newVal);
-    }
+    DoSuggest(m_textCtrlClangSearchPaths);
 }
 
 wxArrayString TagsOptionsDlg::GetCTagsSearchPaths() const
 {
     return wxStringTokenize(m_textCtrlCtagsSearchPaths->GetValue(), wxT("\r\n"), wxTOKEN_STRTOK);
+}
+
+void TagsOptionsDlg::OnSuggestCtags(wxCommandEvent& event)
+{
+    wxUnusedVar(event);
+    DoSuggest(m_textCtrlCtagsSearchPaths);
+}
+
+void TagsOptionsDlg::DoSuggest(wxTextCtrl* textCtrl)
+{
+#ifdef __WXMSW__
+    // Use MinGW compiler for Windows by default
+    CompilerPtr comp = BuildSettingsConfigST::Get()->GetDefaultCompiler(COMPILER_FAMILY_MINGW);
+#else
+    // Otherwise, use GCC
+    CompilerPtr comp = BuildSettingsConfigST::Get()->GetDefaultCompiler(COMPILER_FAMILY_GCC);
+#endif
+    wxArrayString paths;
+    if ( comp ) {
+        paths = comp->GetDefaultIncludePaths();
+    }
+    
+    wxString suggestedPaths;
+    for(size_t i=0; i<paths.GetCount(); i++) {
+        suggestedPaths << paths.Item(i) << wxT("\n");
+    }
+    
+    suggestedPaths.Trim().Trim(false);
+    if ( !suggestedPaths.IsEmpty() ) {
+        if ( ::wxMessageBox(_("Accepting this suggestion will replace your old search paths with these paths\nContinue?"), 
+                            "CodeLite", 
+                            wxYES_NO|wxYES_DEFAULT|wxCANCEL|wxICON_QUESTION) != wxYES ) {
+            return;
+        }
+        textCtrl->Clear();
+        textCtrl->ChangeValue( suggestedPaths );
+    }
 }

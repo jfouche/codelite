@@ -59,6 +59,7 @@ public:
         Opt_Disable_Multiselect      = 0x00080000,
         Opt_Disable_Multipaste       = 0x00100000,
         Opt_AllowCaretAfterEndOfLine = 0x00200000,
+        Opt_HideDockingWindowCaption = 0x00400000,
     };
 
 protected:
@@ -570,6 +571,15 @@ public:
     const wxColour& GetDebuggerMarkerLine() const {
         return m_debuggerMarkerLine;
     }
+    
+    void SetShowDockingWindowCaption(bool show) {
+        EnableOption(Opt_HideDockingWindowCaption, show);
+    }
+    
+    bool IsShowDockingWindowCaption() const {
+        return HasOption(Opt_HideDockingWindowCaption);
+    }
+    
     /**
      * Return an XML representation of this object
      * \return XML node

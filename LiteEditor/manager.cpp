@@ -2129,8 +2129,8 @@ void Manager::DoUpdateDebuggerTabControl(wxWindow* curpage)
 
             //update the stack call
             dbgr->ListFrames();
-
         }
+        
         if ( curpage == ( wxWindow* ) pane->GetBreakpointView() || IsPaneVisible ( wxGetTranslation(DebuggerPane::BREAKPOINTS) ) ) {
 
             // update the breakpoint view
@@ -2772,7 +2772,7 @@ void Manager::UpdateGotControl ( const DebuggerEventData &e )
 
         if(info.IsShown()) {
             // Refresh the view
-            UpdateDebuggerPane();
+            CallAfter( &Manager::UpdateDebuggerPane );
         }
 
         if(!userTriggered) {
@@ -2797,7 +2797,7 @@ void Manager::UpdateGotControl ( const DebuggerEventData &e )
         wxAuiPaneInfo &info = clMainFrame::Get()->GetDockingManager().GetPane(wxT("Debugger"));
         if ( info.IsShown() ) {
             clMainFrame::Get()->GetDebuggerPane()->SelectTab ( DebuggerPane::FRAMES );
-            UpdateDebuggerPane();
+            CallAfter( &Manager::UpdateDebuggerPane );
         }
     }
     break;
@@ -3249,7 +3249,7 @@ void Manager::DebuggerUpdate(const DebuggerEventData& event)
         //in some cases we don't physically reposition the file+line position, such as during updates made by user actions (like add watch)
         //but since this app uses a debugger refresh to update newly added watch values, it automatically repositions the editor always.
         //this isn't always desirable behavior, so we pass a parameter indicating for certain operations if an override was used
-        UpdateFileLine(event.m_file, event.m_line, /*ManagerST::Get()->GetRepositionEditor()*/true);
+        UpdateFileLine(event.m_file, event.m_line, true);
         //raise the flag for the next call, as this "override" is only used once per consumption
         ManagerST::Get()->SetRepositionEditor(true);
         break;
@@ -3311,10 +3311,6 @@ void Manager::DebuggerUpdate(const DebuggerEventData& event)
 
     case DBG_UR_EXPRESSION:
         //clMainFrame::Get()->GetDebuggerPane()->GetWatchesTable()->UpdateExpression ( event.m_expression, event.m_evaluated );
-        break;
-
-    case DBG_UR_UPDATE_STACK_LIST:
-        clMainFrame::Get()->GetDebuggerPane()->GetFrameListView()->Update ( event.m_stack );
         break;
 
     case DBG_UR_FUNCTIONFINISHED:
@@ -3678,8 +3674,7 @@ void Manager::OnIncludeFilesScanDone(wxCommandEvent& event)
     clMainFrame::Get()->SetStatusMessage(_("Retagging..."), 0);
 
     wxBusyCursor busyCursor;
-    std::set<std::string> *fileSet = (std::set<std::string>*)event.GetClientData();
-//	fprintf(stderr, "fileSet size=%d\n", fileSet->size());
+    std::set<wxString> *fileSet = (std::set<wxString>*)event.GetClientData();
 
     wxArrayString projects;
     GetProjectList ( projects );
@@ -3696,17 +3691,17 @@ void Manager::OnIncludeFilesScanDone(wxCommandEvent& event)
     // files
     for (size_t i=0; i<projectFiles.size(); i++) {
         wxString fn( projectFiles.at(i).GetFullPath() );
-        fileSet->insert( fn.mb_str(wxConvUTF8).data() );
+        fileSet->insert( fn );
     }
 
 //	fprintf(stderr, "Parsing the following files\n");
     // recreate the list in the form of vector (the API requirs vector)
     projectFiles.clear();
-    std::set<std::string>::iterator iter = fileSet->begin();
+    std::set<wxString>::iterator iter = fileSet->begin();
     projectFiles.reserve( fileSet->size() );
 
-    for (; iter != fileSet->end(); iter++ ) {
-        wxFileName fn( iter->c_str() );
+    for (; iter != fileSet->end(); ++iter) {
+        wxFileName fn( *iter );
         if ( fn.IsRelative() ) {
             fn.MakeAbsolute();
         }
