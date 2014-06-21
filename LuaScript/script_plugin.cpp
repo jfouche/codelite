@@ -94,18 +94,6 @@ clToolBar *ScriptPlugin::CreateToolBar(wxWindow *parent)
 
 void ScriptPlugin::CreatePluginMenu(wxMenu *pluginsMenu)
 {
-	/*
-		// You can use the below code a snippet:
-	 	wxMenu *menu = new wxMenu();
-		wxMenuItem *item(NULL);
-		item = new wxMenuItem(menu, XRCID("new_plugin"), _("New CodeLite Plugin Wizard..."), wxEmptyString, wxITEM_NORMAL);
-		menu->Append(item);
-		item = new wxMenuItem(menu, XRCID("new_class"), _("New Class Wizard..."), wxEmptyString, wxITEM_NORMAL);
-		menu->Append(item);
-		item = new wxMenuItem(menu, XRCID("new_wx_project"), _("New wxWidgets Project Wizard..."), wxEmptyString, wxITEM_NORMAL);
-		menu->Append(item);
-		pluginsMenu->Append(wxID_ANY, _("Gizmos"), menu);
-	*/
 }
 
 void ScriptPlugin::HookPopupMenu(wxMenu *menu, MenuType type)
@@ -118,6 +106,9 @@ void ScriptPlugin::UnHookPopupMenu(wxMenu *menu, MenuType type)
 
 void ScriptPlugin::UnPlug()
 {
+		wxTheApp->Disconnect(SHOW_FRAME_ID, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(ScriptPlugin::OnShowFrame), NULL, this);
+		wxTheApp->Disconnect(SETTINGS_ID,   wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(ScriptPlugin::OnSettings),  NULL, this);
+		wxTheApp->Disconnect(SHOW_FRAME_ID, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(ScriptPlugin::OnShowFrameUi), NULL, this);
 }
 
 void ScriptPlugin::InitUi()
