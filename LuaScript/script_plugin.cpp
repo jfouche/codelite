@@ -5,6 +5,11 @@
 #include "script_settings_dlg.h"
 #include "script_frame.h"
 
+#include "resources/script_gear_16.xpm"
+#include "resources/script_gear_24.xpm"
+#include "resources/script_lightning_16.xpm"
+#include "resources/script_lightning_24.xpm"
+
 static ScriptPlugin* thePlugin = 0;
 
 static const int SHOW_FRAME_ID = XRCID("script_show_frame");
@@ -65,15 +70,15 @@ clToolBar *ScriptPlugin::CreateToolBar(wxWindow *parent)
        tb = new clToolBar(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, clTB_DEFAULT_STYLE);
        tb->SetToolBitmapSize(wxSize(size, size));
 
-		wxString bmpShowScript = "script_lightning_16.png";
-		wxString bmpConfScript = "script_gear_16.png";
+		const char** xpmShowScript = script_lightning_16_xpm;
+		const char** xpmConfScript = script_gear_16_xpm;
 		if (size == 24)
 		{
-			bmpShowScript = "script_lightning_24.png";
-			bmpConfScript = "script_gear_24.png";
+			xpmShowScript = script_lightning_24_xpm;
+			xpmConfScript = script_gear_24_xpm;
 		}
-		tb->AddTool(SHOW_FRAME_ID, _("Show scripts"),     LoadBitmapFile(bmpShowScript), _("Show scripts"),    wxITEM_CHECK);
-		tb->AddTool(SETTINGS_ID,   _("Scripts settings"), LoadBitmapFile(bmpConfScript), _("Scripts settings"));
+		tb->AddTool(SHOW_FRAME_ID, _("Show scripts"),     wxBitmap(xpmShowScript), _("Show scripts"),    wxITEM_CHECK);
+		tb->AddTool(SETTINGS_ID,   _("Scripts settings"), wxBitmap(xpmConfScript), _("Scripts settings"));
 
        tb->Realize();
 

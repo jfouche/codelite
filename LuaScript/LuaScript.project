@@ -40,7 +40,7 @@
     <Excludepaths/>
     <Ignorefiles/>
     <Extensions>
-      <![CDATA[cpp;c;h;hpp;xrc;wxcp;fbp]]>
+      <![CDATA[cpp;c;h;hpp;xrc;wxcp;fbp;lua;xpm]]>
     </Extensions>
     <Topleveldir>../LuaScript</Topleveldir>
   </Reconciliation>
@@ -89,7 +89,10 @@
   <Dependencies Name="DebugUnicode"/>
   <Dependencies Name="WinReleaseUnicode"/>
   <VirtualDirectory Name="resources">
-    <File Name="resources/codelite.lua"/>
+    <File Name="resources/script_gear_16.xpm"/>
+    <File Name="resources/script_gear_24.xpm"/>
+    <File Name="resources/script_lightning_16.xpm"/>
+    <File Name="resources/script_lightning_24.xpm"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
