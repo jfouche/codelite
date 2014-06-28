@@ -36,11 +36,11 @@ void LuaRunner::Run(const wxString& script)
 	{
 		const char* err = lua_tostring(m_lua, -1);
 		wxString msg = wxString::Format("Error %d : %s", status, err);
-		wxLogError("[LUA] : %s", msg.c_str());
+		wxLogMessage("[LUA] : %s", msg.c_str());
 		::wxMessageBox(msg, "Lua plugin error", wxOK|wxICON_ERROR);
 		return;
 	}
-	wxLogError("[LUA] finished");
+	wxLogMessage("[LUA] finished");
 }
 
 HookRunner::HookRunner(IManager* manager)
