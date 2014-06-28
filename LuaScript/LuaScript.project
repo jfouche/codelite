@@ -326,4 +326,7 @@
       </Completion>
     </Configuration>
   </Settings>
+  <VirtualDirectory Name="tests">
+    <File Name="tests/tests.lua"/>
+  </VirtualDirectory>
 </CodeLite_Project>

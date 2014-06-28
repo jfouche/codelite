@@ -80,6 +80,15 @@ static int InsertText(lua_State* L)
 	return 0;
 }
 
+static int SelectText(lua_State* L)
+{
+	IEditor* editor = lua::check<IEditor>(L, 1);
+	long start = lua::check_integer(L, 2);
+	long len = lua::check_integer(L, 3);
+	editor->SelectText(start, len);
+	return 0;
+}
+
 static const luaL_Reg METHODS[] = {
 	{"GetEditorText", GetEditorText},
 	{"SetEditorText", SetEditorText},
@@ -88,6 +97,7 @@ static const luaL_Reg METHODS[] = {
 	{"AppendText", AppendText},
 	{"GetCurrentPosition", GetCurrentPosition},
 	{"InsertText", InsertText},
+	{"SelectText", SelectText},
 	{NULL, NULL}
 };
 
