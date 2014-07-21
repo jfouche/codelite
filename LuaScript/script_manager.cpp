@@ -169,12 +169,12 @@ wxString ScriptManager::GetHookPath(const wxString& hook) const
 
 void ScriptManager::OnClEvent(clCommandEvent& event)
 {
-	m_hookRunner->onClEvent(event);
+	m_hookRunner->OnClEvent(event);
 }
 
 void ScriptManager::OnCmdEvent(wxCommandEvent& event)
 {
-	m_hookRunner->onCmdEvent(event);
+	m_hookRunner->OnCmdEvent(event);
 }
 
 void ScriptManager::ReloadHooks()

@@ -26,8 +26,8 @@ class HookRunner : public LuaRunner
 public:
 	HookRunner(IManager* manager);
 	
-	void onCmdEvent(wxCommandEvent& event);
-	void onClEvent(clCommandEvent& event);
+	void OnCmdEvent(wxCommandEvent& event);
+	void OnClEvent(clCommandEvent& event);
 	
 private:
 	template<typename T>

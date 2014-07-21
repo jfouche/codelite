@@ -56,12 +56,12 @@ void HookRunner::PushOnEventFunctionAndSelf()
 	lua_remove(m_lua, -3);
 }
 
-void HookRunner::onClEvent(clCommandEvent& event)
+void HookRunner::OnClEvent(clCommandEvent& event)
 {
 	RunFunctions(event.GetEventType(), &event);
 }
 
-void HookRunner::onCmdEvent(wxCommandEvent& event)
+void HookRunner::OnCmdEvent(wxCommandEvent& event)
 {
 	RunFunctions(event.GetEventType(), &event);
 }
