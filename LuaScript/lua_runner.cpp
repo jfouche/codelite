@@ -46,15 +46,6 @@ void LuaRunner::Run(const wxString& script)
 HookRunner::HookRunner(IManager* manager)
 : LuaRunner(manager)
 {
-	wxFileName initScript(m_manager->GetInstallDirectory(), "codelite.lua");
-	initScript.AppendDir("plugins");
-	initScript.AppendDir("resources");
-	int r = luaL_dofile(m_lua, initScript.GetFullPath().c_str());
-	if (r != LUA_OK)
-	{
-		wxString msg = wxString::Format("HookRunner error %s", lua_tostring(m_lua, -1));
-		wxLogError(msg);
-	}
 }
 
 void HookRunner::PushOnEventFunctionAndSelf()
