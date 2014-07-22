@@ -30,9 +30,9 @@ extern "C" EXPORT IPlugin* CreatePlugin(IManager *manager)
 extern "C" EXPORT PluginInfo GetPluginInfo()
 {
 	PluginInfo info;
-	info.SetAuthor("Jérémie Fouché");
-	info.SetName("Lua");
-	info.SetDescription("Lua script");
+	info.SetAuthor("J\xe9r\xe9mie Fouch\xe9");
+	info.SetName("LuaScript");
+	info.SetDescription("Lua bindings for CodeLite API");
 	info.SetVersion("v1.0");
 	return info;
 }
@@ -48,8 +48,8 @@ ScriptPlugin::ScriptPlugin(IManager *manager)
 	: IPlugin(manager)
 	, m_scriptMgr(new ScriptManager(manager))
 {
-	m_longName = wxT("Lua script plugin");
-	m_shortName = wxT("Lua");
+	m_longName = wxT("Lua CodeLite bindings");
+	m_shortName = wxT("LuaScript");
 
 	InitUi();
 }
