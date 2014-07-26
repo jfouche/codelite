@@ -3,12 +3,11 @@
 #include <wx/msgdlg.h>
 #include <wx/log.h>
 
-jmp_buf LuaRunner::JUMP_BUFFER;
 
 static int cl_panic(lua_State *L)
 {
 	::wxMessageBox(lua_tostring(L, -1), "Lua plugin error", wxOK|wxICON_ERROR);
-	longjmp(LuaRunner::JUMP_BUFFER, -1);
+	CL_LUA_THROW;
 }
 
 
@@ -42,7 +41,7 @@ void LuaRunner::Run(const wxString& script)
 {
 	wxLogMessage("[LUA] running %s", script.c_str());
 
-	if (setjmp(JUMP_BUFFER) == 0)
+	CL_LUA_TRY
 	{
 		int status = luaL_dofile(m_lua, script.c_str());
 		if (status != LUA_OK)

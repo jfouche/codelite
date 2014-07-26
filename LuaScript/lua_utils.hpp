@@ -3,6 +3,12 @@
 
 #include <lua.hpp>
 #include <string>
+#include <setjmp.h>
+
+extern jmp_buf JUMP_BUFFER;
+
+#define CL_LUA_TRY		if (setjmp(JUMP_BUFFER) == 0)
+#define CL_LUA_THROW		longjmp(JUMP_BUFFER, -1)
 
 namespace lua
 {

@@ -1,6 +1,8 @@
 #include "lua_utils.hpp"
 #include <sstream>
 
+jmp_buf JUMP_BUFFER;
+
 std::string lua::stack_dump(lua_State *L)
 {
 	std::ostringstream oss;
