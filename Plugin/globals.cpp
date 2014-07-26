@@ -90,8 +90,6 @@ const wxEventType wxEVT_COMMAND_CL_INTERNAL_1_ARGS = ::wxNewEventType();
 // --------------------------------------------------------
 class clInternalEventHandlerData : public wxClientData
 {
-
-
     wxObject*     m_this;
     clEventFunc_t m_funcPtr;
     wxClientData* m_arg;
@@ -762,6 +760,27 @@ time_t GetFileModificationTime(const wxString &filename)
     return buff.st_mtime;
 }
 
+bool clIsCygwinEnvironment()
+{
+#ifdef __WXMSW__
+    static bool isCygwin  = false;
+    static bool firstTime = true;
+    
+    if ( firstTime ) {
+        firstTime = false;
+        wxString out = ProcUtils::SafeExecuteCommand("uname -s");
+        if ( out.IsEmpty() ) {
+            isCygwin = false;
+        } else {
+            isCygwin = out.StartsWith("CYGWIN_NT");
+        }
+    }
+    return isCygwin;
+#else
+    return false;
+#endif
+}
+
 void WrapInShell(wxString& cmd)
 {
     wxString command;
@@ -773,6 +792,7 @@ void WrapInShell(wxString& cmd)
     command << shell << wxT(" /c \"");
     command << cmd << wxT("\"");
     cmd = command;
+
 #else
     command << wxT("/bin/sh -c '");
     // escape any single quoutes
@@ -1648,7 +1668,16 @@ void LaunchTerminalForDebugger(const wxString &title, wxString &tty, long &pid)
     
 #else
     // Non Windows machines
-    static wxString SLEEP_COMMAND = "sleep 85765";
+    
+    // generate a random value to differntiate this instance of codelite
+    // from other instances
+    time_t curtime = time(NULL);
+    int randomSeed = (curtime % 947);
+    wxString secondsToSleep;
+    
+    secondsToSleep << ( 85765 + randomSeed );
+    wxString SLEEP_COMMAND;
+    SLEEP_COMMAND << "sleep " << secondsToSleep;
     
 #if defined(__WXMAC__)
     wxString consoleCommand;

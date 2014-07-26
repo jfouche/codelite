@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : SvnCommitDialog.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "SvnCommitDialog.h"
 #include <wx/tokenzr.h>
 #include "windowattrmanager.h"
@@ -58,7 +83,7 @@ SvnCommitDialog::SvnCommitDialog(wxWindow* parent, Subversion2* plugin)
         m_splitterH->SetSashPosition(sashPos);
     }
     
-    LexerConfPtr textLexer = EditorConfigST::Get()->GetLexer("text");
+    LexerConf::Ptr_t textLexer = EditorConfigST::Get()->GetLexer("text");
     if ( textLexer ) {
         textLexer->Apply( m_stcMessage );
     }
@@ -105,13 +130,13 @@ SvnCommitDialog::SvnCommitDialog(wxWindow* parent, const wxArrayString &paths, c
         m_splitterV->SetSashPosition(sashHPos);
     }
     
-    LexerConfPtr diffLexer = EditorConfigST::Get()->GetLexer("Diff");
+    LexerConf::Ptr_t diffLexer = EditorConfigST::Get()->GetLexer("Diff");
     if ( diffLexer ) {
         m_stcDiff->SetLexer(wxSTC_LEX_DIFF);
         diffLexer->Apply( m_stcDiff );
     }
     
-    LexerConfPtr textLexer = EditorConfigST::Get()->GetLexer("text");
+    LexerConf::Ptr_t textLexer = EditorConfigST::Get()->GetLexer("text");
     if ( textLexer ) {
         textLexer->Apply( m_stcMessage );
     }

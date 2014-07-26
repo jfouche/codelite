@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : cl_config.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "cl_config.h"
 #include <wx/stdpaths.h>
 #include <wx/filefn.h>
@@ -5,6 +30,18 @@
 #include <algorithm>
 #include "cl_standard_paths.h"
 
+#define ADD_OBJ_IF_NOT_EXISTS(parent, objName) \
+    if ( !parent.hasNamedObject( objName ) ) { \
+        JSONElement obj = JSONElement::createObject( objName ); \
+        parent.append( obj ); \
+    }\
+
+#define ADD_ARR_IF_NOT_EXISTS(parent, arrName) \
+    if ( !parent.hasNamedObject( arrName ) ) { \
+        JSONElement arr = JSONElement::createArray( arrName ); \
+        parent.append( arr ); \
+    }\
+    
 clConfig::clConfig(const wxString& filename)
 {
     if ( wxFileName(filename).IsAbsolute() ) {
@@ -233,4 +270,80 @@ void clConfig::ClearAnnoyingDlgAnswers()
     DoDeleteProperty("AnnoyingDialogsAnswers");
     Save();
     Reload();
+}
+
+void clConfig::AddQuickFindReplaceItem(const wxString& str)
+{
+    ADD_OBJ_IF_NOT_EXISTS( m_root->toElement(), "QuickFindBar" );
+    
+    JSONElement quickFindBar = m_root->toElement().namedObject("QuickFindBar");
+    ADD_ARR_IF_NOT_EXISTS( quickFindBar, "ReplaceHistory" );
+    
+    JSONElement arr = quickFindBar.namedObject("ReplaceHistory");
+    wxArrayString items = arr.toArrayString();
+    
+    // Update the array
+    int where = items.Index(str);
+    if ( where != wxNOT_FOUND ) {
+        items.RemoveAt(where);
+        items.Insert(str, 0);
+        
+    } else {
+        // remove overflow items if needed
+        if ( items.GetCount() > 20 ) {
+            // remove last item
+            items.RemoveAt( items.GetCount() - 1);
+        }
+        items.Insert(str, 0);
+    }
+    
+    quickFindBar.removeProperty( "ReplaceHistory" );
+    quickFindBar.addProperty("ReplaceHistory", items);
+    Save();
+}
+
+void clConfig::AddQuickFindSearchItem(const wxString& str)
+{
+    ADD_OBJ_IF_NOT_EXISTS( m_root->toElement(), "QuickFindBar" );
+    
+    JSONElement quickFindBar = m_root->toElement().namedObject("QuickFindBar");
+    ADD_ARR_IF_NOT_EXISTS( quickFindBar, "SearchHistory" );
+    
+    JSONElement arr = quickFindBar.namedObject("SearchHistory");
+    wxArrayString items = arr.toArrayString();
+    
+    // Update the array
+    int where = items.Index(str);
+    if ( where != wxNOT_FOUND ) {
+        items.RemoveAt(where);
+        items.Insert(str, 0);
+        
+    } else {
+        // remove overflow items if needed
+        if ( items.GetCount() > 20 ) {
+            // remove last item
+            items.RemoveAt( items.GetCount() - 1);
+        }
+        items.Insert(str, 0);
+    }
+
+    quickFindBar.removeProperty( "SearchHistory" );
+    quickFindBar.addProperty("SearchHistory", items);
+    Save();
+}
+
+wxArrayString clConfig::GetQuickFindReplaceItems() const
+{
+    ADD_OBJ_IF_NOT_EXISTS( m_root->toElement(), "QuickFindBar" );
+    JSONElement quickFindBar = m_root->toElement().namedObject("QuickFindBar");
+    ADD_ARR_IF_NOT_EXISTS( quickFindBar, "ReplaceHistory" );
+    return quickFindBar.namedObject("ReplaceHistory").toArrayString();
+}
+
+wxArrayString clConfig::GetQuickFindSearchItems() const
+{
+    ADD_OBJ_IF_NOT_EXISTS( m_root->toElement(), "QuickFindBar" );
+    JSONElement quickFindBar = m_root->toElement().namedObject("QuickFindBar");
+    ADD_ARR_IF_NOT_EXISTS( quickFindBar, "SearchHistory" );
+    return quickFindBar.namedObject("SearchHistory").toArrayString();
 }

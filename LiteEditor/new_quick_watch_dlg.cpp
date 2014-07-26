@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : new_quick_watch_dlg.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include <wx/xrc/xmlres.h>
 #include "editor_config.h"
 #include "simpletable.h"
@@ -37,11 +62,11 @@ DisplayVariableDlg::DisplayVariableDlg( wxWindow* parent)
     WindowAttrManager::Load(this, "DebuggerTooltip", NULL);
     m_timer2 = new wxTimer(this);
     m_mousePosTimer = new wxTimer(this);
-	
-	if (GetSize().x < 100 || GetSize().y < 100 ) {
-		SetSize( wxRect(GetPosition(), wxSize(100, 100) ) );
-	}
-	
+
+    if (GetSize().x < 100 || GetSize().y < 100 ) {
+        SetSize( wxRect(GetPosition(), wxSize(100, 100) ) );
+    }
+
     Connect(m_timer2->GetId(),        wxEVT_TIMER, wxTimerEventHandler(DisplayVariableDlg::OnTimer2), NULL, this);
     Connect(m_mousePosTimer->GetId(), wxEVT_TIMER, wxTimerEventHandler(DisplayVariableDlg::OnCheckMousePosTimer), NULL, this);
     m_panelStatusBar->Connect(wxEVT_MOUSE_CAPTURE_LOST, wxMouseCaptureLostEventHandler(DisplayVariableDlg::OnCaptureLost), NULL, this);
@@ -392,7 +417,7 @@ void DisplayVariableDlg::OnMenuSelection(wxCommandEvent& e)
         } else if (e.GetId() == XRCID("tip_copy_value")) {
             wxString itemText = m_treeCtrl->GetItemText(item);
             itemText = itemText.AfterFirst(wxT('='));
-            CopyToClipboard( itemText );
+            CopyToClipboard( itemText.Trim().Trim(true) );
 
         } else if (e.GetId() == XRCID("edit_item")) {
             DoEditItem(item);

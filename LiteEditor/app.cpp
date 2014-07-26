@@ -4,7 +4,7 @@
 // copyright            : (C) 2008 by Eran Ifrah
 // file name            : app.cpp
 //
-// ------------------------------------------------------------------------- 
+// -------------------------------------------------------------------------
 // A
 //              _____           _      _     _ _
 //             /  __ \         | |    | |   (_) |
@@ -22,7 +22,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
- 
+
 #include "precompiled_header.h"
 #include "cl_registry.h"
 #include "file_logger.h"
@@ -48,6 +48,9 @@
 #include "cl_config.h"
 #include "globals.h"
 #include <CompilerLocatorMinGW.h>
+#include <wx/regex.h>
+#include "CompilerLocatorCygwin.h"
+#include "ColoursAndFontsManager.h"
 
 #define __PERFORMANCE
 #include "performance.h"
@@ -407,6 +410,7 @@ bool CodeLiteApp::OnInit()
         wxMkdir(homeDir + wxT("/tabgroups/"));
     }
 
+
     wxString installPath( MacGetBasePath() );
     ManagerST::Get()->SetInstallDir( installPath );
     //copy the settings from the global location if needed
@@ -484,6 +488,8 @@ bool CodeLiteApp::OnInit()
         CL_ERROR(wxT("Failed to load configuration file: %s/config/codelite.xml"), wxGetCwd().c_str());
         return false;
     }
+
+    ColoursAndFontsManager::Get().Load();
 
 #ifdef __WXGTK__
     bool redirect = clConfig::Get().Read("RedirectLogOutput", true);
@@ -582,13 +588,9 @@ bool CodeLiteApp::OnInit()
     wxString newpath;
     wxGetEnv(wxT("PATH"), &newpath);
 
-    // Don't show the splash screen when opening codelite to view
-    // a file, this is done to reduce the load time
-//    if(parser.GetParamCount() > 0)
-//        showSplash = false;
-    
-    //CompilerLocatorMinGW mg;
-    //mg.Locate();
+    // If running under Cygwin terminal, adjust the environment variables
+    AdjustPathForCygwinIfNeeded();
+
     // Create the main application window
     clMainFrame::Initialize( parser.GetParamCount() == 0 );
     m_pMainFrame = clMainFrame::Get();
@@ -840,19 +842,60 @@ void CodeLiteApp::DoCopyGdbPrinters()
     ::CopyDir(printersInstallDir.GetFullPath(), targetDir.GetFullPath());
 }
 
-//void CodeLiteApp::OnAppAcitvated(wxActivateEvent& e)
-//{
-//    CodeCompletionBox::Get().CancelTip();
-//    if(e.GetActive()) {
-//
-//        if(clMainFrame::Get()) {
-//            SetTopWindow(clMainFrame::Get());
-//        }
-//
-//        if(ManagerST::Get()->IsWorkspaceOpen() && !ManagerST::Get()->IsWorkspaceClosing()) {
-//            // Retag the workspace the light way
-//            ManagerST::Get()->RetagWorkspace(TagsManager::Retag_Quick_No_Scan);
-//        }
-//
-//    }
-//}
+void CodeLiteApp::AdjustPathForCygwinIfNeeded()
+{
+#ifdef __WXMSW__
+    CL_DEBUG("AdjustPathForCygwinIfNeeded called");
+    if ( !::clIsCygwinEnvironment() ) {
+        CL_DEBUG("Not running under Cygwin - nothing be done");
+        return;
+    }
+
+    wxString cygwinRootDir;
+    CompilerLocatorCygwin cygwin;
+    if ( cygwin.Locate() ) {
+        // this will return the base folder for cygwin (e.g. D:\cygwin)
+        cygwinRootDir = (*cygwin.GetCompilers().begin())->GetInstallationPath();
+    }
+
+    // Running under Cygwin
+    // Adjust the PATH environment variable
+    wxString pathEnv;
+    ::wxGetEnv("PATH", &pathEnv);
+
+    // Always add the default paths
+    wxArrayString paths;
+    if ( !cygwinRootDir.IsEmpty() ) {
+        wxFileName cygwinBinFolder(cygwinRootDir, "" );
+        cygwinBinFolder.AppendDir("bin");
+        paths.Add(cygwinBinFolder.GetPath());
+    }
+
+    paths.Add("/usr/local/bin");
+    paths.Add("/usr/bin");
+    paths.Add("/usr/sbin");
+    paths.Add("/bin");
+    paths.Add("/sbin");
+
+    // Append the paths from the environment variables
+    wxArrayString userPaths = ::wxStringTokenize(pathEnv, ";", wxTOKEN_STRTOK);
+    paths.insert(paths.end(), userPaths.begin(), userPaths.end());
+
+    wxString fixedPath;
+    for(size_t i=0; i<paths.GetCount(); ++i) {
+        wxString &curpath = paths.Item(i);
+        static wxRegEx reCygdrive("/cygdrive/([A-Za-z])");
+        if ( reCygdrive.Matches(curpath) ) {
+            // Get the drive letter
+            wxString volume = reCygdrive.GetMatch(curpath, 1);
+            volume << ":";
+            reCygdrive.Replace( &curpath, volume );
+        }
+
+        fixedPath << curpath << ";";
+    }
+
+    CL_DEBUG("Setting PATH environment variable to:\n%s", fixedPath);
+    ::wxSetEnv("PATH", fixedPath);
+#endif
+}

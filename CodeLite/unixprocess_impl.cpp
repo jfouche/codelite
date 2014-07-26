@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : unixprocess_impl.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "unixprocess_impl.h"
 #include "file_logger.h"
 
@@ -302,7 +327,8 @@ bool UnixProcessImpl::Read(wxString& buff)
 
     int errCode(0);
     errno = 0;
-
+    
+    buff.Clear();
     int rc = select(GetReadHandle()+1, &rs, NULL, NULL, &timeout);
     errCode = errno;
     if ( rc == 0 ) {
@@ -314,7 +340,6 @@ bool UnixProcessImpl::Read(wxString& buff)
         char buffer[BUFF_SIZE+1]; // our read buffer
         memset(buffer, 0, sizeof(buffer));
         if(read(GetReadHandle(), buffer, sizeof(buffer)) > 0) {
-            buff.Empty();
             buffer[BUFF_SIZE] = 0; // allways place a terminator
 
             // Remove coloring chars from the incomnig buffer
@@ -326,7 +351,7 @@ bool UnixProcessImpl::Read(wxString& buff)
                 convBuff = wxString::From8BitData(buffer);
             }
 
-            buff.Append( convBuff );
+            buff = convBuff;
             return true;
         }
         return false;
@@ -351,7 +376,7 @@ bool UnixProcessImpl::Write(const wxString& buff)
     return bytes == (int)tmpbuf.length();
 }
 
-IProcess* UnixProcessImpl::Execute(wxEvtHandler* parent, const wxString& cmd, IProcessCreateFlags flags, const wxString& workingDirectory, IProcessCallback *cb)
+IProcess* UnixProcessImpl::Execute(wxEvtHandler* parent, const wxString& cmd, size_t flags, const wxString& workingDirectory, IProcessCallback *cb)
 {
     wxUnusedVar(flags);
 
@@ -415,9 +440,12 @@ IProcess* UnixProcessImpl::Execute(wxEvtHandler* parent, const wxString& cmd, IP
         proc->m_callback = cb;
         proc->SetReadHandle  (master);
         proc->SetWriteHandler(master);
-
         proc->SetPid( rc );
-        proc->StartReaderThread();
+        proc->m_flags = flags; // Keep the creation flags
+        
+        if ( !(proc->m_flags & IProcessCreateSync) ) {
+            proc->StartReaderThread();
+        }
         return proc;
     }
 }

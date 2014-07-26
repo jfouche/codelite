@@ -16,6 +16,8 @@
 #include <wx/dataview.h>
 #include <wx/pen.h>
 #include <wx/aui/auibar.h>
+#include <map>
+#include <wx/menu.h>
 #include <wx/toolbar.h>
 #include "lldbbreakpointmodel.h"
 #include <wx/dialog.h>

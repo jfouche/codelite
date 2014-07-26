@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : LLDBConnector.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "LLDBConnector.h"
 #include "LLDBNetworkListenerThread.h"
 #include "LLDBEvent.h"
@@ -13,6 +38,7 @@
 #include "LLDBSettings.h"
 #include "globals.h"
 #include "LLDBRemoteHandshakePacket.h"
+#include "cl_standard_paths.h"
 
 #ifndef __WXMSW__
 #   include <sys/wait.h>
@@ -385,6 +411,7 @@ void LLDBConnector::Start(const LLDBCommand& runCommand)
     LLDBCommand startCommand;
     startCommand.SetExecutable( runCommand.GetExecutable() );
     startCommand.SetCommandType( kCommandStart );
+    startCommand.SetWorkingDirectory( runCommand.GetWorkingDirectory() );
     
     // send the settings as well
     LLDBSettings settings;
@@ -466,17 +493,13 @@ bool LLDBConnector::LaunchLocalDebugServer()
     
 #ifdef __WXMAC__
     // set the LLDB_DEBUGSERVER_PATH env variable
-    wxFileName debugserver(wxStandardPaths::Get().GetExecutablePath());
-    debugserver.SetFullName( "debugserver" );
-    debugserver.RemoveLastDir();
-    debugserver.AppendDir("SharedSupport");
+    wxFileName debugserver( clStandardPaths::Get().GetBinaryFullPath("debugserver") );
     om["LLDB_DEBUGSERVER_PATH"] = debugserver.GetFullPath();
 #endif
 
     EnvSetter es(NULL, &om);
     
-    wxFileName fnCodeLiteLLDB(wxStandardPaths::Get().GetExecutablePath());
-    fnCodeLiteLLDB.SetFullName( "codelite-lldb" );
+    wxFileName fnCodeLiteLLDB( clStandardPaths::Get().GetBinaryFullPath("codelite-lldb") );
     
     wxString command;
     command << fnCodeLiteLLDB.GetFullPath() << " -s " << GetDebugServerPath();

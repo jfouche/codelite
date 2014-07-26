@@ -78,6 +78,9 @@ AbbreviationsSettingsBase::AbbreviationsSettingsBase(wxWindow* parent, wxWindowI
     bSizer5->Add(m_staticText1, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
     
     m_textCtrlName = new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(-1, -1), 0);
+    #if wxVERSION_NUMBER >= 3000
+    m_textCtrlName->SetHint(wxT(""));
+    #endif
     
     bSizer5->Add(m_textCtrlName, 1, wxALL|wxEXPAND, 5);
     
@@ -123,6 +126,7 @@ AbbreviationsSettingsBase::AbbreviationsSettingsBase(wxWindow* parent, wxWindowI
     }
     m_stc->SetWrapMode(0);
     m_stc->SetIndentationGuides(0);
+    m_stc->SetEOLMode(2);
     m_stc->SetKeyWords(0, wxT(""));
     m_stc->SetKeyWords(1, wxT(""));
     m_stc->SetKeyWords(2, wxT(""));

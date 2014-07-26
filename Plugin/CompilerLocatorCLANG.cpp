@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : CompilerLocatorCLANG.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "CompilerLocatorCLANG.h"
 #include <globals.h>
 #include "procutils.h"
@@ -152,16 +177,32 @@ void CompilerLocatorCLANG::AddTools(CompilerPtr compiler, const wxString &instal
 
     toolFile.SetName("clang");
     AddTool(compiler, "CC", toolFile.GetFullPath());
-
+    
+    // Add the archive tool
     toolFile.SetName("llvm-ar");
-    AddTool(compiler, "AR", toolFile.GetFullPath(), "rcu");
+    if ( toolFile.FileExists() ) {
+        AddTool(compiler, "AR", toolFile.GetFullPath(), "rcu");
+        
+    } else {
+        toolFile.SetName("ar");
+        AddTool(compiler, "AR", toolFile.GetFullPath(), "rcu");
+    }
+    
 #ifdef __WXMSW__
     AddTool(compiler, "ResourceCompiler", "windres.exe");
 #else
     AddTool(compiler, "ResourceCompiler", "");
 #endif
+
+    // Add the assembler tool
     toolFile.SetName("llvm-as");
-    AddTool(compiler, "AS", toolFile.GetFullPath());
+    if ( toolFile.FileExists() ) {
+        AddTool(compiler, "AS", toolFile.GetFullPath());
+        
+    } else {
+        toolFile.SetName("as");
+        AddTool(compiler, "AS", toolFile.GetFullPath());
+    }
 
     wxString makeExtraArgs;
     if ( wxThread::GetCPUCount() > 1 ) {

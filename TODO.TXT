@@ -1,2 +1,2 @@
 - Allow multiple file open in open-resource dialog
-- New 'Find Bar'
+- Allow open <file>:<line> in open-resource dialog

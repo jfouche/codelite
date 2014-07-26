@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : cl_standard_paths.h
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #ifndef CLSTANDARDPATHS_H
 #define CLSTANDARDPATHS_H
 
@@ -38,6 +63,31 @@ public:
         Mac: appinfo.app/Contents/SharedSupport bundle subdirectory
      */
     wxString GetDataDir() const;
+
+    // Under MSW, OSX and GTK the bin folder is the same directory as the
+    // main executable (codelite{.exe})
+    // Typically this function returns:
+    // MSW: /path/to/codelite.exe
+    // GTK: /usr/bin
+    // OSX: /path/to/codelite.app/Contents/MacOS
+    wxString GetBinFolder() const;
+
+    /**
+     * @brief return the full path for an executable. This function
+     * usually returns: GetBinFolder() + "/" + toolname + ".exe"
+     * @note the .exe and "/" are platform dependant
+     */
+    wxString GetBinaryFullPath(const wxString &toolname) const;
+    
+    /**
+     * @brief return the user lexers directory
+     */
+    wxString GetUserLexersDir() const;
+
+    /**
+     * @brief return the default (installation) lexers directory
+     */
+    wxString GetLexersDir() const;
 };
 
 #endif // CLSTANDARDPATHS_H

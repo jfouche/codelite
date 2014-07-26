@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : open_resource_dialog.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "open_resource_dialog.h"
 #include "bitmap_loader.h"
 #include <wx/imaglist.h>
@@ -14,6 +39,7 @@
 #include "imanager.h"
 #include "windowattrmanager.h"
 #include <vector>
+#include <codelite_events.h>
 
 BEGIN_EVENT_TABLE(OpenResourceDialog, OpenResourceDialogBase)
     EVT_TIMER(XRCID("OR_TIMER"), OpenResourceDialog::OnTimer)
@@ -292,6 +318,13 @@ void OpenResourceDialog::Clear()
 
 void OpenResourceDialog::OpenSelection(const OpenResourceDialogItemData& selection, IManager* manager)
 {
+    // send event to the plugins to see if they want
+    // to open this file
+    wxString file_path = selection.m_file;
+    if (SendCmdEvent(wxEVT_TREE_ITEM_FILE_ACTIVATED, &file_path)) {
+        return;
+    }
+    
     if ( manager && manager->OpenFile(selection.m_file, wxEmptyString, selection.m_line) ) {
         IEditor *editor = manager->GetActiveEditor();
         if ( editor && !selection.m_name.IsEmpty() && !selection.m_pattern.IsEmpty()) {

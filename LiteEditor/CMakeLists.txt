@@ -42,7 +42,9 @@ if (UNIX AND NOT APPLE)
     endif()
 
 endif (UNIX AND NOT APPLE)
+if (NOT MINGW)
 add_definitions(-fPIC)
+endif (NOT MINGW)
 
 if ( USE_PCH )
     add_definitions(-include "${CL_PCH_FILE}")
@@ -59,12 +61,19 @@ if ( USE_CLANG )
 endif( USE_CLANG )
 
 # Add RPATH
+if (UNIX)
 set (LINKER_OPTIONS -Wl,-rpath,"${PLUGINS_DIR}")
+endif (UNIX)
 
 FILE(GLOB SRCS "*.cpp")
 
 # Define the output
-add_executable(codelite ${SRCS})
+if (MINGW)
+    add_definitions(-DWINDRES)
+    add_executable(codelite ${SRCS} code_parser.rc)
+else()
+    add_executable(codelite ${SRCS})
+endif()
 
 set( ADDITIONAL_LIBRARIES "" )
 
@@ -96,12 +105,24 @@ endif()
 set (EXE_PERM OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
 
 install(TARGETS codelite DESTINATION ${CL_PREFIX}/bin PERMISSIONS ${EXE_PERM})
+if (UNIX)
 install(FILES ${CL_SRC_ROOT}/Runtime/codelite_exec DESTINATION ${CL_PREFIX}/bin PERMISSIONS ${EXE_PERM})
 install(FILES ${CL_SRC_ROOT}/Runtime/codelite_fix_files DESTINATION ${CL_PREFIX}/bin PERMISSIONS ${EXE_PERM})
 install(FILES ${CL_SRC_ROOT}/Runtime/codelite_kill_children DESTINATION ${CL_PREFIX}/bin PERMISSIONS ${EXE_PERM})
 install(FILES ${CL_SRC_ROOT}/Runtime/codelite_xterm DESTINATION ${CL_PREFIX}/bin PERMISSIONS ${EXE_PERM})
 install(FILES ${CL_SRC_ROOT}/Runtime/clg++ DESTINATION ${CL_PREFIX}/bin PERMISSIONS ${EXE_PERM})
 install(FILES ${CL_SRC_ROOT}/Runtime/clgcc DESTINATION ${CL_PREFIX}/bin PERMISSIONS ${EXE_PERM})
+endif (UNIX)
+
+# Install clang-format
+# We name it codelite-clang-format to avoid collision with any official installation
+if ( UNIX AND NOT APPLE )
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        install(FILES ${CL_SRC_ROOT}/sdk/clang/Linux/x86_64/bin/codelite-clang-format DESTINATION ${CL_PREFIX}/bin PERMISSIONS ${EXE_PERM})
+    else()
+        install(FILES ${CL_SRC_ROOT}/sdk/clang/Linux/i386/bin/codelite-clang-format DESTINATION ${CL_PREFIX}/bin PERMISSIONS ${EXE_PERM})
+    endif()
+endif()
 
 ## codelite icons
 install(FILES ${CL_SRC_ROOT}/Runtime/codelite-icons-fresh-farm.zip DESTINATION ${CL_PREFIX}/share/codelite)
@@ -119,7 +140,9 @@ install(FILES ${CL_SRC_ROOT}/Runtime/config/accelerators.conf.default DESTINATIO
 install(FILES ${CL_SRC_ROOT}/Runtime/config/build_settings.xml.default DESTINATION ${CL_PREFIX}/share/codelite/config)
 install(FILES ${CL_SRC_ROOT}/Runtime/config/debuggers.xml.gtk DESTINATION ${CL_PREFIX}/share/codelite/config RENAME debuggers.xml.default)
 install(FILES ${CL_SRC_ROOT}/Runtime/config/codelite.xml.default.gtk DESTINATION ${CL_PREFIX}/share/codelite/config RENAME codelite.xml.default)
+if ( UNIX AND NOT APPLE )
 install(FILES ${CL_SRC_ROOT}/Runtime/codelite.desktop DESTINATION ${CL_PREFIX}/share/applications)
+endif (  UNIX AND NOT APPLE )
 
 install(
   DIRECTORY ${CL_SRC_ROOT}/Runtime/plugins/resources

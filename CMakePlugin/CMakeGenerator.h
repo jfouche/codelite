@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : CMakeGenerator.h
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 /* ************************************************************************ */
 /*                                                                          */
 /* CMakePlugin for Codelite                                                 */
@@ -54,20 +79,19 @@ public:
      *
      * @param workspace Exported workspace.
      */
-    static void Generate(Workspace* workspace);
+    static bool Generate(Workspace* workspace);
 
 
     /**
-     * @brief Generate CMakeLists.txt file for given project and
-     * configuration.
+     * @brief Generate CMakeLists.txt file for given project 
+     * This function always generte it for the build configuration that matches
+     * to the workspace configuration
      *
      * @param project       Project.
-     * @param configuration Build configuration.
-     * @param compiler      Optional compiler.
+     * @param topProject    When set to true, generator will generate CMakeLists.txt file
+     * for all dependencies as well
      */
-    static void Generate(ProjectPtr project,
-                         BuildConfigPtr configuration,
-                         CompilerPtr compiler = NULL);
+    static bool Generate(ProjectPtr project, bool topProject);
 
 };
 

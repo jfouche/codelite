@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : codelite_events.h
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #ifndef CODELITE_EVENTS_H
 #define CODELITE_EVENTS_H
 
@@ -484,7 +509,8 @@
 // If a plugin wishes to override codelite's default debugger (gdb)
 // it simply needs to connect the event and avoid calling 'event.Skip();
 //----------------------------------------------------------------------
-#define wxEVT_DBG_UI_START_OR_CONT              3547 // Start the debugger or continue
+#define wxEVT_DBG_UI_START                      3547 // Start
+#define wxEVT_DBG_UI_CONTINUE                   3548 // Continue
 #define wxEVT_DBG_UI_STOP                       3549 // Stop the debugger
 #define wxEVT_DBG_UI_STEP_IN                    3550 // Step into function
 #define wxEVT_DBG_UI_STEP_OUT                   3551 // Step out of current frame
@@ -550,6 +576,44 @@
 // save it as well
 // event type: clCommandEvent
 #define wxEVT_SAVE_ALL_EDITORS 3610
+
+//----------------------------------------------------------------------
+// Source Code Format events
+//----------------------------------------------------------------------
+
+// Format an input string
+// Event type: clSourceFormatEvent
+// Use clSourceFormatEvent.SetInputString() / GetFormattedString()
+// to get and set the string to format
+// Note that the plugin should be "smart" enough to indent the file
+// by its type
+// Call event.Skip(false) to mark this event as completed
+#define wxEVT_FORMAT_STRING    3620
+
+// Format a file
+// Event type: clSourceFormatEvent
+// Use event.SetFileName() to pass the file name to be formatted
+// Note that the plugin should be "smart" enough to indent the file
+// by its type
+// Call event.Skip(false) to mark this event as completed
+#define wxEVT_FORMAT_FILE      3621
+
+//----------------------------------------------------------------------
+// Context menu events
+//----------------------------------------------------------------------
+
+// codelite is about to show the context menu for the
+// editor
+// Event type: clContextMenuEvent
+#define wxEVT_CONTEXT_MENU_EDITOR_SHOWING 3630
+
+// editor context menu was dismissed
+// Event type: clContextMenuEvent
+#define wxEVT_CONTEXT_MENU_EDITOR_DISMISSED 3631
+
+// User modified the colours and font of the IDE
+// event type: clCommandEvent
+#define wxEVT_CMD_COLOURS_FONTS_UPDATED  3640
 
 #endif // CODELITE_EVENTS_H
 

@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : fileextmanager.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "fileextmanager.h"
 #include <wx/filename.h>
 
@@ -21,8 +46,6 @@ void FileExtManager::Init()
         m_map[wxT("hxx") ] = TypeHeader;
         m_map[wxT("hh")  ] = TypeHeader;
         m_map[wxT("h++") ] = TypeHeader;
-        m_map[wxT("inc") ] = TypeHeader;
-        m_map[wxT("incl")] = TypeHeader;
         m_map[wxT("inl") ] = TypeHeader;
 
         m_map[wxT("rc")  ] = TypeResource;
@@ -47,6 +70,7 @@ void FileExtManager::Init()
         m_map[wxT("xrc")] = TypeXRC;
         m_map[wxT("css")] = TypeCSS;
         m_map[wxT("js")]  = TypeJS;
+        m_map[wxT("javascript")]  = TypeJS;
         m_map[wxT("py")]  = TypePython;
 
         m_map[wxT("exe")] = TypeExe;
@@ -88,7 +112,7 @@ void FileExtManager::Init()
         m_map[wxT("sql")]     = TypeSQL;
         m_map[wxT("phpwsp")]  = TypeWorkspacePHP;
         m_map[wxT("phptags")] = TypeWorkspacePHPTags;
-        
+
         m_map["s"] = TypeAsm;
     }
 }
@@ -115,4 +139,16 @@ FileExtManager::FileType FileExtManager::GetType(const wxString& filename, FileE
         return defaultType;
     }
     return iter->second;
+}
+
+bool FileExtManager::IsCxxFile(const wxString& filename)
+{
+    FileType ft = GetType(filename);
+    return ft == TypeSourceC || ft == TypeSourceCpp || ft == TypeHeader;
+}
+
+bool FileExtManager::IsJavascriptFile(const wxString& filename)
+{
+    FileType ft = GetType(filename);
+    return ft == TypeJS;
 }

@@ -22,10 +22,11 @@
 #include <wx/arrstr.h>
 #include <wx/pen.h>
 #include <wx/aui/auibar.h>
+#include <map>
+#include <wx/menu.h>
 #include <wx/toolbar.h>
 #include <wx/imaglist.h>
 #include <wx/bitmap.h>
-#include <map>
 #include <wx/icon.h>
 #include <wx/bannerwindow.h>
 #include <wx/commandlinkbutton.h>
@@ -216,7 +217,7 @@ public:
 
 class WorkspaceTabBase : public wxPanel
 {
-protected:
+public:
     enum {
         ID_TOOL_ACTIVE_PROJECT_SETTINGS = 1001,
         ID_TOOL_COLLAPSE_ALL = 1002,

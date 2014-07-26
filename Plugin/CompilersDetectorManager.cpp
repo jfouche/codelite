@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : CompilersDetectorManager.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "CompilersDetectorManager.h"
 #include "CompilerLocatorMinGW.h"
 #include "CompilerLocatorGCC.h"
@@ -6,6 +31,7 @@
 #include "CompilerLocatorMSVC11.h"  // VS 2012
 #include "CompilerLocatorMSVC12.h"  // VS 2013
 #include "CompilerLocatorCLANG.h"
+#include "CompilerLocatorCygwin.h"
 
 CompilersDetectorManager::CompilersDetectorManager()
 {
@@ -16,6 +42,7 @@ CompilersDetectorManager::CompilersDetectorManager()
     m_detectors.push_back( ICompilerLocator::Ptr_t(new CompilerLocatorMSVC10()) );
     m_detectors.push_back( ICompilerLocator::Ptr_t(new CompilerLocatorMSVC11()) );
     m_detectors.push_back( ICompilerLocator::Ptr_t(new CompilerLocatorMSVC12()) );
+    m_detectors.push_back( ICompilerLocator::Ptr_t(new CompilerLocatorCygwin()) );
     
 #elif defined(__WXGTK__)
     m_detectors.push_back( ICompilerLocator::Ptr_t(new CompilerLocatorGCC()) );

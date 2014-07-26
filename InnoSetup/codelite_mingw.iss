@@ -54,7 +54,7 @@ Source: "D:\src\wxWidgets-3.0.1\lib\gcc_dll\wxmsw30u_stc_gcc_cl.dll";      DestD
 Source: "D:\src\wxWidgets-3.0.1\lib\gcc_dll\wxmsw30u_propgrid_gcc_cl.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: Editor
 Source: "D:\src\wxWidgets-3.0.1\lib\gcc_dll\wxmsw30u_webview_gcc_cl.dll";  DestDir: "{app}"; Flags: ignoreversion; Components: Editor
 Source: "D:\src\wxWidgets-3.0.1\lib\gcc_dll\wxmsw30u_ribbon_gcc_cl.dll";   DestDir: "{app}"; Flags: ignoreversion; Components: Editor
-Source: "D:\src\wxWidgets-3.0.1\lib\gcc_dll\wxrc.exe";                     DestDir: "{app}"; Flags: ignoreversion; Components: Editor
+
 
 Source: "..\InnoSetup\license.txt"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\sdk\wxconfig\wx-config.exe"; DestDir: "{app}"; Components: Editor
@@ -110,8 +110,10 @@ Source: "..\lib\gcc_lib\libcodeliteu.dll"; DestDir: "{app}"; Flags: ignoreversio
 Source: "..\lib\gcc_lib\libplugin_sdku.dll"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\lib\gcc_lib\libdatabaselayersqliteu.dll"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\lib\gcc_lib\libwxshapeframeworku.dll"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
-Source: "..\sdk\clang\lib\liblibclang.dll"; DestDir: "{app}\"; Flags: ignoreversion ; Components: Editor
+Source: "..\sdk\clang\lib\libclang.dll"; DestDir: "{app}\"; Flags: ignoreversion ; Components: Editor
+Source: "..\sdk\clang\lib\clang-format.exe"; DestDir: "{app}\"; Flags: ignoreversion ; Components: Editor
 Source: "..\sdk\libssh\lib\libssh.dll"; DestDir: "{app}\"; Flags: ignoreversion ; Components: Editor
+Source: "..\sdk\clang\lib\clang-format.exe"; DestDir: "{app}\"; DestName: "codelite-clang-format.exe"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\plugins\resources\*"; DestDir: "{app}\plugins\resources\"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\codelite_indexer.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\codelite_launcher.exe"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor

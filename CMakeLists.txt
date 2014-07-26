@@ -53,9 +53,11 @@ set( WITH_SFTP 1 )
 
 if ( UNIX )
     execute_process(COMMAND pwd OUTPUT_VARIABLE BUILD_DIRECTORY OUTPUT_STRIP_TRAILING_WHITESPACE)
-else ( UNIX)
+elseif(MINGW)
+    set ( BUILD_DIRECTORY ${CMAKE_BINARY_DIR} )
+else()
     set ( BUILD_DIRECTORY $ENV{CD} )
-endif ( UNIX )
+endif()
 
 message( "-- BUILD_DIRECTORY is set to ${BUILD_DIRECTORY}")
 
@@ -79,14 +81,14 @@ unset(WITH_WXPATH CACHE)
 
 set( CL_WX_CONFIG wx-config )
 
-if (UNIX)
+if (UNIX OR MINGW)
     execute_process(COMMAND which ${CL_WX_CONFIG} OUTPUT_VARIABLE WX_TOOL OUTPUT_STRIP_TRAILING_WHITESPACE)
     if (NOT WX_TOOL)
         message(FATAL_ERROR
 "\nNo functional wx_config script was found in your PATH.\nIs the wxWidgets development package installed?"
              )
     else()
-        execute_process(COMMAND ${WX_TOOL} --version OUTPUT_VARIABLE WX_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+        execute_process(COMMAND sh ${WX_TOOL} --version OUTPUT_VARIABLE WX_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
         string(SUBSTRING "${WX_VERSION}" "0" "1" wxMAJOR_VERSION)
         string(SUBSTRING "${WX_VERSION}" "2" "1" wxMINOR_VERSION)
         string(SUBSTRING "${WX_VERSION}" "4" "1" wxRELEASE_NUMBER)
@@ -95,16 +97,19 @@ if (UNIX)
 "\nI'm afraid your wxWidgets version is too old.\nBuilding CodeLite requires at least wxWidgets-3.0.0"
              )
         endif()
+        if (MINGW)
+          add_definitions(-D__WXMSW__)
+        endif (MINGW)
     endif()
     message("-- wx-config used is: ${WX_TOOL}")
     message("-- wxWidgets version is: ${WX_VERSION}")
-    if (NOT APPLE)
+    if (NOT APPLE AND NOT MINGW)
         # Is the wx we are using built on gtk2 or 3?
         execute_process(COMMAND ${WX_TOOL} --selected_config OUTPUT_VARIABLE WX_GTK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
         string(SUBSTRING "${WX_GTK_VERSION}" "3" "1" GTK_VERSION)
         message("-- gtk version is: ${GTK_VERSION}")
     endif()
-endif (UNIX)
+endif (UNIX OR MINGW)
 
 ########################################
 ## Override defaults with user input
@@ -143,10 +148,15 @@ endif (ENABLE_SFTP MATCHES 0)
 unset(ENABLE_SFTP CACHE)
 
 if ( WITH_SFTP )
-    if (UNIX AND NOT APPLE )
+    if (UNIX AND NOT APPLE OR MINGW)
         ## Linux
-        find_library(LIBSSH_LIB NAMES libssh.so HINTS /usr/local/lib /usr/lib ${CMAKE_INSTALL_LIBDIR})
-        find_path(LIBSSH_INCLUDE_DIR NAMES libssh.h HINTS /usr/local/include /usr/include PATH_SUFFIXES libssh)
+        if (MINGW)
+            find_library(LIBSSH_LIB NAMES ssh PATH_SUFFIXES lib)
+            find_path(LIBSSH_INCLUDE_DIR NAMES libssh.h PATH_SUFFIXES include/libssh)
+        else()
+            find_library(LIBSSH_LIB NAMES libssh.so HINTS /usr/local/lib /usr/lib ${CMAKE_INSTALL_LIBDIR})
+            find_path(LIBSSH_INCLUDE_DIR NAMES libssh.h HINTS /usr/local/include /usr/include PATH_SUFFIXES libssh)
+        endif()
         string(FIND ${LIBSSH_INCLUDE_DIR} "NOTFOUND" LIBSSH_NOT_FOUND_POS)
         if ( LIBSSH_NOT_FOUND_POS GREATER -1 )
             if (UNIX AND NOT APPLE )
@@ -159,12 +169,12 @@ if ( WITH_SFTP )
             message(FATAL_ERROR "-- Could not find libssh")
         endif( LIBSSH_NOT_FOUND_POS GREATER -1 )
 
-    else ( UNIX AND NOT APPLE )
+    else ( UNIX AND NOT APPLE OR MINGW )
         ## OSX
         set( LIBSSH_INCLUDE_DIR ${CL_SRC_ROOT}/sdk/libssh/include)
         set( LIBSSH_LIB ${CL_SRC_ROOT}/sdk/libssh/lib/osx/libssh.a)
         include_directories(${LIBSSH_INCLUDE_DIR})
-    endif ( UNIX AND NOT APPLE )
+    endif ( UNIX AND NOT APPLE OR MINGW )
     message("-- LIBSSH_LIB is set to ${LIBSSH_LIB}")
 endif ( WITH_SFTP )
 
@@ -325,7 +335,7 @@ if ( MAKE_DEB )
 
     set(CPACK_GENERATOR                   "DEB")
     set(CPACK_PACKAGE_NAME                "codelite")
-    set(CPACK_PACKAGE_VERSION             "6.0")
+    set(CPACK_PACKAGE_VERSION             "6.1")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER   "Eran Ifrah <eran.ifrah@gmail.com>") #required
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "codelite IDE for C/C++")
     set(CPACK_DEBIAN_PACKAGE_SECTION      "devel")
@@ -345,6 +355,16 @@ if (APPLE)
   set( CLANG_LIBRARY "-L${CL_SRC_ROOT}/sdk/clang/lib -lclang" )
   set( CLANG_BINARY "${CL_SRC_ROOT}/sdk/clang/lib/libclang.dylib")
 
+elseif (MINGW)
+  find_package(LLVM)
+  if (LLVM_FOUND)
+    find_package(Clang)
+    if (CLANG_FOUND)
+        set( CLANG_INCLUDE "${CLANG_INCLUDE_DIRS}" )
+        set( CLANG_LIBRARY "${CLANG_LDFLAGS}")
+        set( CLANG_BINARY "")
+    endif ()
+  endif ()
 elseif (UNIX)
   set( CLANG_INCLUDE "${CL_SRC_ROOT}/sdk/clang/Linux/${ARCH_NAME}/include" )
   set( CLANG_LIBRARY "-L${CL_SRC_ROOT}/sdk/clang/Linux/${ARCH_NAME}/lib -lclang" )
@@ -406,6 +426,10 @@ unset(WITH_PCH CACHE)
 if ( USE_PCH )
     add_subdirectory(PCH)
 endif ( USE_PCH )
+
+if ( APPLE )
+    add_definitions( -mmacosx-version-min=10.7 )
+endif()
 
 add_subdirectory(sqlite3)
 add_subdirectory(sdk/wxsqlite3)
@@ -471,6 +495,7 @@ add_subdirectory(codelite_echo)
 if (USE_CLANG)
     add_subdirectory(codelite_clang)
 endif(USE_CLANG)
+
 
 ##
 ## Setup the proper dependencies

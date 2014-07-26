@@ -144,11 +144,17 @@ LLDBNewBreakpointDlgBase::LLDBNewBreakpointDlgBase(wxWindow* parent, wxWindowID 
     
     m_textCtrlFile = new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(-1,-1), 0);
     m_textCtrlFile->SetToolTip(_("File name"));
+    #if wxVERSION_NUMBER >= 3000
+    m_textCtrlFile->SetHint(wxT(""));
+    #endif
     
     flexGridSizer41->Add(m_textCtrlFile, 0, wxALL|wxEXPAND|wxALIGN_CENTER_VERTICAL, 5);
     
     m_textCtrlLine = new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(-1,-1), 0);
     m_textCtrlLine->SetToolTip(_("Line number"));
+    #if wxVERSION_NUMBER >= 3000
+    m_textCtrlLine->SetHint(wxT(""));
+    #endif
     
     flexGridSizer41->Add(m_textCtrlLine, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5);
     
@@ -158,6 +164,9 @@ LLDBNewBreakpointDlgBase::LLDBNewBreakpointDlgBase(wxWindow* parent, wxWindowID 
     flexGridSizer41->Add(m_checkBoxFuncName, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5);
     
     m_textCtrlFunctionName = new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(-1,-1), 0);
+    #if wxVERSION_NUMBER >= 3000
+    m_textCtrlFunctionName->SetHint(wxT(""));
+    #endif
     
     flexGridSizer41->Add(m_textCtrlFunctionName, 0, wxALL|wxEXPAND|wxALIGN_CENTER_VERTICAL, 5);
     
@@ -269,7 +278,7 @@ LLDBSettingDialogBase::LLDBSettingDialogBase(wxWindow* parent, wxWindowID id, co
     
     m_pgPropCallStackSize = m_pgMgrDisplayProperties->AppendIn( m_pgProp138,  new wxIntProperty( _("Backtrace frames"), wxPG_LABEL, 100) );
     m_pgPropCallStackSize->SetHelpString(_("Maximum number of frames to show in the callstack window"));
-    
+    m_pgMgrDisplayProperties->GetGrid()->SetSplitterLeft(true);
     m_panel91 = new wxPanel(m_notebook87, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxTAB_TRAVERSAL);
     m_notebook87->AddPage(m_panel91, _("Types"), false);
     
@@ -366,7 +375,7 @@ LLDBSettingDialogBase::LLDBSettingDialogBase(wxWindow* parent, wxWindowID id, co
     
     m_pgPropProxyPort = m_pgMgrAdvanced->AppendIn( m_pgProp169,  new wxIntProperty( _("Port"), wxPG_LABEL, 13610) );
     m_pgPropProxyPort->SetHelpString(_("The port number on which the remote proxy server is accepting connections"));
-    
+    m_pgMgrAdvanced->GetGrid()->SetSplitterLeft(true);
     m_stdBtnSizer79 = new wxStdDialogButtonSizer();
     
     boxSizer77->Add(m_stdBtnSizer79, 0, wxALL|wxALIGN_CENTER_HORIZONTAL, 5);
@@ -466,8 +475,8 @@ LLDBTooltipBase::LLDBTooltipBase(wxWindow* parent,long style)
     m_panel134->SetSizer(boxSizer136);
     
     m_treeCtrl = new wxTreeCtrl(m_panel134, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), wxTR_DEFAULT_STYLE);
-    m_treeCtrl->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOBK));
-    m_treeCtrl->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOTEXT));
+    m_treeCtrl->SetBackgroundColour(wxColour(wxT("rgb(251,234,160)")));
+    m_treeCtrl->SetForegroundColour(wxColour(wxT("rgb(33,33,33)")));
     
     boxSizer136->Add(m_treeCtrl, 1, wxALL|wxEXPAND, 1);
     
@@ -552,6 +561,9 @@ FolderMappingBaseDlg::FolderMappingBaseDlg(wxWindow* parent, wxWindowID id, cons
     
     m_textCtrlRemote = new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(-1,-1), 0);
     m_textCtrlRemote->SetToolTip(_("Remote Folder"));
+    #if wxVERSION_NUMBER >= 3000
+    m_textCtrlRemote->SetHint(wxT(""));
+    #endif
     
     flexGridSizer187->Add(m_textCtrlRemote, 0, wxALL|wxEXPAND, 5);
     

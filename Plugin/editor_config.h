@@ -102,15 +102,6 @@ public:
     }
 };
 
-typedef std::map<wxString, LexerConfPtr> ThemeLexersMap;
-struct LexersInfo {
-    ThemeLexersMap lexers;
-    wxString       filename;
-    wxString       theme;
-    wxString       outputpane_fg_colour;  // Here because they're global to this theme, not per lexor
-    wxString       outputpane_bg_colour;
-};
-
 /**
  * \ingroup LiteEditor
  * \brief EditorConfig a singleton class that manages the liteeditor.xml configuration file
@@ -127,31 +118,22 @@ class WXDLLIMPEXP_SDK EditorConfig : public IConfigTool
     friend class EditorConfigST;
     wxXmlDocument*                      m_doc;
     wxFileName                          m_fileName;
-    std::map<wxString, LexersInfo*>     m_lexers;
     bool                                m_transcation;
     wxString                            m_svnRevision;
     wxString                            m_version;
     wxString                            m_installDir;
-    LexersInfo*                         m_activeThemeLexers;
 
 private:
     bool DoSave() const;
     bool DoLoadDefaultSettings();
 
 public:
-
-    //load lexers again, based on the active theme
-    void LoadLexers(bool loadDefault);
-    wxArrayString GetLexersThemes();
-
     void Init(const wxChar *revision, const wxChar* version) {
         this->m_svnRevision  = revision;
         this->m_version      = version;
     }
 
 public:
-    typedef std::map<wxString, LexerConfPtr>::const_iterator ConstIterator;
-
     void Begin();
     void Save();
 
@@ -165,16 +147,16 @@ public:
     /**
      * Find lexer configuration and return a pointer to a LexerConf object
      * \param lexer lexer name (e.g. Cpp, Java, Default etc..)
-     * \return LexerConfPtr
+     * \return LexerConf::Ptr_t
      */
-    LexerConfPtr GetLexer(const wxString& lexer);
+    LexerConf::Ptr_t GetLexer(const wxString& lexer);
 
     /**
      * @brief return the proper lexer based on the file's extension
      * @param filename
      * @return the file's lexer or the "Text" lexer
      */
-    LexerConfPtr GetLexerForFile(const wxString& filename);
+    LexerConf::Ptr_t GetLexerForFile(const wxString& filename);
     
     /**
      * Get the outputview's foreground colour, which is global to a theme
@@ -187,16 +169,6 @@ public:
      * \return the colour as a wxString
      */
     wxString GetCurrentOutputviewBgColour() const;
-
-    /**
-     * Return iterator to the begin of the undelying lexer mapping
-      */
-    ConstIterator LexerBegin();
-
-    /**
-     * Return iterator to the end of the undelying lexer mapping
-     */
-    ConstIterator LexerEnd();
 
     /**
      * Test if this configuration is loaded properly
@@ -232,20 +204,12 @@ public:
     /**
      * Store in the current LexersInfo, the outputview's foreground colour as it's global to a theme
      */
-    void SetCurrentOutputviewFgColour(const wxString& colourstring) {
-        if (m_activeThemeLexers) {
-            m_activeThemeLexers->outputpane_fg_colour = colourstring;
-        }
-    }
+    void SetCurrentOutputviewFgColour(const wxString& colourstring) ;
 
     /**
      * Store in the current LexersInfo, the outputview's background colour as it's global to a theme
      */
-    void SetCurrentOutputviewBgColour(const wxString& colourstring) {
-        if (m_activeThemeLexers) {
-            m_activeThemeLexers->outputpane_bg_colour = colourstring;
-        }
-    }
+    void SetCurrentOutputviewBgColour(const wxString& colourstring) ;
 
     /**
      * save lexers settings
@@ -334,14 +298,6 @@ public:
      * \param stickiness true if the pane should stay open
      */
     void SetPaneStickiness(const wxString& caption, bool stickiness);
-
-protected:
-    /**
-     * \brief Update the user's lexer with any novel lexers or attributes
-     * \param userLexer the current lexer, which may contain user prefs
-     * \param installedLexer the equivalent unaltered lexer from the CodeLite installation
-     */
-    void UpgradeUserLexer(const wxString& userLexer, const wxString& installedLexer);
 
 private:
     EditorConfig();

@@ -647,7 +647,7 @@ WorkspaceTabBase::WorkspaceTabBase(wxWindow* parent, wxWindowID id, const wxPoin
     
     wxArrayString m_choiceActiveProjectArr;
     m_choiceActiveProject = new wxChoice(m_splitterPage308, wxID_ANY, wxDefaultPosition, wxSize(-1,-1), m_choiceActiveProjectArr, 0);
-    m_choiceActiveProject->SetToolTip(_("Select the active porject"));
+    m_choiceActiveProject->SetToolTip(_("Select the active project"));
     
     boxSizer314->Add(m_choiceActiveProject, 0, wxALL|wxEXPAND, 2);
     
@@ -823,6 +823,9 @@ NewProjectWizardBase::NewProjectWizardBase(wxWindow* parent, wxWindowID id, cons
     m_txtProjName = new wxTextCtrl(m_wizardPageDetails, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(-1,-1), 0);
     m_txtProjName->SetToolTip(_("Set the project name. A project name can contains A-Z, 0-9 and _ characters only"));
     m_txtProjName->SetFocus();
+    #if wxVERSION_NUMBER >= 3000
+    m_txtProjName->SetHint(wxT(""));
+    #endif
     
     flexGridSizer15->Add(m_txtProjName, 0, wxLEFT|wxTOP|wxBOTTOM|wxEXPAND, 5);
     
@@ -836,6 +839,9 @@ NewProjectWizardBase::NewProjectWizardBase(wxWindow* parent, wxWindowID id, cons
     
     m_textCtrlProjectPath = new wxTextCtrl(m_wizardPageDetails, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(-1,-1), 0);
     m_textCtrlProjectPath->SetToolTip(_("Select the location of the project. The location must exist."));
+    #if wxVERSION_NUMBER >= 3000
+    m_textCtrlProjectPath->SetHint(wxT(""));
+    #endif
     
     boxSizer30->Add(m_textCtrlProjectPath, 1, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
     

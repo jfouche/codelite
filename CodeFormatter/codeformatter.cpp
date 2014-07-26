@@ -35,22 +35,23 @@
 #include "codeformatterdlg.h"
 #include "wx/menu.h"
 #include "file_logger.h"
+#include "asyncprocess.h"
+#include "json_node.h"
+#include <wx/ffile.h>
+#include <wx/filename.h>
+#include "file_logger.h"
+#include "procutils.h"
+#include "clSTCLineKeeper.h"
 
-
-const wxEventType wxEVT_CF_FORMAT_STRING = XRCID("wxEVT_CF_FORMAT_STRING");
-const wxEventType wxEVT_CF_FORMAT_FILE   = XRCID("wxEVT_CF_FORMAT_FILE");
-
-extern "C" EXPORT char* STDCALL
-AStyleMain(const char* pSourceIn,
-           const char* pOptions,
-           void(STDCALL *fpError)(int, const char*),
-           char*(STDCALL *fpAlloc)(unsigned long));
-
+extern "C" EXPORT char* STDCALL AStyleMain(const char* pSourceIn,
+                                           const char* pOptions,
+                                           void(STDCALL* fpError)(int, const char*),
+                                           char*(STDCALL* fpAlloc)(unsigned long));
 
 //------------------------------------------------------------------------
 // Astyle functions required by AStyleLib
 // Error handler for the Artistic Style formatter
-void  STDCALL ASErrorHandler(int errorNumber, const char* errorMessage)
+void STDCALL ASErrorHandler(int errorNumber, const char* errorMessage)
 {
     wxString errStr;
     errStr << _U(errorMessage) << wxT(" (error ") << errorNumber << wxT(")");
@@ -61,17 +62,17 @@ void  STDCALL ASErrorHandler(int errorNumber, const char* errorMessage)
 char* STDCALL ASMemoryAlloc(unsigned long memoryNeeded)
 {
     // error condition is checked after return from AStyleMain
-    char* buffer = new char [memoryNeeded];
+    char* buffer = new char[memoryNeeded];
     return buffer;
 }
 //------------------------------------------------------------------------
-static CodeFormatter *theFormatter = NULL;
+static CodeFormatter* theFormatter = NULL;
 
-//Allocate the code formatter on the heap, it will be freed by
-//the application
-extern "C" EXPORT IPlugin *CreatePlugin(IManager *manager)
+// Allocate the code formatter on the heap, it will be freed by
+// the application
+extern "C" EXPORT IPlugin* CreatePlugin(IManager* manager)
 {
-    if (theFormatter == 0) {
+    if(theFormatter == 0) {
         theFormatter = new CodeFormatter(manager);
     }
     return theFormatter;
@@ -87,66 +88,96 @@ extern "C" EXPORT PluginInfo GetPluginInfo()
     return info;
 }
 
-extern "C" EXPORT int GetPluginInterfaceVersion()
-{
-    return PLUGIN_INTERFACE_VERSION;
-}
+extern "C" EXPORT int GetPluginInterfaceVersion() { return PLUGIN_INTERFACE_VERSION; }
 
-CodeFormatter::CodeFormatter(IManager *manager)
+CodeFormatter::CodeFormatter(IManager* manager)
     : IPlugin(manager)
 {
     m_longName = _("Source Code Formatter (AStyle)");
     m_shortName = wxT("CodeFormatter");
 
-    EventNotifier::Get()->Connect(wxEVT_CF_FORMAT_STRING, wxCommandEventHandler(CodeFormatter::OnFormatString), NULL, this);
-    EventNotifier::Get()->Connect(wxEVT_CF_FORMAT_FILE  , wxCommandEventHandler(CodeFormatter::OnFormatFile), NULL, this);
+    EventNotifier::Get()->Connect(
+        wxEVT_FORMAT_STRING, clSourceFormatEventHandler(CodeFormatter::OnFormatString), NULL, this);
+    EventNotifier::Get()->Connect(
+        wxEVT_FORMAT_FILE, clSourceFormatEventHandler(CodeFormatter::OnFormatFile), NULL, this);
 }
 
 CodeFormatter::~CodeFormatter()
 {
-    EventNotifier::Get()->Disconnect(wxEVT_CF_FORMAT_STRING, wxCommandEventHandler(CodeFormatter::OnFormatString), NULL, this);
-    EventNotifier::Get()->Disconnect(wxEVT_CF_FORMAT_FILE  , wxCommandEventHandler(CodeFormatter::OnFormatFile), NULL, this);
+    EventNotifier::Get()->Connect(
+        wxEVT_FORMAT_STRING, clSourceFormatEventHandler(CodeFormatter::OnFormatString), NULL, this);
+    EventNotifier::Get()->Connect(
+        wxEVT_FORMAT_FILE, clSourceFormatEventHandler(CodeFormatter::OnFormatFile), NULL, this);
 }
 
-clToolBar *CodeFormatter::CreateToolBar(wxWindow *parent)
+clToolBar* CodeFormatter::CreateToolBar(wxWindow* parent)
 {
-    clToolBar *tb(NULL);
-    if (m_mgr->AllowToolbar()) {
-        //support both toolbars icon size
+    clToolBar* tb(NULL);
+    if(m_mgr->AllowToolbar()) {
+        // support both toolbars icon size
         int size = m_mgr->GetToolbarIconSize();
 
         tb = new clToolBar(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, clTB_DEFAULT_STYLE);
         tb->SetToolBitmapSize(wxSize(size, size));
 
         BitmapLoader* bmpLoader = m_mgr->GetStdIcons();
-        if (size == 24) {
-            tb->AddTool(XRCID("format_source"),     _("Format Source"),  bmpLoader->LoadBitmap(wxT("toolbars/24/codeformatter/code-format")),         _("Format Source Code"));
-            tb->AddTool(XRCID("formatter_options"), _("Format Options"), bmpLoader->LoadBitmap(wxT("toolbars/24/codeformatter/code-format-options")), _("Source Code Formatter Options..."));
+        if(size == 24) {
+            tb->AddTool(XRCID("format_source"),
+                        _("Format Source"),
+                        bmpLoader->LoadBitmap(wxT("toolbars/24/codeformatter/code-format")),
+                        _("Format Source Code"));
+            tb->AddTool(XRCID("formatter_options"),
+                        _("Format Options"),
+                        bmpLoader->LoadBitmap(wxT("toolbars/24/codeformatter/code-format-options")),
+                        _("Source Code Formatter Options..."));
         } else {
-            //16
-            tb->AddTool(XRCID("format_source"),     _("Format Source"),  bmpLoader->LoadBitmap(wxT("toolbars/16/codeformatter/code-format")),         _("Format Source Code"));
-            tb->AddTool(XRCID("formatter_options"), _("Format Options"), bmpLoader->LoadBitmap(wxT("toolbars/16/codeformatter/code-format-options")), _("Source Code Formatter Options..."));
+            // 16
+            tb->AddTool(XRCID("format_source"),
+                        _("Format Source"),
+                        bmpLoader->LoadBitmap(wxT("toolbars/16/codeformatter/code-format")),
+                        _("Format Source Code"));
+            tb->AddTool(XRCID("formatter_options"),
+                        _("Format Options"),
+                        bmpLoader->LoadBitmap(wxT("toolbars/16/codeformatter/code-format-options")),
+                        _("Source Code Formatter Options..."));
         }
 
-#if defined (__WXMAC__)
+#if defined(__WXMAC__)
         tb->AddSeparator();
 #endif
         tb->Realize();
     }
 
-    //Connect the events to us
-    m_mgr->GetTheApp()->Connect(XRCID("format_source"), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(CodeFormatter::OnFormat), NULL, (wxEvtHandler*)this);
-    m_mgr->GetTheApp()->Connect(XRCID("formatter_options"), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(CodeFormatter::OnFormatOptions), NULL, (wxEvtHandler*)this);
-    m_mgr->GetTheApp()->Connect(XRCID("format_source"), wxEVT_UPDATE_UI, wxUpdateUIEventHandler(CodeFormatter::OnFormatUI), NULL, (wxEvtHandler*)this);
-    m_mgr->GetTheApp()->Connect(XRCID("formatter_options"), wxEVT_UPDATE_UI, wxUpdateUIEventHandler(CodeFormatter::OnFormatOptionsUI), NULL, (wxEvtHandler*)this);
+    // Connect the events to us
+    m_mgr->GetTheApp()->Connect(XRCID("format_source"),
+                                wxEVT_COMMAND_MENU_SELECTED,
+                                wxCommandEventHandler(CodeFormatter::OnFormat),
+                                NULL,
+                                (wxEvtHandler*)this);
+    m_mgr->GetTheApp()->Connect(XRCID("formatter_options"),
+                                wxEVT_COMMAND_MENU_SELECTED,
+                                wxCommandEventHandler(CodeFormatter::OnFormatOptions),
+                                NULL,
+                                (wxEvtHandler*)this);
+    m_mgr->GetTheApp()->Connect(XRCID("format_source"),
+                                wxEVT_UPDATE_UI,
+                                wxUpdateUIEventHandler(CodeFormatter::OnFormatUI),
+                                NULL,
+                                (wxEvtHandler*)this);
+    m_mgr->GetTheApp()->Connect(XRCID("formatter_options"),
+                                wxEVT_UPDATE_UI,
+                                wxUpdateUIEventHandler(CodeFormatter::OnFormatOptionsUI),
+                                NULL,
+                                (wxEvtHandler*)this);
     return tb;
 }
 
-void CodeFormatter::CreatePluginMenu(wxMenu *pluginsMenu)
+void CodeFormatter::CreatePluginMenu(wxMenu* pluginsMenu)
 {
-    wxMenu *menu = new wxMenu();
-    wxMenuItem *item(NULL);
-    item = new wxMenuItem(menu, XRCID("format_source"), _("Format Current Source"), _("Format Current Source"), wxITEM_NORMAL);
+    wxMenu* menu = new wxMenu();
+    wxMenuItem* item(NULL);
+    item = new wxMenuItem(
+        menu, XRCID("format_source"), _("Format Current Source"), _("Format Current Source"), wxITEM_NORMAL);
     menu->Append(item);
     menu->AppendSeparator();
     item = new wxMenuItem(menu, XRCID("formatter_options"), _("Options..."), wxEmptyString, wxITEM_NORMAL);
@@ -154,9 +185,9 @@ void CodeFormatter::CreatePluginMenu(wxMenu *pluginsMenu)
     pluginsMenu->Append(wxID_ANY, _("Source Code Formatter"), menu);
 }
 
-void CodeFormatter::OnFormat(wxCommandEvent &e)
+void CodeFormatter::OnFormat(wxCommandEvent& e)
 {
-    IEditor *editor(NULL);
+    IEditor* editor(NULL);
     wxString fileToFormat = e.GetString();
 
     // If we got a file name in the event, use it instead of the active editor
@@ -168,100 +199,133 @@ void CodeFormatter::OnFormat(wxCommandEvent &e)
     }
 
     // get the editor that requires formatting
-    if (!editor)
+    if(!editor)
         return;
 
     // Notify about indentation about to start
     wxCommandEvent evt(wxEVT_CODEFORMATTER_INDENT_STARTING);
-    evt.SetString( editor->GetFileName().GetFullPath() );
+    evt.SetString(editor->GetFileName().GetFullPath());
     EventNotifier::Get()->ProcessEvent(evt);
 
-    m_mgr->SetStatusMessage(wxString::Format(wxT("%s: %s..."), _("Formatting"), editor->GetFileName().GetFullPath().c_str()), 0);
+    m_mgr->SetStatusMessage(
+        wxString::Format(wxT("%s: %s..."), _("Formatting"), editor->GetFileName().GetFullPath().c_str()), 0);
     DoFormatFile(editor);
     m_mgr->SetStatusMessage(_("Done"), 0);
 }
 
-void CodeFormatter::DoFormatFile(IEditor *editor)
+void CodeFormatter::DoFormatFile(IEditor* editor)
 {
-    long curpos = editor->GetCurrentPosition();
+    int curpos = editor->GetCurrentPosition();
 
-    //execute the formatter
+    // execute the formatter
     FormatOptions fmtroptions;
     m_mgr->GetConfigTool()->ReadObject(wxT("FormatterOptions"), &fmtroptions);
-    wxString options = fmtroptions.ToString();
 
-    //determine indentation method and amount
-    bool useTabs = m_mgr->GetEditorSettings()->GetIndentUsesTabs();
-    int tabWidth = m_mgr->GetEditorSettings()->GetTabWidth();
-    int indentWidth = m_mgr->GetEditorSettings()->GetIndentWidth();
-    options << (useTabs && tabWidth == indentWidth ? wxT(" -t") : wxT(" -s")) << indentWidth;
+    // We allow ClangFormat to work only when the source file is known to be
+    // a C/C++ source file or JavaScript (these are the types of files that clang-format can handle properly)
+    if(fmtroptions.GetEngine() == kFormatEngineClangFormat &&
+       (FileExtManager::IsCxxFile(editor->GetFileName()) || FileExtManager::IsJavascriptFile(editor->GetFileName()))) {
 
-    wxString output;
-    wxString inputString;
-    bool     formatSelectionOnly( editor->GetSelection().IsEmpty() == false );
-
-    if(formatSelectionOnly) {
-        // get the lines contained in the selection
-        int selStart   = editor->GetSelectionStart();
-        int selEnd     = editor->GetSelectionEnd();
-        int lineNumber = editor->LineFromPos(selStart);
-
-        selStart  = editor->PosFromLine(lineNumber);
-        selEnd = editor->LineEnd( editor->LineFromPos(selEnd) );
-
-        editor->SelectText(selStart, selEnd - selStart);
-        inputString = editor->GetSelection();
-
-    } else {
-        inputString = editor->GetEditorText();
-    }
-
-    AstyleFormat(inputString, options, output);
-    if (output.IsEmpty() == false) {
-
-        // append new-line
-        wxString eol;
-        if ( editor->GetEOL() == 0 ) {// CRLF
-            eol = wxT("\r\n");
-        } else if ( editor->GetEOL() == 1 ) { // CR
-            eol = wxT("\r");
-        } else {
-            eol = wxT("\n");
+        int from = wxNOT_FOUND, length = wxNOT_FOUND;
+        wxString formattedOutput;
+        if(editor->GetSelectionStart() != wxNOT_FOUND) {
+            // we got a selection, only format it
+            from = editor->GetSelectionStart();
+            length = editor->GetSelectionEnd() - from;
+            if(length <= 0) {
+                from = wxNOT_FOUND;
+                length = wxNOT_FOUND;
+            }
         }
 
-        if(!formatSelectionOnly)
-            output << eol;
+        // Make sure we format the editor string and _not_ the file (there might be some newly added lines
+        // the could be missing ...)
+        ClangFormat(editor->GetSTC()->GetText(), formattedOutput, curpos, from, length);
 
-        if( formatSelectionOnly ) {
-            // format the text (add the indentation)
-            output = editor->FormatTextKeepIndent(output, editor->GetSelectionStart(), Format_Text_Indent_Prev_Line|Format_Text_Save_Empty_Lines);
-            editor->ReplaceSelection(output);
+        clSTCLineKeeper lk(editor);
+        editor->SetEditorText(formattedOutput);
+        editor->SetCaretAt(curpos);
+
+    } else {
+        // AStyle
+        wxString options = fmtroptions.AstyleOptionsAsString();
+
+        // determine indentation method and amount
+        bool useTabs = m_mgr->GetEditorSettings()->GetIndentUsesTabs();
+        int tabWidth = m_mgr->GetEditorSettings()->GetTabWidth();
+        int indentWidth = m_mgr->GetEditorSettings()->GetIndentWidth();
+        options << (useTabs && tabWidth == indentWidth ? wxT(" -t") : wxT(" -s")) << indentWidth;
+
+        wxString output;
+        wxString inputString;
+        bool formatSelectionOnly(editor->GetSelection().IsEmpty() == false);
+
+        if(formatSelectionOnly) {
+            // get the lines contained in the selection
+            int selStart = editor->GetSelectionStart();
+            int selEnd = editor->GetSelectionEnd();
+            int lineNumber = editor->LineFromPos(selStart);
+
+            selStart = editor->PosFromLine(lineNumber);
+            selEnd = editor->LineEnd(editor->LineFromPos(selEnd));
+
+            editor->SelectText(selStart, selEnd - selStart);
+            inputString = editor->GetSelection();
 
         } else {
-            editor->SetEditorText(output);
-            editor->SetCaretAt(curpos);
+            inputString = editor->GetEditorText();
+        }
+
+        AstyleFormat(inputString, options, output);
+        if(output.IsEmpty() == false) {
+
+            // append new-line
+            wxString eol;
+            if(editor->GetEOL() == 0) { // CRLF
+                eol = wxT("\r\n");
+            } else if(editor->GetEOL() == 1) { // CR
+                eol = wxT("\r");
+            } else {
+                eol = wxT("\n");
+            }
+
+            if(!formatSelectionOnly)
+                output << eol;
+
+            if(formatSelectionOnly) {
+                // format the text (add the indentation)
+                output = editor->FormatTextKeepIndent(
+                    output, editor->GetSelectionStart(), Format_Text_Indent_Prev_Line | Format_Text_Save_Empty_Lines);
+                editor->ReplaceSelection(output);
+
+            } else {
+                clSTCLineKeeper lk(editor);
+                editor->SetEditorText(output);
+                editor->SetCaretAt(curpos);
+            }
         }
     }
 
     // Notify that a file was indented
     wxCommandEvent evt(wxEVT_CODEFORMATTER_INDENT_COMPLETED);
-    evt.SetString( editor->GetFileName().GetFullPath() );
-    EventNotifier::Get()->AddPendingEvent( evt );
+    evt.SetString(editor->GetFileName().GetFullPath());
+    EventNotifier::Get()->AddPendingEvent(evt);
 }
 
-void CodeFormatter::AstyleFormat(const wxString &input, const wxString &options, wxString &output)
+void CodeFormatter::AstyleFormat(const wxString& input, const wxString& options, wxString& output)
 {
-    char *textOut = AStyleMain(_C(input), _C(options), ASErrorHandler, ASMemoryAlloc);
-    if (textOut) {
+    char* textOut = AStyleMain(_C(input), _C(options), ASErrorHandler, ASMemoryAlloc);
+    if(textOut) {
         output = _U(textOut);
         output.Trim();
-        delete [] textOut;
+        delete[] textOut;
     }
 }
 
-void CodeFormatter::OnFormatOptions(wxCommandEvent &e)
+void CodeFormatter::OnFormatOptions(wxCommandEvent& e)
 {
-    //load options from settings file
+    wxUnusedVar(e);
+    // load options from settings file
     FormatOptions fmtroptions;
     m_mgr->GetConfigTool()->ReadObject(wxT("FormatterOptions"), &fmtroptions);
 
@@ -270,27 +334,19 @@ void CodeFormatter::OnFormatOptions(wxCommandEvent &e)
     sampleFile << m_mgr->GetStartupDirectory() << wxT("/astyle.sample");
     ReadFileWithConversion(sampleFile, content);
 
-    CodeFormatterDlg dlg(NULL, this, fmtroptions, content);
-    if (dlg.ShowModal() == wxID_OK) {
-        //update the settings on the configuration file
-        fmtroptions = dlg.GetOptions();
-        m_mgr->GetConfigTool()->WriteObject(wxT("FormatterOptions"), &fmtroptions);
-    }
-    wxUnusedVar(e);
+    CodeFormatterDlg dlg(NULL, m_mgr, this, fmtroptions, content);
+    dlg.ShowModal();
 }
 
-void CodeFormatter::OnFormatUI(wxUpdateUIEvent &e)
+void CodeFormatter::OnFormatUI(wxUpdateUIEvent& e)
 {
     CHECK_CL_SHUTDOWN();
     e.Enable(m_mgr->GetActiveEditor() != NULL);
 }
 
-void CodeFormatter::OnFormatOptionsUI(wxUpdateUIEvent &e)
-{
-    e.Enable(true);
-}
+void CodeFormatter::OnFormatOptionsUI(wxUpdateUIEvent& e) { e.Enable(true); }
 
-void CodeFormatter::HookPopupMenu(wxMenu *menu, MenuType type)
+void CodeFormatter::HookPopupMenu(wxMenu* menu, MenuType type)
 {
     wxUnusedVar(type);
     wxUnusedVar(menu);
@@ -298,52 +354,75 @@ void CodeFormatter::HookPopupMenu(wxMenu *menu, MenuType type)
 
 void CodeFormatter::UnPlug()
 {
-    m_mgr->GetTheApp()->Disconnect(XRCID("format_source"), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(CodeFormatter::OnFormat), NULL, (wxEvtHandler*)this);
-    m_mgr->GetTheApp()->Disconnect(XRCID("formatter_options"), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(CodeFormatter::OnFormatOptions), NULL, (wxEvtHandler*)this);
-    m_mgr->GetTheApp()->Disconnect(XRCID("format_source"), wxEVT_UPDATE_UI, wxUpdateUIEventHandler(CodeFormatter::OnFormatUI), NULL, (wxEvtHandler*)this);
-    m_mgr->GetTheApp()->Disconnect(XRCID("formatter_options"), wxEVT_UPDATE_UI, wxUpdateUIEventHandler(CodeFormatter::OnFormatOptionsUI), NULL, (wxEvtHandler*)this);
+    m_mgr->GetTheApp()->Disconnect(XRCID("format_source"),
+                                   wxEVT_COMMAND_MENU_SELECTED,
+                                   wxCommandEventHandler(CodeFormatter::OnFormat),
+                                   NULL,
+                                   (wxEvtHandler*)this);
+    m_mgr->GetTheApp()->Disconnect(XRCID("formatter_options"),
+                                   wxEVT_COMMAND_MENU_SELECTED,
+                                   wxCommandEventHandler(CodeFormatter::OnFormatOptions),
+                                   NULL,
+                                   (wxEvtHandler*)this);
+    m_mgr->GetTheApp()->Disconnect(XRCID("format_source"),
+                                   wxEVT_UPDATE_UI,
+                                   wxUpdateUIEventHandler(CodeFormatter::OnFormatUI),
+                                   NULL,
+                                   (wxEvtHandler*)this);
+    m_mgr->GetTheApp()->Disconnect(XRCID("formatter_options"),
+                                   wxEVT_UPDATE_UI,
+                                   wxUpdateUIEventHandler(CodeFormatter::OnFormatOptionsUI),
+                                   NULL,
+                                   (wxEvtHandler*)this);
 }
 
-IManager* CodeFormatter::GetManager()
-{
-    return m_mgr;
-}
+IManager* CodeFormatter::GetManager() { return m_mgr; }
 
-void CodeFormatter::OnFormatString(wxCommandEvent& e)
+void CodeFormatter::OnFormatString(clSourceFormatEvent& e)
 {
-    wxString str = e.GetString();
-    if(str.IsEmpty())
+    wxString str = e.GetInputString();
+    if(str.IsEmpty()) {
+        e.SetFormattedString(str);
         return;
+    }
 
-    //execute the formatter
+    // execute the formatter
     FormatOptions fmtroptions;
     m_mgr->GetConfigTool()->ReadObject(wxT("FormatterOptions"), &fmtroptions);
-    wxString options = fmtroptions.ToString();
-
-    //determine indentation method and amount
-    bool useTabs = m_mgr->GetEditorSettings()->GetIndentUsesTabs();
-    int tabWidth = m_mgr->GetEditorSettings()->GetTabWidth();
-    int indentWidth = m_mgr->GetEditorSettings()->GetIndentWidth();
-    options << (useTabs && tabWidth == indentWidth ? wxT(" -t") : wxT(" -s")) << indentWidth;
 
     wxString output;
-    AstyleFormat(str, options, output);
-    output << DoGetGlobalEOLString();
+    if(fmtroptions.GetEngine() == kFormatEngineAStyle) {
+        wxString options = fmtroptions.AstyleOptionsAsString();
 
-    e.SetString( output );
+        // determine indentation method and amount
+        bool useTabs = m_mgr->GetEditorSettings()->GetIndentUsesTabs();
+        int tabWidth = m_mgr->GetEditorSettings()->GetTabWidth();
+        int indentWidth = m_mgr->GetEditorSettings()->GetIndentWidth();
+        options << (useTabs && tabWidth == indentWidth ? wxT(" -t") : wxT(" -s")) << indentWidth;
+
+        AstyleFormat(str, options, output);
+        output << DoGetGlobalEOLString();
+
+    } else if(fmtroptions.GetEngine() == kFormatEngineClangFormat) {
+        ClangPreviewFormat(str, output, fmtroptions);
+
+    } else {
+        // ??
+    }
+    e.SetFormattedString(output);
 }
 
 int CodeFormatter::DoGetGlobalEOL() const
 {
     OptionsConfigPtr options = m_mgr->GetEditorSettings();
-    if (options->GetEolMode() == wxT("Unix (LF)")) {
+    if(options->GetEolMode() == wxT("Unix (LF)")) {
         return 2;
-    } else if (options->GetEolMode() == wxT("Mac (CR)")) {
+    } else if(options->GetEolMode() == wxT("Mac (CR)")) {
         return 1;
-    } else if (options->GetEolMode() == wxT("Windows (CRLF)")) {
+    } else if(options->GetEolMode() == wxT("Windows (CRLF)")) {
         return 0;
     } else {
-        // set the EOL by the hosting OS
+// set the EOL by the hosting OS
 #if defined(__WXMAC__)
         return 2;
 #elif defined(__WXGTK__)
@@ -355,7 +434,7 @@ int CodeFormatter::DoGetGlobalEOL() const
 }
 wxString CodeFormatter::DoGetGlobalEOLString() const
 {
-    switch ( DoGetGlobalEOL() ) {
+    switch(DoGetGlobalEOL()) {
     case 0:
         return wxT("\r\n");
     case 1:
@@ -366,7 +445,115 @@ wxString CodeFormatter::DoGetGlobalEOLString() const
     }
 }
 
-void CodeFormatter::OnFormatFile(wxCommandEvent& e)
+void CodeFormatter::OnFormatFile(clSourceFormatEvent& e) { wxUnusedVar(e); }
+
+bool CodeFormatter::ClangFormat(const wxString& content,
+                                wxString& formattedOutput,
+                                int& cursorPosition,
+                                int startOffset,
+                                int length)
 {
-    wxUnusedVar(e);
+    // Write the content into a temporary file
+    wxFileName fn(wxStandardPaths::Get().GetTempDir(), "code-formatter-tmp.cpp");
+    wxFFile fp(fn.GetFullPath(), "w+b");
+    if(fp.IsOpened()) {
+        fp.Write(content, wxConvUTF8);
+        fp.Close();
+    }
+
+    FormatOptions options;
+    m_mgr->GetConfigTool()->ReadObject(wxT("FormatterOptions"), &options);
+    bool res = DoClangFormat(fn, formattedOutput, cursorPosition, startOffset, length, options);
+    {
+        // Delete the temporary file
+        wxLogNull nl;
+        ::wxRemoveFile(fn.GetFullPath());
+    }
+    return res;
+}
+
+bool CodeFormatter::ClangFormat(const wxFileName& filename,
+                                wxString& formattedOutput,
+                                int& cursorPosition,
+                                int startOffset,
+                                int length)
+{
+    FormatOptions options;
+    m_mgr->GetConfigTool()->ReadObject(wxT("FormatterOptions"), &options);
+    return DoClangFormat(filename, formattedOutput, cursorPosition, startOffset, length, options);
+}
+
+bool CodeFormatter::ClangPreviewFormat(const wxString& content, wxString& formattedOutput, const FormatOptions& options)
+{
+    int startOffset, length, cursorPosition;
+    startOffset = length = cursorPosition = wxNOT_FOUND;
+
+    wxFileName fn(wxStandardPaths::Get().GetTempDir(), "code-formatter-tmp.cpp");
+    wxFFile fp(fn.GetFullPath(), "w+b");
+    if(fp.IsOpened()) {
+        fp.Write(content, wxConvUTF8);
+        fp.Close();
+    }
+    bool res = DoClangFormat(fn, formattedOutput, cursorPosition, startOffset, length, options);
+    {
+        // Delete the temporary file
+        wxLogNull nl;
+        ::wxRemoveFile(fn.GetFullPath());
+    }
+    return res;
+}
+
+bool CodeFormatter::DoClangFormat(const wxFileName& filename,
+                                  wxString& formattedOutput,
+                                  int& cursorPosition,
+                                  int startOffset,
+                                  int length,
+                                  const FormatOptions& options)
+{
+    // clang-format
+    // Build the command line to run
+
+    if(options.GetClangFormatExe().IsEmpty()) {
+        return false;
+    }
+
+    wxString command, file;
+
+    command << options.GetClangFormatExe();
+    file = filename.GetFullPath();
+    ::WrapWithQuotes(command);
+    ::WrapWithQuotes(file);
+
+    command << options.ClangFormatOptionsAsString();
+    if(cursorPosition != wxNOT_FOUND) {
+        command << " -cursor=" << cursorPosition;
+    }
+
+    if(startOffset != wxNOT_FOUND && length != wxNOT_FOUND) {
+        command << " -offset=" << startOffset << " -length=" << length;
+    }
+    command << " " << file;
+
+    // Wrap the command in the local shell
+    ::WrapInShell(command);
+
+    // Log the command
+    CL_DEBUG("CodeForamtter: running:\n%s\n", command);
+
+    // Execute clang-format and reand the output
+    formattedOutput.Clear();
+    IProcess::Ptr_t clangFormatProc(
+        ::CreateSyncProcess(command, IProcessCreateDefault | IProcessCreateWithHiddenConsole));
+    CHECK_PTR_RET_FALSE(clangFormatProc);
+    clangFormatProc->WaitForTerminate(formattedOutput);
+    CL_DEBUG("clang-format returned with:\n%s\n", formattedOutput);
+
+    // The first line contains the cursor position
+    if(cursorPosition != wxNOT_FOUND) {
+        wxString metadata = formattedOutput.BeforeFirst('\n');
+        JSONRoot root(metadata);
+        cursorPosition = root.toElement().namedObject("cursor").toInt(wxNOT_FOUND);
+        formattedOutput = formattedOutput.AfterFirst('\n');
+    }
+    return true;
 }

@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : SvnBlameFrame.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "SvnBlameFrame.h"
 #include <windowattrmanager.h>
 #include <lexer_configuration.h>
@@ -12,7 +37,7 @@ SvnBlameFrame::SvnBlameFrame(wxWindow* parent, const wxFileName& filename, const
    
     m_stc->SetText( content );
     m_stc->SetReadOnly(true);
-    LexerConfPtr lexer = EditorConfigST::Get()->GetLexerForFile(filename.GetFullName());
+    LexerConf::Ptr_t lexer = EditorConfigST::Get()->GetLexerForFile(filename.GetFullName());
     if ( lexer ) {
         lexer->Apply( m_stc, true );
     }

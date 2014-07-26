@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : zoomtext.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 //	Copyright: 2013 Brandon Captain
 //
 //  This program is free software; you can redistribute it and/or modify
@@ -61,7 +86,7 @@ ZoomText::~ZoomText()
 void ZoomText::UpdateLexer(const wxString& filename)
 {
     m_filename = filename;
-    LexerConfPtr lexer = EditorConfigST::Get()->GetLexerForFile(filename);
+    LexerConf::Ptr_t lexer = EditorConfigST::Get()->GetLexerForFile(filename);
     if ( !lexer ) {
         lexer = EditorConfigST::Get()->GetLexer("Text");
     }

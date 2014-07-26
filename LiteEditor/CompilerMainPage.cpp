@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : CompilerMainPage.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "CompilerMainPage.h"
 #include "compiler.h"
 #include <build_settings_config.h>
@@ -13,6 +38,8 @@
 #include <wx/msgdlg.h>
 #include <wx/textdlg.h>
 #include "advanced_settings.h"
+#include <wx/menu.h>
+#include <wx/textdlg.h>
 
 CompilerMainPage::CompilerMainPage(wxWindow* parent)
     : CompilerMainPageBase(parent)
@@ -173,7 +200,7 @@ void CompilerMainPage::OnCompilerOptionSelected(wxListEvent& event)
 
 void CompilerMainPage::OnCustomEditorButtonClicked(wxCommandEvent& event)
 {
-    wxPGProperty* prop = m_pgMgr92->GetSelectedProperty();
+    wxPGProperty* prop = m_pgMgrTools->GetSelectedProperty();
     CHECK_PTR_RET(prop);
     
     wxString oldValue = prop->GetValueAsString();
@@ -503,7 +530,7 @@ void CompilerMainPage::SavePatterns()
 void CompilerMainPage::InitializeTools()
 {
     // Clear the values
-    wxPropertyGridConstIterator iter = m_pgMgr92->GetGrid()->GetIterator();
+    wxPropertyGridConstIterator iter = m_pgMgrTools->GetGrid()->GetIterator();
     for ( ; !iter.AtEnd(); ++iter ) {
         wxPGProperty *prop = iter.GetProperty();
         prop->SetValue("");
@@ -519,6 +546,8 @@ void CompilerMainPage::InitializeTools()
     m_pgPropAS->SetValue(m_compiler->GetTool("AS"));
     m_pgPropMAKE->SetValue(m_compiler->GetTool("MAKE"));
     m_pgPropResourceCompiler->SetValue(m_compiler->GetTool("ResourceCompiler"));
+    m_pgPropMkdir->SetValue( m_compiler->GetTool("MakeDirCommand") );
+    m_pgPropDebugger->SetValue( m_compiler->GetTool("Debugger") );
 }
 
 void CompilerMainPage::SaveTools()
@@ -532,6 +561,8 @@ void CompilerMainPage::SaveTools()
     m_compiler->SetTool(wxT("ResourceCompiler"),       m_pgPropResourceCompiler->GetValueAsString());
     m_compiler->SetTool("MAKE",                        m_pgPropMAKE->GetValueAsString());
     m_compiler->SetTool("AS",                          m_pgPropAS->GetValueAsString());
+    m_compiler->SetTool("MakeDirCommand",              m_pgPropMkdir->GetValueAsString());
+    m_compiler->SetTool("Debugger",                    m_pgPropDebugger->GetValueAsString());
 }
 
 void CompilerMainPage::Initialize()
@@ -823,4 +854,66 @@ void CompilerMainPage::OnAddCompilers(wxCommandEvent& event)
 {
     AdvancedDlg *dlg = dynamic_cast<AdvancedDlg*>(wxGetTopLevelParent(this));
     dlg->OnAutoDetectCompilers( m_button222 );
+}
+
+void CompilerMainPage::OnContextMenu(wxContextMenuEvent& event)
+{
+    wxMenu menu;
+    menu.Append(XRCID("rename_compiler"), _("Rename..."));
+    menu.Append(wxID_DELETE);
+    
+    int selection = m_listBoxCompilers->GetSelection();
+    menu.Enable(wxID_DELETE,              selection != wxNOT_FOUND);
+    menu.Enable(XRCID("rename_compiler"), selection != wxNOT_FOUND);
+    
+    m_listBoxCompilers->Bind(wxEVT_COMMAND_MENU_SELECTED, &CompilerMainPage::OnRenameCompiler, this, XRCID("rename_compiler"));
+    m_listBoxCompilers->Bind(wxEVT_COMMAND_MENU_SELECTED, &CompilerMainPage::OnDeleteCompiler, this, wxID_DELETE);
+    
+    m_listBoxCompilers->PopupMenu( &menu );
+}
+
+void CompilerMainPage::OnDeleteCompiler(wxCommandEvent& event)
+{
+    int selection = m_listBoxCompilers->GetSelection();
+    if ( selection == wxNOT_FOUND )
+        return;
+    
+    if ( ::wxMessageBox(wxString() << _("Are you sure you want to delete compiler\n'") << m_listBoxCompilers->GetStringSelection() << "'?", _("Delete Compiler"), wxYES_NO|wxCENTER|wxICON_WARNING) != wxYES )
+        return;
+
+    wxString compilerName = m_listBoxCompilers->GetStringSelection();
+    BuildSettingsConfigST::Get()->DeleteCompiler( compilerName );
+    
+    // Reload the content
+    LoadCompilers();
+}
+
+void CompilerMainPage::OnRenameCompiler(wxCommandEvent& event)
+{
+    int selection = m_listBoxCompilers->GetSelection();
+    if ( selection == wxNOT_FOUND )
+        return;
+        
+    wxString newName = ::wxGetTextFromUser(_("New Compiler Name"), _("Rename Compiler"), m_listBoxCompilers->GetStringSelection());
+    if ( newName.IsEmpty() )
+        return;
+    
+    CompilerPtr compiler = BuildSettingsConfigST::Get()->GetCompiler(m_listBoxCompilers->GetStringSelection());
+    if ( !compiler )
+        return;
+    
+    // Delete the old compiler
+    BuildSettingsConfigST::Get()->DeleteCompiler( compiler->GetName() );
+    
+    // Create new one with differet name
+    compiler->SetName( newName );
+    BuildSettingsConfigST::Get()->SetCompiler( compiler );
+    
+    // Reload the content
+    LoadCompilers();
+}
+void CompilerMainPage::OnValueChanged(wxPropertyGridEvent& event)
+{
+    event.Skip();
+    m_isDirty = true;
 }

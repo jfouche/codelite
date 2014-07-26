@@ -62,6 +62,10 @@
     <File Name="unredobase.h"/>
     <File Name="CompileCommandsCreateor.h"/>
     <File Name="CompileCommandsCreateor.cpp"/>
+    <File Name="clSTCLineKeeper.cpp"/>
+    <File Name="clSTCLineKeeper.h"/>
+    <File Name="ColoursAndFontsManager.h"/>
+    <File Name="ColoursAndFontsManager.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <File Name="async_executable_cmd.h"/>
@@ -81,6 +85,7 @@
     <File Name="queuecommand.cpp"/>
     <File Name="queuecommand.h"/>
     <File Name="shell_command.h"/>
+    <File Name="wxArrayStringAppender.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Commons">
     <File Name="xmlutils.cpp"/>
@@ -104,6 +109,8 @@
     <File Name="macromanager.h"/>
     <File Name="theme_handler_helper.h"/>
     <File Name="theme_handler_helper.cpp"/>
+    <File Name="clStringHistory.h"/>
+    <File Name="clStringHistory.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Builders">
     <File Name="builder.h"/>
@@ -579,5 +586,23 @@
     <File Name="CompilerLocatorCLANG.cpp"/>
     <File Name="CompilerLocatorMSVC9.h"/>
     <File Name="CompilerLocatorMSVC9.cpp"/>
+    <File Name="CompilerLocatorCygwin.h"/>
+    <File Name="CompilerLocatorCygwin.cpp"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="Zip">
+    <File Name="clZipReader.cpp"/>
+    <File Name="clZipReader.h"/>
+    <File Name="clZipWriter.h"/>
+    <File Name="clZipWriter.cpp"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="wxFlatButtonBar">
+    <File Name="wxFlatButton.cpp"/>
+    <File Name="wxFlatButton.h"/>
+    <File Name="wxFlatButton.wxcp"/>
+    <File Name="wxFlatButtonBar.cpp"/>
+    <File Name="wxFlatButtonBar.h"/>
+    <File Name="wxFlatButtonBase.cpp"/>
+    <File Name="wxFlatButtonBase.h"/>
+    <File Name="wxFlatButtonBaseBitmaps.cpp"/>
   </VirtualDirectory>
 </CodeLite_Project>

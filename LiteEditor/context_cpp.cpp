@@ -76,6 +76,8 @@
 #include "SelectProjectsDlg.h"
 #include "globals.h"
 #include <parse_thread.h>
+#include "cl_command_event.h"
+#include "codelite_events.h"
 
 //#define __PERFORMANCE
 #include "performance.h"
@@ -685,7 +687,7 @@ void ContextCpp::OnAddIncludeFile(wxCommandEvent &e)
     }
 
     //check to see if this file is a workspace file
-    AddIncludeFileDlg *dlg = new AddIncludeFileDlg(NULL, choice, rCtrl.GetText(), FindLineToAddInclude());
+    AddIncludeFileDlg *dlg = new AddIncludeFileDlg(clMainFrame::Get(), choice, rCtrl.GetText(), FindLineToAddInclude());
     if (dlg->ShowModal() == wxID_OK) {
         //add the line to the current document
         wxString lineToAdd = dlg->GetLineToAdd();
@@ -1923,10 +1925,10 @@ void ContextCpp::OnAddImpl(wxCommandEvent &e)
 
 void ContextCpp::DoFormatEditor(LEditor *editor)
 {
-    wxCommandEvent formatEvent(XRCID("wxEVT_CF_FORMAT_STRING"));
-    formatEvent.SetString( editor->GetText() );
+    clSourceFormatEvent formatEvent(wxEVT_FORMAT_STRING);
+    formatEvent.SetInputString( editor->GetText() );
     EventNotifier::Get()->ProcessEvent( formatEvent );
-    editor->SetText( formatEvent.GetString() );
+    editor->SetText( formatEvent.GetFormattedString() );
 }
 
 void ContextCpp::OnFileSaved()
@@ -1968,7 +1970,7 @@ void ContextCpp::ApplySettings()
     SetName(wxT("C++"));
 
     // Set the key words and the lexer
-    LexerConfPtr lexPtr;
+    LexerConf::Ptr_t lexPtr;
     // Read the configuration file
     if (EditorConfigST::Get()->IsOk()) {
         lexPtr = EditorConfigST::Get()->GetLexer(wxT("C++"));
@@ -2399,7 +2401,7 @@ void ContextCpp::OnUserTypedXChars(const wxString &word)
 
 void ContextCpp::MakeCppKeywordsTags(const wxString &word, std::vector<TagEntryPtr>& tags)
 {
-    LexerConfPtr lexPtr;
+    LexerConf::Ptr_t lexPtr;
     // Read the configuration file
     if (EditorConfigST::Get()->IsOk()) {
         lexPtr = EditorConfigST::Get()->GetLexer(this->GetName());

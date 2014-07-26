@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : gitCommitListDlg.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #include "gitCommitListDlg.h"
 #include "gitentry.h"
 #include "editor_config.h"
@@ -27,12 +52,12 @@ GitCommitListDlg::GitCommitListDlg(wxWindow* parent, const wxString& workingDir,
     , m_git(git)
     , m_workingDir(workingDir)
 {
-    LexerConfPtr lex = EditorConfigST::Get()->GetLexer("diff");
+    LexerConf::Ptr_t lex = EditorConfigST::Get()->GetLexer("diff");
     if ( lex ) {
         lex->Apply( m_stcDiff, true );
     }
     
-    LexerConfPtr textLex = EditorConfigST::Get()->GetLexer("text");
+    LexerConf::Ptr_t textLex = EditorConfigST::Get()->GetLexer("text");
     textLex->Apply( m_stcCommitMessage, true );
     
     clConfig conf("git.conf");

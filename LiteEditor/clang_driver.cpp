@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : clang_driver.cpp
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #if HAS_LIBCLANG
 
 #include "clang_driver.h"
@@ -782,17 +807,8 @@ void ClangDriver::GetMacros(IEditor *editor)
     FileTypeCmpArgs_t compileFlags = DoPrepareCompilationArgs(editor->GetProjectName(), editor->GetFileName().GetFullPath(), projectPath, pchFile);
 
     wxString cmd;
-#ifdef __WXMAC__
-    wxFileName exePath(wxStandardPaths::Get().GetDataDir(), wxT(""));
-#else
-    wxFileName exePath(wxStandardPaths::Get().GetExecutablePath());
-#endif
-    exePath.SetFullName(wxT("codelite-clang"));
 
-#ifdef __WXMSW__
-    exePath.SetExt(wxT("exe"));
-#endif
-
+    wxFileName exePath( clStandardPaths::Get().GetBinaryFullPath("codelite-clang") );
     wxFileName outputFolder(pchFile);
     // Select the compilation args
     FileExtManager::FileType type = FileExtManager::TypeSourceCpp; // Default is C++

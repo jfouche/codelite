@@ -1,3 +1,28 @@
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// copyright            : (C) 2014 The CodeLite Team
+// file name            : cl_config.h
+//
+// -------------------------------------------------------------------------
+// A
+//              _____           _      _     _ _
+//             /  __ \         | |    | |   (_) |
+//             | /  \/ ___   __| | ___| |    _| |_ ___
+//             | |    / _ \ / _  |/ _ \ |   | | __/ _ )
+//             | \__/\ (_) | (_| |  __/ |___| | ||  __/
+//              \____/\___/ \__,_|\___\_____/_|\__\___|
+//
+//                                                  F i l e
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 #ifndef CLCONFIG_H
 #define CLCONFIG_H
 
@@ -83,6 +108,12 @@ public:
     // wxString
     wxString Read (const wxString& name, const wxString& defaultValue);
     void Write(const wxString& name, const wxString& value);
+    
+    // Quick Find Bar history
+    void AddQuickFindSearchItem(const wxString &str);
+    void AddQuickFindReplaceItem(const wxString &str);
+    wxArrayString GetQuickFindSearchItems() const;
+    wxArrayString GetQuickFindReplaceItems() const;
     
     // standard IDs for annoying dialogs
     int GetAnnoyingDlgAnswer(const wxString &name, int defaultValue = wxNOT_FOUND);

@@ -107,10 +107,11 @@ protected:
     wxPGProperty* m_pgPropAssembler;
     wxPGProperty* m_pgPropIncludePaths;
     wxPGProperty* m_pgPropPreProcessors;
-    wxPGProperty* CATEGORY_PCH11;
+    wxPGProperty* CATEGORY_PCH;
     wxPGProperty* m_pgPropPreCmpHeaderFile;
     wxPGProperty* m_pgPropIncludePCH;
     wxPGProperty* m_pgPropPCHCompileLine;
+    wxPGProperty* m_pgPropPCHPolicy;
 
 protected:
     virtual void OnProjectEnabledUI(wxUpdateUIEvent& event) { event.Skip(); }
