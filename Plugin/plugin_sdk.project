@@ -66,6 +66,10 @@
     <File Name="clSTCLineKeeper.h"/>
     <File Name="ColoursAndFontsManager.h"/>
     <File Name="ColoursAndFontsManager.cpp"/>
+    <File Name="EclipseThemeImporterBase.h"/>
+    <File Name="EclipseThemeImporterBase.cpp"/>
+    <File Name="EclipseCXXThemeImporter.h"/>
+    <File Name="EclipseCXXThemeImporter.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <File Name="async_executable_cmd.h"/>
@@ -331,9 +335,6 @@
     <File Name="my_sftp_tree_model.cpp"/>
     <File Name="my_sftp_tree_model.h"/>
   </VirtualDirectory>
-  <Dependencies Name="Custom"/>
-  <Dependencies Name="Win_wxWidgets_29"/>
-  <Dependencies Name="WinReleaseUnicode"/>
   <VirtualDirectory Name="Diff">
     <VirtualDirectory Name="dtl">
       <File Name="dtl/Diff.hpp"/>
@@ -564,7 +565,6 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="WinDebugUnicode"/>
   <VirtualDirectory Name="Compilers">
     <File Name="ICompilerLocator.h"/>
     <File Name="ICompilerLocator.cpp"/>
@@ -574,6 +574,8 @@
     <File Name="CompilersDetectorManager.cpp"/>
     <File Name="CompilerLocatorGCC.h"/>
     <File Name="CompilerLocatorGCC.cpp"/>
+    <File Name="CompilerLocatorCrossGCC.h"/>
+    <File Name="CompilerLocatorCrossGCC.cpp"/>
     <File Name="CompilerLocatorMSVC10.cpp"/>
     <File Name="CompilerLocatorMSVC10.h"/>
     <File Name="CompilerLocatorMSVCBase.h"/>
@@ -605,4 +607,8 @@
     <File Name="wxFlatButtonBase.h"/>
     <File Name="wxFlatButtonBaseBitmaps.cpp"/>
   </VirtualDirectory>
+  <Dependencies Name="Custom"/>
+  <Dependencies Name="WinDebugUnicode"/>
+  <Dependencies Name="WinReleaseUnicode"/>
+  <Dependencies Name="Win_wxWidgets_29"/>
 </CodeLite_Project>

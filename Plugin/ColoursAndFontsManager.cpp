@@ -15,6 +15,7 @@
 #include "macros.h"
 #include <wx/settings.h>
 #include <wx/tokenzr.h>
+#include "EclipseCXXThemeImporter.h"
 
 class clCommandEvent;
 ColoursAndFontsManager::ColoursAndFontsManager()
@@ -24,7 +25,9 @@ ColoursAndFontsManager::ColoursAndFontsManager()
     m_globalFgColour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
 }
 
-ColoursAndFontsManager::~ColoursAndFontsManager() {}
+ColoursAndFontsManager::~ColoursAndFontsManager()
+{
+}
 
 ColoursAndFontsManager& ColoursAndFontsManager::Get()
 {
@@ -34,8 +37,7 @@ ColoursAndFontsManager& ColoursAndFontsManager::Get()
 
 void ColoursAndFontsManager::Load()
 {
-    if(m_initialized)
-        return;
+    if(m_initialized) return;
 
     m_lexersMap.clear();
     m_initialized = true;
@@ -105,18 +107,18 @@ void ColoursAndFontsManager::LoadOldXmls(const wxString& path)
     wxDir::GetAllFiles(path, &files, "lexers_*.xml");
 
     wxString activeTheme = EditorConfigST::Get()->GetStringValue("LexerTheme");
-    if(activeTheme.IsEmpty())
-        activeTheme = "Default";
+    if(activeTheme.IsEmpty()) activeTheme = "Default";
 
     // Each XMl represents a single lexer
     for(size_t i = 0; i < files.GetCount(); ++i) {
         wxXmlDocument doc;
-        if(!doc.Load(files.Item(i)))
-            continue;
+        if(!doc.Load(files.Item(i))) continue;
 
         wxXmlNode* lexers = doc.GetRoot();
         wxXmlNode* child = lexers->GetChildren();
         wxString themeName = XmlUtils::ReadString(lexers, "Theme", "Default");
+        themeName = themeName.Capitalize();
+        
         while(child) {
             if(child->GetName() == "Lexer") {
                 // Assign theme to this lexer
@@ -141,18 +143,23 @@ LexerConf::Ptr_t ColoursAndFontsManager::DoAddLexer(wxXmlNode* node)
 {
     wxString lexerName = XmlUtils::ReadString(node, "Name");
     lexerName.MakeLower();
-    if(lexerName.IsEmpty())
-        return NULL;
+    if(lexerName.IsEmpty()) return NULL;
 
     LexerConf::Ptr_t lexer(new LexerConf);
     lexer->FromXml(node);
-
+    
+    // ensure that the theme name is capitalized - this helps
+    // when displaying the content in a wxListBox sorted
+    wxString themeName = lexer->GetThemeName();
+    themeName = themeName.Mid(0, 1).Capitalize() + themeName.Mid(1);
+    lexer->SetThemeName( themeName );
+    
     // Hack: fix Java lexer which is using the same
     // file extensions as C++...
     if(lexer->GetName() == "java" && lexer->GetFileSpec().Contains(".cpp")) {
         lexer->SetFileSpec("*.java");
     }
-    
+
     if(m_lexersMap.count(lexerName) == 0) {
         m_lexersMap.insert(std::make_pair(lexerName, ColoursAndFontsManager::Vec_t()));
     }
@@ -180,22 +187,23 @@ LexerConf::Ptr_t ColoursAndFontsManager::DoAddLexer(wxXmlNode* node)
 wxArrayString ColoursAndFontsManager::GetAvailableThemesForLexer(const wxString& lexerName) const
 {
     ColoursAndFontsManager::Map_t::const_iterator iter = m_lexersMap.find(lexerName.Lower());
-    if(iter == m_lexersMap.end())
-        return wxArrayString();
+    if(iter == m_lexersMap.end()) return wxArrayString();
 
     wxArrayString themes;
     const ColoursAndFontsManager::Vec_t& lexers = iter->second;
     for(size_t i = 0; i < lexers.size(); ++i) {
         themes.Add(lexers.at(i)->GetThemeName());
     }
+    
+    // sort the list
+    themes.Sort();
     return themes;
 }
 
 LexerConf::Ptr_t ColoursAndFontsManager::GetLexer(const wxString& lexerName, const wxString& theme) const
 {
     ColoursAndFontsManager::Map_t::const_iterator iter = m_lexersMap.find(lexerName.Lower());
-    if(iter == m_lexersMap.end())
-        return NULL;
+    if(iter == m_lexersMap.end()) return NULL;
 
     // Locate the requested theme
     LexerConf::Ptr_t firstLexer(NULL);
@@ -214,8 +222,7 @@ LexerConf::Ptr_t ColoursAndFontsManager::GetLexer(const wxString& lexerName, con
                 defaultLexer = lexers.at(i);
             }
 
-            if(lexers.at(i)->IsActive())
-                return lexers.at(i);
+            if(lexers.at(i)->IsActive()) return lexers.at(i);
         }
 
         // No match
@@ -261,6 +268,7 @@ wxArrayString ColoursAndFontsManager::GetAllLexersNames() const
             names.Add(lexer->GetName());
         }
     }
+    names.Sort();
     return names;
 }
 
@@ -332,7 +340,7 @@ void ColoursAndFontsManager::Save(LexerConf::Ptr_t lexer)
     themeName.Replace(",", "_");
     themeName.Replace(".", "_");
     themeName.Replace(";", "_");
-    
+
     filename << "lexer_" << lexer->GetName().Lower() << "_" << themeName << ".xml";
     wxFileName xmlFile(clStandardPaths::Get().GetUserDataDir(), filename);
     xmlFile.AppendDir("lexers");
@@ -372,7 +380,7 @@ void ColoursAndFontsManager::SaveGlobalSettings()
 }
 
 LexerConf::Ptr_t
-    ColoursAndFontsManager::CopyTheme(const wxString& lexerName, const wxString& themeName, const wxString& sourceTheme)
+ColoursAndFontsManager::CopyTheme(const wxString& lexerName, const wxString& themeName, const wxString& sourceTheme)
 {
     LexerConf::Ptr_t sourceLexer = GetLexer(lexerName, sourceTheme);
     CHECK_PTR_RET_NULL(sourceLexer);
@@ -386,4 +394,34 @@ LexerConf::Ptr_t
 
     // Add it
     return DoAddLexer(newLexer->ToXml());
+}
+
+void ColoursAndFontsManager::RestoreDefaults()
+{
+    wxArrayString files;
+    wxDir::GetAllFiles(clStandardPaths::Get().GetUserLexersDir(), &files, "lexer_*.xml");
+
+    // First we delete the user settings
+    {
+        wxLogNull noLog;
+        for(size_t i = 0; i < files.GetCount(); ++i) {
+            ::wxRemoveFile(files.Item(i));
+        }
+    }
+
+    // Now, we simply reload the settings
+    Reload();
+}
+
+bool ColoursAndFontsManager::ImportEclipseTheme(const wxString& eclipseXml, wxString& outputFile)
+{
+    bool res = false;
+    if(!eclipseXml.IsEmpty()) {
+        EclipseCXXThemeImporter importer;
+        res = importer.Import(eclipseXml, outputFile);
+        if(res) {
+            Reload();
+        }
+    }
+    return res;
 }

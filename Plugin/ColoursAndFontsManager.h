@@ -100,6 +100,17 @@ public:
      * @brief return lexer for a file
      */
     LexerConf::Ptr_t GetLexerForFile(const wxString& filename) const;
+    
+    /**
+     * @brief restore the default colours
+     * This is done by deleting the user defined XML files and
+     */
+    void RestoreDefaults();
+    
+    /**
+     * @brief import an eclipse theme into codelite
+     */
+    bool ImportEclipseTheme(const wxString &eclipseXml, wxString &outputFile);
 };
 
 #endif // LEXERCONFMANAGER_H

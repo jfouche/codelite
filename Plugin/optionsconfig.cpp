@@ -65,6 +65,7 @@ OptionsConfig::OptionsConfig(wxXmlNode *node)
     , m_bookmarkFgColours(SetDefaultBookmarkColours())
     , m_bookmarkLabels(defaultBookmarkLabels)
     , m_highlightCaretLine(true)
+    , m_clearHighlitWordsOnFind(true)
     , m_displayLineNumbers(false)
     , m_showIndentationGuidelines(false)
     , m_caretLineColour(wxT("LIGHT BLUE"))
@@ -105,6 +106,7 @@ OptionsConfig::OptionsConfig(wxXmlNode *node)
     , m_hideOutputPaneNotIfCscope(false)
     , m_hideOutputPaneNotIfGit(true)
     , m_hideOutputPaneNotIfDebug(true)
+    , m_hideOutputPaneNotIfMemCheck(true)
     , m_findBarAtBottom(true)
     , m_TrimLine(true)
     , m_AppendLF(true)
@@ -145,6 +147,7 @@ OptionsConfig::OptionsConfig(wxXmlNode *node)
         m_bookmarkBgColours             = XmlUtils::ReadString(node, wxT("BookmarkBgColours"),         ""); // No default; we'll deal with this later
         m_bookmarkFgColours             = XmlUtils::ReadString(node, wxT("BookmarkFgColours"),         "");
         m_bookmarkLabels                = XmlUtils::ReadString(node, wxT("BookmarkLabels"),            defaultBookmarkLabels);
+        m_clearHighlitWordsOnFind       = XmlUtils::ReadBool  (node, wxT("ClearHighlitWordsOnFind"),   m_clearHighlitWordsOnFind);
         m_highlightCaretLine            = XmlUtils::ReadBool  (node, wxT("HighlightCaretLine"),        m_highlightCaretLine);
         m_displayLineNumbers            = XmlUtils::ReadBool  (node, wxT("ShowLineNumber"),            m_displayLineNumbers);
         m_showIndentationGuidelines     = XmlUtils::ReadBool  (node, wxT("IndentationGuides"),         m_showIndentationGuidelines);
@@ -183,6 +186,7 @@ OptionsConfig::OptionsConfig(wxXmlNode *node)
         m_hideOutputPaneNotIfCscope     = XmlUtils::ReadBool  (node, wxT("HideOutputPaneNotIfCscope"));
         m_hideOutputPaneNotIfGit        = XmlUtils::ReadBool  (node, wxT("HideOutputPaneNotIfGit"));
         m_hideOutputPaneNotIfDebug      = XmlUtils::ReadBool  (node, wxT("HideOutputPaneNotIfDebug"));
+        m_hideOutputPaneNotIfMemCheck   = XmlUtils::ReadBool  (node, wxT("HideOutputPaneNotIfMemCheck"));
         m_findBarAtBottom               = XmlUtils::ReadBool  (node, wxT("FindBarAtBottom"),           m_findBarAtBottom);
         m_disableSmartIndent            = XmlUtils::ReadBool  (node, wxT("DisableSmartIndent"),        m_disableSmartIndent);
         m_disableSemicolonShift         = XmlUtils::ReadBool  (node, wxT("DisableSemicolonShift"),     m_disableSemicolonShift);
@@ -248,6 +252,7 @@ wxXmlNode *OptionsConfig::ToXml() const
     n->AddProperty(wxT("BookmarkBgColours"),             m_bookmarkBgColours);
     n->AddProperty(wxT("BookmarkFgColours"),             m_bookmarkFgColours);
     n->AddProperty(wxT("BookmarkLabels"),                m_bookmarkLabels);
+    n->AddProperty(wxT("ClearHighlitWordsOnFind"),       BoolToString(m_clearHighlitWordsOnFind));
     n->AddProperty(wxT("HighlightCaretLine"),            BoolToString(m_highlightCaretLine));
     n->AddProperty(wxT("ShowLineNumber"),                BoolToString(m_displayLineNumbers));
     n->AddProperty(wxT("IndentationGuides"),             BoolToString(m_showIndentationGuidelines));
@@ -275,6 +280,7 @@ wxXmlNode *OptionsConfig::ToXml() const
     n->AddProperty(wxT("HideOutputPaneNotIfCscope"),     BoolToString(m_hideOutputPaneNotIfCscope));
     n->AddProperty(wxT("HideOutputPaneNotIfGit"),        BoolToString(m_hideOutputPaneNotIfGit));
     n->AddProperty(wxT("HideOutputPaneNotIfDebug"),      BoolToString(m_hideOutputPaneNotIfDebug));
+    n->AddProperty(wxT("HideOutputPaneNotIfMemCheck"),   BoolToString(m_hideOutputPaneNotIfMemCheck));
     n->AddProperty(wxT("FindBarAtBottom"),               BoolToString(m_findBarAtBottom));
     n->AddProperty(wxT("DisableSmartIndent"),            BoolToString(m_disableSmartIndent));
     n->AddProperty(wxT("DisableSemicolonShift"),         BoolToString(m_disableSemicolonShift));

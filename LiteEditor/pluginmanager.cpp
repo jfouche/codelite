@@ -54,6 +54,7 @@
 #include "clang_code_completion.h"
 #include "debugger.h"
 #include "cl_standard_paths.h"
+#include "new_build_tab.h"
 
 PluginManager* PluginManager::Get()
 {
@@ -529,7 +530,7 @@ bool PluginManager::OpenFile(const BrowseRecord& rec) { return clMainFrame::Get(
 NavMgr* PluginManager::GetNavigationMgr() { return NavMgr::Get(); }
 
 void
-PluginManager::HookProjectSettingsTab(wxBookCtrlBase* book, const wxString& projectName, const wxString& configName)
+    PluginManager::HookProjectSettingsTab(wxBookCtrlBase* book, const wxString& projectName, const wxString& configName)
 {
     std::map<wxString, IPlugin*>::iterator iter = m_plugins.begin();
     for(; iter != m_plugins.end(); iter++) {
@@ -537,8 +538,9 @@ PluginManager::HookProjectSettingsTab(wxBookCtrlBase* book, const wxString& proj
     }
 }
 
-void
-PluginManager::UnHookProjectSettingsTab(wxBookCtrlBase* book, const wxString& projectName, const wxString& configName)
+void PluginManager::UnHookProjectSettingsTab(wxBookCtrlBase* book,
+                                             const wxString& projectName,
+                                             const wxString& configName)
 {
     std::map<wxString, IPlugin*>::iterator iter = m_plugins.begin();
     for(; iter != m_plugins.end(); iter++) {
@@ -732,5 +734,29 @@ void PluginManager::ProcessEditEvent(wxCommandEvent& e, IEditor* editor)
     LEditor* lEditor = dynamic_cast<LEditor*>(editor);
     if(lEditor) {
         lEditor->OnMenuCommand(e);
+    }
+}
+
+void PluginManager::AppendOutputTabText(eOutputPaneTab tab, const wxString& text)
+{
+    switch(tab) {
+    case kOutputTab_Build:
+        clMainFrame::Get()->GetOutputPane()->GetBuildTab()->AppendLine(text);
+        break;
+    case kOutputTab_Output:
+        clMainFrame::Get()->GetOutputPane()->GetOutputWindow()->AppendText(text);
+        break;
+    }
+}
+
+void PluginManager::ClearOutputTab(eOutputPaneTab tab)
+{
+    switch(tab) {
+    case kOutputTab_Build:
+        clMainFrame::Get()->GetOutputPane()->GetBuildTab()->Clear();
+        break;
+    case kOutputTab_Output:
+        clMainFrame::Get()->GetOutputPane()->GetOutputWindow()->Clear();
+        break;
     }
 }

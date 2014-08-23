@@ -46,6 +46,9 @@
 #include "clZipWriter.h"
 #include "clZipReader.h"
 #include <wx/choicdlg.h>
+#include <wx/filedlg.h>
+#include "EclipseCXXThemeImporter.h"
+#include <wx/msgdlg.h>
 
 SyntaxHighlightDlg::SyntaxHighlightDlg(wxWindow* parent)
     : SyntaxHighlightBaseDlg(parent)
@@ -58,10 +61,10 @@ SyntaxHighlightDlg::SyntaxHighlightDlg(wxWindow* parent)
     if(editor) {
         lexerName = editor->GetContext()->GetName().Lower();
     }
-    
+
     m_listBox->Append(lexers);
     if(!m_listBox->IsEmpty()) {
-        if ( lexerName.IsEmpty() ) {
+        if(lexerName.IsEmpty()) {
             m_listBox->Select(0);
         } else {
             m_listBox->SetStringSelection(lexerName);
@@ -124,8 +127,7 @@ void SyntaxHighlightDlg::LoadLexer(const wxString& themeName)
     wxWindowUpdateLocker locker(this);
     Clear();
     wxString lexer = m_listBox->GetStringSelection();
-    if(lexer.IsEmpty())
-        return;
+    if(lexer.IsEmpty()) return;
 
     m_lexer = ColoursAndFontsManager::Get().GetLexer(lexer, themeName);
     CreateLexerPage();
@@ -168,7 +170,10 @@ void SyntaxHighlightDlg::SaveChanges()
     m_isModified = false;
 }
 
-SyntaxHighlightDlg::~SyntaxHighlightDlg() { WindowAttrManager::Save(this, wxT("SyntaxHighlightDlgAttr"), NULL); }
+SyntaxHighlightDlg::~SyntaxHighlightDlg()
+{
+    WindowAttrManager::Save(this, wxT("SyntaxHighlightDlgAttr"), NULL);
+}
 
 void SyntaxHighlightDlg::OnColourChanged(wxColourPickerEvent& event)
 {
@@ -195,8 +200,7 @@ void SyntaxHighlightDlg::OnColourChanged(wxColourPickerEvent& event)
         StyleProperty::List_t::iterator iter = properties.begin();
         for(; iter != properties.end(); ++iter) {
             // Dont change the text selection using the global font picker
-            if(iter->GetName() == wxT("Text Selection"))
-                continue;
+            if(iter->GetName() == wxT("Text Selection")) continue;
             iter->SetBgColour(colour.GetAsString(wxC2S_HTML_SYNTAX));
         }
 
@@ -384,8 +388,7 @@ void SyntaxHighlightDlg::CreateLexerPage()
         }
     }
 
-    if(m_properties->GetCount())
-        m_properties->SetSelection(0);
+    if(m_properties->GetCount()) m_properties->SetSelection(0);
 
     wxString initialColor = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT).GetAsString();
     wxString bgInitialColor = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW).GetAsString();
@@ -460,7 +463,10 @@ void SyntaxHighlightDlg::OnLexerSelected(wxCommandEvent& event)
     LoadLexer("");
 }
 
-void SyntaxHighlightDlg::OnButtonApplyUI(wxUpdateUIEvent& event) { event.Enable(m_isModified); }
+void SyntaxHighlightDlg::OnButtonApplyUI(wxUpdateUIEvent& event)
+{
+    event.Enable(m_isModified);
+}
 
 void SyntaxHighlightDlg::OnTextSelFgUI(wxUpdateUIEvent& event)
 {
@@ -506,19 +512,18 @@ void SyntaxHighlightDlg::OnExport(wxCommandEvent& event)
     // Get list of choices
     wxArrayString lexers = ColoursAndFontsManager::Get().GetAllLexersNames();
     wxArrayInt choices;
-    if(::wxGetSelectedChoices(
-           choices, _("Select which lexers you wish to export"), _("Export Lexers"), lexers, this) == wxNOT_FOUND) {
+    if(::wxGetSelectedChoices(choices, _("Select which lexers you wish to export"), _("Export Lexers"), lexers, this) ==
+       wxNOT_FOUND) {
         return;
     }
 
     // Select the 'save' path
     wxString path = ::wxFileSelector(
         _("Save as"), "", "MySettings.zip", "", wxFileSelectorDefaultWildcardStr, wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-    if(path.IsEmpty())
-        return;
+    if(path.IsEmpty()) return;
 
     clZipWriter zw(path);
-    for(size_t i=0; i<choices.GetCount(); ++i) {
+    for(size_t i = 0; i < choices.GetCount(); ++i) {
         wxString file;
         file << "lexer_" << lexers.Item(choices.Item(i)).Lower() << "_*.xml";
         zw.AddDirectory(clStandardPaths::Get().GetUserLexersDir(), file);
@@ -530,9 +535,8 @@ void SyntaxHighlightDlg::OnExport(wxCommandEvent& event)
 
 void SyntaxHighlightDlg::OnImport(wxCommandEvent& event)
 {
-    wxString path = ::wxFileSelector(_("Save as"), "", "", "", "Zip Files (*.zip)|*.zip", wxFD_OPEN);
-    if(path.IsEmpty())
-        return;
+    wxString path = ::wxFileSelector(_("Select file"), "", "", "", "Zip Files (*.zip)|*.zip", wxFD_OPEN);
+    if(path.IsEmpty()) return;
 
     wxFileName fn(path);
     clZipReader zr(fn);
@@ -559,8 +563,7 @@ void SyntaxHighlightDlg::OnExportAll(wxCommandEvent& event)
     // Select the 'save' path
     wxString path = ::wxFileSelector(
         _("Save as"), "", "MySettings.zip", "", wxFileSelectorDefaultWildcardStr, wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-    if(path.IsEmpty())
-        return;
+    if(path.IsEmpty()) return;
 
     clZipWriter zw(path);
     zw.AddDirectory(clStandardPaths::Get().GetUserLexersDir(), "lexer_*.xml");
@@ -572,4 +575,42 @@ void SyntaxHighlightDlg::OnExportAll(wxCommandEvent& event)
 void SyntaxHighlightDlg::OnToolExportAll(wxAuiToolBarEvent& event)
 {
     OnExportAll(event);
+}
+void SyntaxHighlightDlg::OnRestoreDefaults(wxCommandEvent& event)
+{
+    // Ask for confirmation
+    if(::wxMessageBox(_("Are you sure you want to restore colours to factory defaults?\nBy choosing 'Yes', you will "
+                        "lose your modifications"),
+                      _("Confirm"),
+                      wxICON_WARNING | wxYES_NO | wxCANCEL | wxNO_DEFAULT | wxCENTER,
+                      this) == wxYES) {
+        // Restore defaults
+        ColoursAndFontsManager::Get().RestoreDefaults();
+        // Dismiss the dialog
+        EndModal(wxID_OK);
+        // and reload it
+        wxCommandEvent openEvent(wxEVT_COMMAND_MENU_SELECTED, XRCID("syntax_highlight"));
+        clMainFrame::Get()->GetEventHandler()->AddPendingEvent(openEvent);
+    }
+}
+
+void SyntaxHighlightDlg::OnImportEclipseTheme(wxAuiToolBarEvent& event)
+{
+    wxString eclipseThemeXml =
+        ::wxFileSelector(_("Select eclipse XML theme file"), "", "", "", "Eclipse Theme Files (*.xml)|*.xml");
+    wxString outputFile;
+    if(ColoursAndFontsManager::Get().ImportEclipseTheme(eclipseThemeXml, outputFile)) {
+        ::wxMessageBox(_("File imported successfully!\n") + outputFile);
+        // Dismiss the dialog
+        EndModal(wxID_OK);
+        // and reload it
+        wxCommandEvent openEvent(wxEVT_COMMAND_MENU_SELECTED, XRCID("syntax_highlight"));
+        clMainFrame::Get()->GetEventHandler()->AddPendingEvent(openEvent);
+    }
+}
+
+void SyntaxHighlightDlg::OnLoadEclipseThemeWebsite(wxCommandEvent& event)
+{
+    wxUnusedVar(event);
+    ::wxLaunchDefaultBrowser("http://eclipsecolorthemes.org/");
 }

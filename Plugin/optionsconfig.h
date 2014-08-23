@@ -73,6 +73,7 @@ protected:
     wxString       m_bookmarkFgColours;
     wxString       m_bookmarkLabels;
     bool           m_highlightCaretLine;
+    bool           m_clearHighlitWordsOnFind;
     bool           m_displayLineNumbers;
     bool           m_showIndentationGuidelines;
     wxColour       m_caretLineColour;
@@ -110,6 +111,7 @@ protected:
     bool           m_hideOutputPaneNotIfCscope;
     bool           m_hideOutputPaneNotIfGit;
     bool           m_hideOutputPaneNotIfDebug;
+    bool           m_hideOutputPaneNotIfMemCheck;
     bool           m_findBarAtBottom;
     bool           m_TrimLine;
     bool           m_AppendLF;
@@ -321,6 +323,12 @@ public:
     const bool& GetHideOutputPaneNotIfDebug() const {
         return m_hideOutputPaneNotIfDebug;
     }
+    void SetHideOutputPaneNotIfMemCheck(const bool& HideOutpuPaneNotIfMemCheck) {
+        this->m_hideOutputPaneNotIfMemCheck = HideOutpuPaneNotIfMemCheck;
+    }
+    const bool& GetHideOutputPaneNotIfMemCheck() const {
+        return m_hideOutputPaneNotIfMemCheck;
+    }
     void SetHideChangeMarkerMargin(bool hideChangeMarkerMargin) {
         this->m_hideChangeMarkerMargin = hideChangeMarkerMargin;
     }
@@ -352,6 +360,10 @@ public:
     wxColour GetBookmarkBgColour(size_t index) const;
 
     wxString GetBookmarkLabel(size_t index) const;
+
+    bool GetClearHighlitWordsOnFind() const {
+        return m_clearHighlitWordsOnFind;
+    }
 
     bool GetHighlightCaretLine() const {
         return m_highlightCaretLine;
@@ -390,6 +402,10 @@ public:
     void SetBookmarkBgColour(wxColour c, size_t index);
     
     void SetBookmarkLabel(const wxString& label, size_t index);
+
+    void SetClearHighlitWordsOnFind(bool b) {
+        m_clearHighlitWordsOnFind = b;
+    }
 
     void SetHighlightCaretLine(bool b) {
         m_highlightCaretLine = b;
