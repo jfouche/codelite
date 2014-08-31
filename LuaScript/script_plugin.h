@@ -29,7 +29,6 @@ private:
 	void InitUi();
 	
 	void OnCmdEvent(wxCommandEvent& event);
-	void OnClEvent(clCommandEvent& event);
 
 	void OnShowFrame(wxCommandEvent& event);
 	void OnSettings(wxCommandEvent& event);

@@ -30,11 +30,6 @@ void ScriptEventHandler::ConnectCmdEvent(int id)
 	EventNotifier::Get()->Connect(id, wxCommandEventHandler(ScriptEventHandler::OnCmdEvent), NULL, this);
 }
 
-void ScriptEventHandler::OnClEvent(clCommandEvent& event)
-{
-	m_scriptMgr->OnClEvent(event);
-}
-
 void ScriptEventHandler::OnCmdEvent(wxCommandEvent& event)
 {
 	m_scriptMgr->OnCmdEvent(event);

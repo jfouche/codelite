@@ -167,11 +167,6 @@ wxString ScriptManager::GetHookPath(const wxString& hook) const
 	return wxFileName(GetHookDir(), hook).GetFullPath();
 }
 
-void ScriptManager::OnClEvent(clCommandEvent& event)
-{
-	m_hookRunner->OnClEvent(event);
-}
-
 void ScriptManager::OnCmdEvent(wxCommandEvent& event)
 {
 	m_hookRunner->OnCmdEvent(event);

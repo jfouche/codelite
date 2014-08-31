@@ -63,20 +63,24 @@ HookRunner::HookRunner(IManager* manager)
 {
 }
 
-void HookRunner::PushOnEventFunctionAndSelf()
+void HookRunner::OnCmdEvent(wxCommandEvent& event)
 {
 	lua_getglobal(m_lua, "codelite");
 	lua_getfield(m_lua, -1, "OnEvent");
 	lua_pushvalue(m_lua, -2); // push self
 	lua_remove(m_lua, -3);
-}
+	lua_pushnumber(m_lua, event.GetEventType());
 
-void HookRunner::OnClEvent(clCommandEvent& event)
-{
-	RunFunctions(event.GetEventType(), &event);
-}
+	clCommandEvent* clEvent = wxDynamicCast(&event, clCommandEvent);
+	if (clEvent)
+	{
+		lua::push(m_lua, clEvent);
+	}
+	else
+	{
+		lua::push(m_lua, &event);
+	}
 
-void HookRunner::OnCmdEvent(wxCommandEvent& event)
-{
-	RunFunctions(event.GetEventType(), &event);
+	// Call the fonction
+	CL_LUA_TRY { lua_call(m_lua, 3, 0); }
 }

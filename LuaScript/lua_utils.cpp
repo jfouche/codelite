@@ -3,6 +3,44 @@
 
 jmp_buf JUMP_BUFFER;
 
+static std::string to_string(lua_State *L, int n)
+{
+	std::ostringstream oss;
+	const int t = lua_type(L, n);
+	switch (t)
+	{
+	case LUA_TSTRING:  /* strings */
+		oss << '"' << lua_tostring(L, n) << '"';
+		break;
+
+	case LUA_TBOOLEAN:  /* booleans */
+		oss << (lua_toboolean(L, n) ? "true" : "false");
+		break;
+
+	case LUA_TNUMBER:  /* numbers */
+		oss << lua_tonumber(L, n);
+		break;
+
+	case LUA_TTABLE: /* table */
+		oss << "{ ";
+		lua_pushnil(L); // first index
+		while (lua_next(L, -2))
+		{
+			lua_pushvalue(L, -2);
+			oss << to_string(L, -1) << ":" << to_string(L, -2) << " ";
+			lua_pop(L, 2);
+		}
+		//lua_pop(L, 1);
+		oss << "}";
+		break;
+
+	default:  /* other values */
+		oss << lua_typename(L, t);
+		break;
+	}
+	return oss.str();
+}
+
 std::string lua::stack_dump(lua_State *L)
 {
 	std::ostringstream oss;
@@ -10,27 +48,7 @@ std::string lua::stack_dump(lua_State *L)
 	const int top = lua_gettop(L);
 	for (int i = 1; i <= top; i++)    /* repeat for each level */
 	{
-		oss << " - " << i << " : ";
-		const int t = lua_type(L, i);
-		switch (t)
-		{
-		case LUA_TSTRING:  /* strings */
-			oss << '"' << lua_tostring(L, i) << '"';
-			break;
-
-		case LUA_TBOOLEAN:  /* booleans */
-			oss << (lua_toboolean(L, i) ? "true" : "false");
-			break;
-
-		case LUA_TNUMBER:  /* numbers */
-			oss << lua_tonumber(L, i);
-			break;
-
-		default:  /* other values */
-			oss << lua_typename(L, t);
-			break;
-		}
-		oss << std::endl;  /* put a separator */
+		oss << " - " << i << " : " << to_string(L, i) << std::endl;  /* put a separator */
 	}
 	return oss.str();
 }
@@ -53,6 +71,11 @@ void lua::createClass(lua_State* L, const char* name, const luaL_Reg* methods)
 {
 	createClass(L, name);
 	luaL_setfuncs(L, methods, 0);
+}
+
+bool lua::is(lua_State* L, int n, const char* name)
+{
+	return luaL_testudata(L, n, name) != NULL;
 }
 
 const char* lua::check_string(lua_State* L, int n, const char* error)

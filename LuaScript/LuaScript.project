@@ -292,7 +292,7 @@
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(ConfigurationName)/LuaScript.dll" IntermediateDirectory="./WinReleaseUnicode" Command="./codelite.exe" CommandArguments="-b ." UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="../Runtime" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
-        <![CDATA[]]>
+        <![CDATA[PATH=../sdk/clang/lib;$(WXWIN)\lib\gcc_dll;$(PATH)]]>
       </Environment>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
         <DebuggerSearchPaths/>

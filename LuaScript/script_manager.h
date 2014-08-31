@@ -42,7 +42,6 @@ public:
 	void ReloadHooks();
 
 	void OnCmdEvent(wxCommandEvent& event);
-	void OnClEvent(clCommandEvent& event);
 
 private:
 	wxString GetScriptDir() const;

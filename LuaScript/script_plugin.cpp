@@ -117,11 +117,6 @@ void ScriptPlugin::InitUi()
 	m_scriptsFrame	 = new ScriptFrame(wxTheApp->GetTopWindow(), m_scriptMgr);
 }
 
-void ScriptPlugin::OnClEvent(clCommandEvent& event)
-{
-	m_scriptMgr->OnClEvent(event);
-}
-
 void ScriptPlugin::OnCmdEvent(wxCommandEvent& event)
 {
 	m_scriptMgr->OnCmdEvent(event);

@@ -23,8 +23,6 @@ public:
 	
 protected:
 	void OnCmdEvent(wxCommandEvent& event);
-
-	void OnClEvent(clCommandEvent& event);
 };
 
 #endif // CL_LUA_EVENT_HANDLER_H_INCLUDED

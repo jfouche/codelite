@@ -1,6 +1,7 @@
 #include "lua_utils.hpp"
 #include "script_event_handler.h"
 #include "imanager.h"
+#include "lua_cl_bindings.h"
 #include "cl_command_event.h"
 #include "plugin.h"
 #include "event_notifier.h"
@@ -62,7 +63,15 @@ static int OnEvent(lua_State* L)
 {
 	lua::check_table(L, 1);            // codelite
 	lua::check_integer(L, 2);          // event_id
-	lua::check<wxCommandEvent>(L, 3);  // event
+	if (!lua::is(L, 3, WX_EVT_CLASSNAME) && !lua::is(L, 3, CL_EVT_CLASSNAME))
+	{
+		// not an event
+		lua_getmetatable(L, 3);
+		luaL_getmetatable(L, CL_EVT_CLASSNAME);
+		lua::print_stack(L);
+
+		luaL_error(L, "Expected event");
+	}
 
 	// bindings = codelite.bindings
 	lua_getfield(L, 1, BINDINGS_FIELD);

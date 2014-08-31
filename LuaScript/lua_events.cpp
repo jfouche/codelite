@@ -13,6 +13,10 @@ namespace lua
 	template <>
 	wxCommandEvent* check(lua_State* L, int n)
 	{
+		if (is(L, n, CL_EVT_CLASSNAME))
+		{
+			return check<clCommandEvent>(L, n, CL_EVT_CLASSNAME);
+		}
 		return check<wxCommandEvent>(L, n, WX_EVT_CLASSNAME);
 	}
 
