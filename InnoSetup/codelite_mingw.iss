@@ -11,7 +11,7 @@ DefaultDirName={reg:HKLM\Software\codelite\settings,InstalPath|{pf}\CodeLite}
 DefaultGroupName=CodeLite
 LicenseFile=license.txt
 OutputDir=output
-OutputBaseFilename=codelite-6.0.1-mingw4.8.1
+OutputBaseFilename=codelite-7.0-mingw4.8.1
 ChangesEnvironment=yes
 FlatComponentsList=yes
 SetupIconFile=box_software.ico
@@ -34,7 +34,6 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 Source: "..\Runtime\codelite.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: Editor
-Source: "..\Runtime\codelite-clang.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: Editor
 Source: "..\Runtime\codelite-echo.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: Editor
 Source: "..\Runtime\codelite-make.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: Editor
 Source: "..\Runtime\codelite-terminal.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: Editor
@@ -69,6 +68,7 @@ Source: "..\Runtime\config\codelite.layout.default"; DestDir: "{app}\config"; De
 Source: "..\sdk\codelite_cppcheck\cfg\*.cfg"; DestDir: "{app}\config\cppcheck"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\templates\*"; DestDir: "{app}\templates"; Flags: recursesubdirs ; Components: Editor
 Source: "..\SpellChecker\dics\*"; DestDir: "{app}\dics"; Flags: recursesubdirs ; Components: Editor
+Source: "..\codelitephp\resources\cc\*.php"; DestDir: "{app}\plugins\resources\php\cc"; Flags: recursesubdirs ; Components: Editor
 
 ; Override with Windows specific files
 Source: "..\Runtime\templates\projects\dynamic-library\dynamic-library.project.windows"; DestName: dynamic-library.project; DestDir: "{app}\templates\projects\dynamic-library"; Flags: ignoreversion ; Components: Editor
@@ -104,6 +104,7 @@ Source: "..\Runtime\plugins\CodeLiteDiff.dll"; DestDir: "{app}\plugins"; Flags: 
 Source: "..\Runtime\plugins\LLDBDebugger.dll"; DestDir: "{app}\plugins"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\plugins\wxcrafter.dll"; DestDir: "{app}\plugins"; Flags: ignoreversion ; Components: Editor
 Source: "..\Runtime\plugins\SpellCheck.dll"; DestDir: "{app}\plugins"; Flags: ignoreversion ; Components: Editor
+Source: "..\Runtime\plugins\PHP.dll"; DestDir: "{app}\plugins"; Flags: ignoreversion ; Components: Editor
 
 Source: "..\lib\gcc_lib\libwxsqlite3u.dll"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
 Source: "..\lib\gcc_lib\libcodeliteu.dll"; DestDir: "{app}"; Flags: ignoreversion ; Components: Editor
@@ -159,6 +160,9 @@ Root: HKLM; Subkey: "Software\codelite\settings"; ValueType: string; ValueName: 
 Root: HKLM; Subkey: "Software\codelite\settings"; ValueType: string; ValueName: "MinGW"; ValueData: "{code:GetMinGWInstallDir}"
 Root: HKLM; Subkey: "Software\codelite\settings"; ValueType: string; ValueName: "MinGW_Version"; ValueData: "4.8.1"
 
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}"
+
 [Code]
 var
   MinGW_Page:      TInputDirWizardPage;
@@ -210,6 +214,29 @@ begin
   CreateUnitTestPPPage();
 end;
 
+procedure DeleteFolder(ADirName: string);
+var
+  FindRec: TFindRec;
+begin
+  if FindFirst(ADirName + '\*', FindRec) then begin
+    try
+      repeat
+        if FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY <> 0 then begin
+          if (FindRec.Name <> '.') and (FindRec.Name <> '..') then begin
+            DeleteFolder(ADirName + '\' + FindRec.Name);
+            RemoveDir(ADirName + '\' + FindRec.Name);
+          end;
+        end else
+          DeleteFile(ADirName + '\' + FindRec.Name);
+      until not FindNext(FindRec);
+    finally
+      FindClose(FindRec);
+    end;
+  end;
+  // Remove the folder itself
+  RemoveDir(ADirName);
+end;
+
 // Uninstall
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
@@ -217,6 +244,11 @@ begin
     usUninstall:
       begin
         RegDeleteKeyIncludingSubkeys(HKCR, '*\shell\Open With CodeLite');
+        // Prompt the user to delete all his settings, default to "No"
+        if MsgBox('Do you want to delete all user settings as well?', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES 
+        then begin
+            DeleteFolder(ExpandConstant('{userappdata}') + '\codelite');
+        end;
       end;
     usPostUninstall:
       begin

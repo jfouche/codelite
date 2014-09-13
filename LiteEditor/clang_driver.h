@@ -64,7 +64,6 @@ protected:
     ClangThreadRequest::List_t DoCreateListOfModifiedBuffers(IEditor *excludeEditor);
 
     // Event handlers
-    void OnDeletMacroHandler(wxCommandEvent &e);
     void DoDeleteTempFile( const wxString &fileName );
     
 public:
@@ -72,7 +71,6 @@ public:
     virtual ~ClangDriver();
 
     void QueueRequest  (IEditor *editor, WorkingContext context);
-    void GetMacros(IEditor* editor);
     void ReparseFile(const wxString &filename);
     void CodeCompletion(IEditor *editor);
     void Abort();

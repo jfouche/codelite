@@ -678,7 +678,7 @@ clMainFrame::clMainFrame(wxWindow* pParent,
     JobQueueSingleton::Instance()->Start(6);
 
     // the single instance job is a presisstent job, so the pool will contain only 4 available threads
-    JobQueueSingleton::Instance()->PushJob(new SingleInstanceThreadJob(this, ManagerST::Get()->GetStarupDirectory()));
+    JobQueueSingleton::Instance()->PushJob(new SingleInstanceThreadJob(this, ManagerST::Get()->GetStartupDirectory()));
 
     // start the editor creator thread
     m_timer = new wxTimer(this, FrameTimerId);
@@ -895,7 +895,7 @@ void clMainFrame::Initialize(bool loadLastSession)
     // we show splash only when using Release builds of codelite
     if(inf.GetFlags() & CL_SHOW_SPLASH) {
         wxBitmap bitmap;
-        wxString splashName(ManagerST::Get()->GetStarupDirectory() + wxT("/images/splashscreen.png"));
+        wxString splashName(ManagerST::Get()->GetStartupDirectory() + wxT("/images/splashscreen.png"));
         if(bitmap.LoadFile(splashName, wxBITMAP_TYPE_PNG)) {
             wxString mainTitle = CODELITE_VERSION_STR;
             clMainFrame::m_splashScreen = new clSplashScreen(NULL, bitmap);
@@ -970,14 +970,9 @@ void clMainFrame::CreateGUIControls(void)
 
     // initialize debugger configuration tool
     DebuggerConfigTool::Get()->Load(wxT("config/debuggers.xml"), wxT("5.4"));
-    WorkspaceST::Get()->SetStartupDir(ManagerST::Get()->GetStarupDirectory());
+    WorkspaceST::Get()->SetStartupDir(ManagerST::Get()->GetStartupDirectory());
 
-#if wxCHECK_VERSION(2, 9, 5)
     m_mgr.GetArtProvider()->SetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE, 0);
-#else
-    m_mgr.GetArtProvider()->SetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE, 0);
-#endif
-
     m_mgr.GetArtProvider()->SetMetric(wxAUI_DOCKART_SASH_SIZE, 6);
 
     // Load the menubar from XRC and set this frame's menubar to it.
@@ -2738,6 +2733,8 @@ void clMainFrame::OnCtagsOptions(wxCommandEvent& event)
         // Clear clang's cache
         ClangCodeCompletion::Instance()->ClearCache();
 #endif
+        // Update the pre-processor dimming feature
+        CodeCompletionManager::Get().RefreshPreProcessorColouring();
     }
 }
 
@@ -2759,7 +2756,14 @@ void clMainFrame::OnViewToolbar(wxCommandEvent& event)
 {
     std::map<int, wxString>::iterator iter = m_toolbars.find(event.GetId());
     if(iter != m_toolbars.end()) {
-        ViewPane(iter->second, event.IsChecked());
+        wxAuiPaneInfo& pane = m_mgr.GetPane(iter->second);
+        if(pane.IsOk() && pane.IsToolbar()) {
+            pane.Show(event.IsChecked());
+            m_mgr.Update();
+            
+            // Update the current perspective
+            ManagerST::Get()->GetPerspectiveManager().SavePerspective();
+        }
     }
 }
 
@@ -2786,63 +2790,35 @@ void clMainFrame::OnTogglePluginTBars(wxCommandEvent& event)
 
 void clMainFrame::ToggleToolBars(bool std)
 {
-    wxMenu* menu;
-    wxMenuItem* item = GetMenuBar()->FindItem(XRCID("show_std_toolbar"), &menu);
-    if(!item || !item->IsCheckable()) {
-        CL_DEBUG1(wxT("In clMainFrame::ToggleToolBars: menuitem not found"));
-        return;
-    }
+    wxStringSet_t toolbars;
+    {
+        wxAuiPaneInfoArray& allPanes = m_mgr.GetAllPanes();
+        for(size_t i = 0; i < allPanes.GetCount(); ++i) {
+            wxAuiPaneInfo& pane = allPanes.Item(i);
+            if(!pane.IsOk() || !pane.IsToolbar()) continue;
 
-    if(std) {
-        // The standard items are the first 4
-        // Use the first menuitem's state to decide whether to show or hide them all
-        bool checked = item->IsChecked();
-
-        if(!menu || (menu->GetMenuItemCount() < 4)) {
-            CL_DEBUG1(wxT("In clMainFrame::ToggleToolBars: menu not found, or has too few items"));
-            return;
-        }
-
-        for(size_t n = 0; n < 4; ++n) {
-            wxMenuItem* item = menu->FindItemByPosition(n);
-            if(!item || !item->IsCheckable()) {
-                CL_DEBUG1(
-                    wxT("In clMainFrame::ToggleToolBars: standard menuitem not found, or is no longer checkable :/"));
-                continue;
-            }
-
-            std::map<int, wxString>::iterator iter = m_toolbars.find(item->GetId());
-            if(iter != m_toolbars.end()) {
-                ViewPane(iter->second, !checked);
+            if(std) {
+                // collect core toolbars
+                if(m_coreToolbars.count(pane.name)) toolbars.insert(pane.name);
+            } else {
+                // collect plugins toolbars
+                if(m_coreToolbars.count(pane.name) == 0) toolbars.insert(pane.name);
             }
         }
-        return;
     }
 
-    // We don't know in advance the number of plugin toolbars, but we do know that they are at the end, following a
-    // separator
-    // So show/hide them backwards until we hit something uncheckable
-    size_t count = menu->GetMenuItemCount();
-    if(count < 8) {
-        CL_DEBUG1(wxT("In clMainFrame::ToggleToolBars: An implausibly small number of non-plugin menuitem found"));
-        return;
-    }
+    if(toolbars.empty()) return;
 
-    bool checked = true;
-    for(size_t n = count; n; --n) {
-        wxMenuItem* item = menu->FindItemByPosition(n - 1);
-        if(!item || !item->IsCheckable()) {
-            return;
-        }
-        // Arbitrarily use the last menuitem's state to decide whether to show or hide them all
-        if(n == count) {
-            checked = item->IsChecked();
-        }
-        std::map<int, wxString>::iterator iter = m_toolbars.find(item->GetId());
-        if(iter != m_toolbars.end()) {
-            ViewPane(iter->second, !checked);
-        }
+    // determine that state based on the first toolbar
+    bool currentStateVisible = m_mgr.GetPane((*toolbars.begin())).IsShown();
+
+    wxStringSet_t::iterator iter = toolbars.begin();
+    for(; iter != toolbars.end(); ++iter) {
+        wxString name = *iter;
+        wxAuiPaneInfo& pane = m_mgr.GetPane(name);
+        pane.Show(!currentStateVisible);
     }
+    m_mgr.Update();
 }
 
 void clMainFrame::OnViewPane(wxCommandEvent& event)
@@ -2878,11 +2854,9 @@ void clMainFrame::ViewPane(const wxString& paneName, bool checked)
         }
     }
 
-#if wxVERSION_NUMBER >= 2900
     // This is needed in >=wxGTK-2.9, otherwise output pane doesn't fully expand, or on closing the auinotebook doesn't
     // occupy its space
     SendSizeEvent(wxSEND_EVENT_POST);
-#endif
 }
 
 void clMainFrame::ViewPaneUI(const wxString& paneName, wxUpdateUIEvent& event)
@@ -3137,7 +3111,11 @@ void clMainFrame::OnCleanProjectUI(wxUpdateUIEvent& event)
 void clMainFrame::OnExecuteNoDebug(wxCommandEvent& event)
 {
     // Test to see if any plugin wants to execute it
-    wxCommandEvent evtExecute(wxEVT_CMD_EXECUTE_ACTIVE_PROJECT);
+    clExecuteEvent evtExecute(wxEVT_CMD_EXECUTE_ACTIVE_PROJECT);
+    if(WorkspaceST::Get()->IsOpen()) {
+        // set the project name
+        evtExecute.SetTargetName(WorkspaceST::Get()->GetActiveProject()->GetName());
+    }
     if(EventNotifier::Get()->ProcessEvent(evtExecute)) return;
 
     if(!WorkspaceST::Get()->IsOpen()) {
@@ -3185,7 +3163,7 @@ void clMainFrame::OnTimer(wxTimerEvent& event)
     long updatePaths(1);
 
     wxLogMessage(wxString::Format(wxT("Install path: %s"), ManagerST::Get()->GetInstallDir().c_str()));
-    wxLogMessage(wxString::Format(wxT("Startup Path: %s"), ManagerST::Get()->GetStarupDirectory().c_str()));
+    wxLogMessage(wxString::Format(wxT("Startup Path: %s"), ManagerST::Get()->GetStartupDirectory().c_str()));
     wxLogMessage("Using " + wxStyledTextCtrl::GetLibraryVersionInfo().ToString());
     if(::clIsCygwinEnvironment()) {
         wxLogMessage("Running under Cygwin environment");
@@ -3497,7 +3475,7 @@ void clMainFrame::CreateWelcomePage()
     /*
     Manager *mgr = ManagerST::Get();
     //load the template
-    wxFileName fn(mgr->GetStarupDirectory(), wxT("index.html"));
+    wxFileName fn(mgr->GetStartupDirectory(), wxT("index.html"));
     wxFFile file(fn.GetFullPath(), wxT("r"));
     if (!file.IsOpened()) {
         return;
@@ -3509,7 +3487,7 @@ void clMainFrame::CreateWelcomePage()
     file.Close();
 
     //replace $(InstallPath)
-    content.Replace(wxT("$(InstallPath)"), mgr->GetStarupDirectory());
+    content.Replace(wxT("$(InstallPath)"), mgr->GetStartupDirectory());
 
     //replace the $(FilesTable) & $(WorkspaceTable)
     wxString workspaceTable = CreateWorkspaceTable();
@@ -3864,11 +3842,25 @@ void clMainFrame::OnShowWelcomePage(wxCommandEvent& event) { ShowWelcomePage(); 
 
 void clMainFrame::CompleteInitialization()
 {
+    // Populate the list of core toolbars before we start loading
+    // the plugins
+    wxAuiPaneInfoArray& panes = m_mgr.GetAllPanes();
+    for(size_t i = 0; i < panes.GetCount(); ++i) {
+        if(panes.Item(i).IsToolbar()) {
+            m_coreToolbars.insert(panes.Item(i).name);
+        }
+    }
+
     // Load the plugins
     PluginManager::Get()->Load();
 
-    // Load debuggers (*must* be after the plugins)
+// Load debuggers (*must* be after the plugins)
+#ifdef USE_POSIX_LAYOUT
+    wxString plugdir(wxStandardPaths::Get().GetDataDir() + wxT(PLUGINS_DIR));
+    DebuggerMgr::Get().Initialize(this, EnvironmentConfig::Instance(), plugdir);
+#else
     DebuggerMgr::Get().Initialize(this, EnvironmentConfig::Instance(), ManagerST::Get()->GetInstallDir());
+#endif
     DebuggerMgr::Get().LoadDebuggers();
 
     // Connect some system events
@@ -5270,7 +5262,7 @@ void clMainFrame::OnRestoreDefaultLayout(wxCommandEvent& e)
     for(size_t i = 0; i < panes.GetCount(); i++) {
         // make sure that the caption is visible
         panes.Item(i).CaptionVisible(true);
-        wxAuiPaneInfo &p = panes.Item(i);
+        wxAuiPaneInfo& p = panes.Item(i);
 
         if(p.window) {
             DockablePane* d = dynamic_cast<DockablePane*>(p.window);
@@ -5745,8 +5737,8 @@ void clMainFrame::OnUpdateCustomTargetsDropDownMenu(wxCommandEvent& e)
 
 void clMainFrame::DoCreateBuildDropDownMenu(wxMenu* menu)
 {
-    menu->Append(XRCID("build_active_project_only"), wxT("Project Only » Build"));
-    menu->Append(XRCID("clean_active_project_only"), wxT("Project Only » Clean"));
+    menu->Append(XRCID("build_active_project_only"), wxT("Project Only - Build"));
+    menu->Append(XRCID("clean_active_project_only"), wxT("Project Only - Clean"));
 
     // build the menu and show it
     BuildConfigPtr bldcfg = WorkspaceST::Get()->GetProjBuildConf(WorkspaceST::Get()->GetActiveProjectName(), "");

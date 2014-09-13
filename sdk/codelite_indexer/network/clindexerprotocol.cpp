@@ -61,10 +61,10 @@ bool clIndexerProtocol::ReadReply(clNamedPipe* conn, clIndexerReply& reply)
 	}
 
 	if (actual_read != sizeof(buff_len)) {
-		fprintf(stderr, "ERROR: ReadReply: Protocol error: expected %lu bytes, got %u. reason: %d\n",
-				sizeof(buff_len),
-				(unsigned int)actual_read,
-				conn->getLastError());
+		fprintf(stderr, "ERROR: ReadReply: Protocol error: expected %d bytes, got %d. reason: %d\n",
+				(int)sizeof(buff_len),
+				(int)actual_read,
+				(int)conn->getLastError());
 		return false;
 	}
 
@@ -103,7 +103,7 @@ bool clIndexerProtocol::ReadRequest(clNamedPipe* conn, clIndexerRequest& req)
 	}
 
 	if (actual_read != sizeof(buff_len)) {
-		fprintf(stderr, "ERROR: Protocol error: expected %lu bytes, got %u\n", sizeof(buff_len), (unsigned int)actual_read);
+		fprintf(stderr, "ERROR: Protocol error: expected %u bytes, got %u\n", (unsigned int)sizeof(buff_len), (unsigned int)actual_read);
 		return false;
 	}
 

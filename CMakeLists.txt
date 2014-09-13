@@ -98,6 +98,9 @@ if (UNIX OR MINGW)
              )
         endif()
         if (MINGW)
+          execute_process(COMMAND sh ${WX_TOOL} --debug=no --rescomp OUTPUT_VARIABLE WX_RC_FLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+          string(REGEX REPLACE "windres" "" WX_RC_FLAGS ${WX_RC_FLAGS})
+          set (CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} ${WX_RC_FLAGS}")
           add_definitions(-D__WXMSW__)
         endif (MINGW)
     endif()
@@ -208,8 +211,13 @@ unset(COPY_WX_LIBS CACHE)
 
 set( PLUGINS_DIR "${CL_PREFIX}/${CL_INSTALL_LIBDIR}/codelite")
 add_definitions(-DYY_NEVER_INTERACTIVE=1)
+if (NOT MINGW)
 add_definitions(-DINSTALL_DIR=\"${CL_PREFIX}/share/codelite\")
 add_definitions(-DPLUGINS_DIR=\"${PLUGINS_DIR}\")
+else()
+add_definitions(-DNDEBUG)
+add_definitions(-DUSE_POSIX_LAYOUT)
+endif()
 
 message("-- PLUGINS_DIR is set to ${PLUGINS_DIR}")
 
@@ -335,7 +343,7 @@ if ( MAKE_DEB )
 
     set(CPACK_GENERATOR                   "DEB")
     set(CPACK_PACKAGE_NAME                "codelite")
-    set(CPACK_PACKAGE_VERSION             "6.1")
+    set(CPACK_PACKAGE_VERSION             "7.0")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER   "Eran Ifrah <eran.ifrah@gmail.com>") #required
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "codelite IDE for C/C++")
     set(CPACK_DEBIAN_PACKAGE_SECTION      "devel")
@@ -487,6 +495,7 @@ endif(WITH_SFTP)
 if (WITH_LLDB)
     add_subdirectory(LLDBDebugger)
 endif()
+add_subdirectory(codelitephp)
 
 ## Executables
 add_subdirectory(LiteEditor)
@@ -496,11 +505,6 @@ add_subdirectory(codelite_terminal)
 add_subdirectory(sdk/codelite_indexer)
 add_subdirectory(sdk/codelite_cppcheck)
 add_subdirectory(codelite_echo)
-
-if (USE_CLANG)
-    add_subdirectory(codelite_clang)
-endif(USE_CLANG)
-
 
 ##
 ## Setup the proper dependencies

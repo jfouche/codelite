@@ -620,34 +620,34 @@
             </object>
 			<object class="wxMenuItem" name="wxID_SEPARATOR"/>
 			<object class="wxMenuItem" name="restore_layout">
-				<label>Restore Default Layout</label>
+                <label>Restore Default Layout</label>
             </object>
-		</object>
-		<object class="wxMenu" name="settings_menu">
+        </object>
+        <object class="wxMenu" name="settings_menu">
             <label>Settin&amp;gs</label>
             <style>wxMENU_TEAROFF</style>
             <object class="wxMenuItem" name="wxID_PREFERENCES">
                 <label>Global &amp;Editor Preferences...</label>
             </object>
-			<object class="wxMenuItem" name="syntax_highlight">
+            <object class="wxMenuItem" name="syntax_highlight">
                 <label>Colours and &amp;Fonts...</label>
             </object>
-			<object class="wxMenuItem" name="configure_accelerators">
+            <object class="wxMenuItem" name="configure_accelerators">
                 <label>Keyboard &amp;shortcuts...</label>
             </object>
             <object class="wxMenuItem" name="add_envvar">
                 <label>En&amp;vironment Variables...</label>
             </object>
-			<object class="wxMenuItem" name="advance_settings">
+            <object class="wxMenuItem" name="advance_settings">
                 <label>&amp;Build Settings...</label>
             </object>
-			<object class="wxMenuItem" name="debuger_settings">
+            <object class="wxMenuItem" name="debuger_settings">
                 <label>&amp;GDB Settings...</label>
             </object>
-			<object class="wxMenuItem" name="tags_options">
-                <label>&amp;Tags Settings...</label>
+            <object class="wxMenuItem" name="tags_options">
+                <label>&amp;Code Completion...</label>
             </object>
-		</object>
+        </object>
 
         <!---
             Help menu
@@ -925,14 +925,11 @@
         <label>Project</label>
         <style>wxMENU_TEAROFF</style>
 
-		<object class="wxMenuItem" name="import_directory">
-			<label>Import Files From Directory</label>
+        <object class="wxMenuItem" name="build_order">
+			<label>Build Order...</label>
 		</object>
-		<object class="wxMenuItem" name="reconcile_project">
-			<label>Reconcile Project</label>
-		</object>
-		<object class="wxMenuItem" name="wxID_SEPARATOR"/>
-
+        <object class="wxMenuItem" name="wxID_SEPARATOR"/>
+        
 		<object class="wxMenuItem" name="build_project">
 			<label>Build</label>
 		</object>
@@ -943,7 +940,12 @@
 		<object class="wxMenuItem" name="clean_project">
 			<label>Clean</label>
 		</object>
+        
 		<object class="wxMenuItem" name="wxID_SEPARATOR"/>
+		<object class="wxMenuItem" name="stop_build">
+			<label>Stop Build</label>
+		</object>
+        <object class="wxMenuItem" name="wxID_SEPARATOR"/>
 		<object class="wxMenu" name="project_only">
 			<label>Project Only</label>
 			<style>wxMENU_TEAROFF</style>
@@ -958,38 +960,28 @@
 				<label>Rebuild</label>
 			</object>
 		</object>
-
 		<object class="wxMenuItem" name="wxID_SEPARATOR"/>
-		<object class="wxMenuItem" name="stop_build">
-			<label>Stop Build</label>
+		<object class="wxMenuItem" name="import_directory">
+			<label>Import Files From Directory</label>
 		</object>
-
+		<object class="wxMenuItem" name="reconcile_project">
+			<label>Reconcile Project</label>
+		</object>
+        <object class="wxMenuItem" name="set_as_active">
+			<label>Set As Active</label>
+		</object>
+        
 		<object class="wxMenuItem" name="wxID_SEPARATOR"/>
 
 		<object class="wxMenuItem" name="export_makefile">
 			<label>Export Makefile</label>
 		</object>
-		<object class="wxMenuItem" name="wxID_SEPARATOR"/>
-		<object class="wxMenuItem" name="set_as_active">
-			<label>Set As Active</label>
-		</object>
-
-		<object class="wxMenuItem" name="wxID_SEPARATOR"/>
-		<object class="wxMenuItem" name="build_order">
-			<label>Build Order...</label>
-		</object>
 
 		<object class="wxMenuItem" name="wxID_SEPARATOR"/>
 
-		<object class="wxMenuItem" name="retag_project">
-			<label>Re-Tag Project</label>
-		</object>
-
-		<object class="wxMenuItem" name="wxID_SEPARATOR"/>
-
-		<object class="wxMenuItem" name="sort_item">
+		<!--<object class="wxMenuItem" name="sort_item">
 			<label>Sort Item</label>
-		</object>
+		</object>-->
 		<object class="wxMenuItem" name="new_virtual_folder">
 			<label>New Virtual Folder</label>
 		</object>
@@ -1191,7 +1183,7 @@
         <object class="wxMenuItem" name="open_shell">
             <label>Open Shell here</label>
         </object>
-        <object class="wxMenuItem" name="open_file_explorer">
+        <object class="wxMenuItem" name="fe_open_file_explorer">
             <label>Open File Explorer here</label>
         </object>
 	</object>

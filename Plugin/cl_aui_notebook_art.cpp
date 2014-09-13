@@ -106,7 +106,7 @@ void clAuiGlossyTabArt::DrawTab(wxDC& dc,
     wxColour textColour;
     bool isBgColourDark = DrawingUtils::IsDark(bgColour);
     if ( isBgColourDark ) {
-        penColour = DrawingUtils::LightColour(bgColour, 4.0);
+        penColour = wxColour(*wxBLACK).ChangeLightness(110);
     } else {
         bgColour = *wxWHITE;
         penColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
@@ -173,7 +173,7 @@ void clAuiGlossyTabArt::DrawTab(wxDC& dc,
     gdc.SetPen( penColour );
     
     if ( page.active ) {
-        path.AddRoundedRectangle(rr.x, rr.y, rr.width-1, rr.height, 6.5);
+        path.AddRoundedRectangle(rr.x, rr.y, rr.width-1, rr.height, 2.5);
         gdc.GetGraphicsContext()->FillPath( path );
         gdc.GetGraphicsContext()->StrokePath( path );
         
@@ -358,7 +358,7 @@ void clAuiGlossyTabArt::DoGetTabAreaBackgroundColour(wxColour& bgColour, wxColou
     bgColour = wxColour(EditorConfigST::Get()->GetCurrentOutputviewBgColour());
     // Determine the pen colour
     if ( DrawingUtils::IsDark(bgColour)) {
-        penColour = DrawingUtils::LightColour(bgColour, 4.0);
+        penColour = wxColour(*wxBLACK).ChangeLightness(110);
     } else {
         penColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
    }

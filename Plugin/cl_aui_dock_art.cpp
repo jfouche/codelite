@@ -68,9 +68,6 @@ static wxString wxAuiChopText(wxDC& dc, const wxString& text, int max_size)
 clAuiDockArt::clAuiDockArt(IManager *manager)
     : m_manager(manager)
 {
-    BitmapLoader *bl = m_manager->GetStdIcons();
-    m_bmpClose   = bl->LoadBitmap("aui/close");
-    m_bmpCloseInactive = bl->LoadBitmap("aui/close-inactive");
 }
 
 clAuiDockArt::~clAuiDockArt()
@@ -107,7 +104,8 @@ void clAuiDockArt::DrawCaption(wxDC& dc, wxWindow* window, const wxString& text,
     bool is_dark_theme = DrawingUtils::IsThemeDark();
     wxColour bgColour, penColour, textColour;
     if ( is_dark_theme ) {
-        bgColour = wxColour(EditorConfigST::Get()->GetCurrentOutputviewBgColour());
+        //bgColour = wxColour(EditorConfigST::Get()->GetCurrentOutputviewBgColour());
+        bgColour = DrawingUtils::GetAUIPaneBGColour();
         penColour = DrawingUtils::DarkColour(bgColour, 5.0);
         textColour = *wxWHITE;
         
@@ -128,14 +126,20 @@ void clAuiDockArt::DrawCaption(wxDC& dc, wxWindow* window, const wxString& text,
             }
             
         } else {
-            bgColour  = DrawingUtils::DarkColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE), 2.0);
+            bgColour = DrawingUtils::GetAUIPaneBGColour();
             penColour = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
             textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT);
         }
     }
     
-    memDc.SetPen( penColour );
-    memDc.SetBrush( bgColour );
+    memDc.SetPen( bgColour );
+    if(!is_dark_theme) {
+        memDc.SetBrush( wxSystemSettings::GetColour(wxSYS_COLOUR_ACTIVECAPTION) );
+    } else {
+        // set the bg colour a bit darker than the bg colour
+        bgColour = bgColour.ChangeLightness(80);
+        memDc.SetBrush( bgColour );
+    }
     memDc.DrawRectangle( tmpRect );
     
     wxPoint bottomLeft, bottomRight;
@@ -143,12 +147,12 @@ void clAuiDockArt::DrawCaption(wxDC& dc, wxWindow* window, const wxString& text,
     bottomRight = tmpRect.GetBottomRight();
     bottomRight.x += 1;
     memDc.SetPen( bgColour );
-    memDc.DrawLine(bottomLeft, bottomRight);
+    //memDc.DrawLine(bottomLeft, bottomRight);
     
     memDc.SetPen( penColour );
     bottomLeft.y--;
     bottomRight.y--;
-    memDc.DrawLine(bottomLeft, bottomRight);
+    //memDc.DrawLine(bottomLeft, bottomRight);
     
     int caption_offset = 0;
     if ( pane.icon.IsOk() ) {
@@ -182,22 +186,24 @@ void clAuiDockArt::DrawCaption(wxDC& dc, wxWindow* window, const wxString& text,
 
 void clAuiDockArt::DrawBackground(wxDC& dc, wxWindow* window, int orientation, const wxRect& rect)
 {
-    wxAuiDefaultDockArt::DrawBackground(dc, window, orientation, rect);
+    wxUnusedVar(window);
+    wxUnusedVar(orientation);
+    dc.SetPen(*wxTRANSPARENT_PEN);
+    dc.SetBrush( DrawingUtils::GetAUIPaneBGColour() );
+    dc.DrawRectangle(rect);
 }
 
 void clAuiDockArt::DrawBorder(wxDC& dc, wxWindow* window, const wxRect& rect, wxAuiPaneInfo& pane)
 {
     wxColour bgColour = wxColour(EditorConfigST::Get()->GetCurrentOutputviewBgColour());
-    wxColour penColour;
-    
     // Determine the pen colour
-    if ( !DrawingUtils::IsDark(bgColour)) {
-        wxAuiDefaultDockArt::DrawBorder(dc, window, rect, pane);
-        return;
-    }
+    // if ( !DrawingUtils::IsDark(bgColour)) {
+    //     wxAuiDefaultDockArt::DrawBorder(dc, window, rect, pane);
+    //     return;
+    // }
     
-    penColour = DrawingUtils::LightColour(bgColour, 4.0);
-    dc.SetPen(*wxTRANSPARENT_PEN);
+    bgColour = DrawingUtils::GetAUIPaneBGColour();
+    dc.SetPen(bgColour);
     dc.SetBrush(*wxTRANSPARENT_BRUSH);
     dc.DrawRectangle(rect);
     
@@ -210,9 +216,6 @@ void clAuiDockArt::DrawSash(wxDC& dc, wxWindow* window, int orientation, const w
     wxAuiDefaultDockArt::DrawSash(dc, window, orientation, rect);
     return;
 #endif
-    
-    // Prepare a stipple bitmap
-    wxColour bgColour = DrawingUtils::GetAUIPaneBGColour();
     
     // MSW
     wxUnusedVar(window);

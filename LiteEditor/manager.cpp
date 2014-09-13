@@ -205,7 +205,7 @@ Manager::Manager(void)
             this);
 
     EventNotifier::Get()->Connect(
-        wxEVT_CMD_PROJ_SETTINGS_SAVED, wxCommandEventHandler(Manager::OnProjectSettingsModified), NULL, this);
+        wxEVT_CMD_PROJ_SETTINGS_SAVED, clProjectSettingsEventHandler(Manager::OnProjectSettingsModified), NULL, this);
     EventNotifier::Get()->Connect(wxEVT_CODELITE_ADD_WORKSPACE_TO_RECENT_LIST,
                                   wxCommandEventHandler(Manager::OnAddWorkspaceToRecentlyUsedList),
                                   NULL,
@@ -217,7 +217,7 @@ Manager::Manager(void)
 Manager::~Manager(void)
 {
     EventNotifier::Get()->Disconnect(
-        wxEVT_CMD_PROJ_SETTINGS_SAVED, wxCommandEventHandler(Manager::OnProjectSettingsModified), NULL, this);
+        wxEVT_CMD_PROJ_SETTINGS_SAVED, clProjectSettingsEventHandler(Manager::OnProjectSettingsModified), NULL, this);
     EventNotifier::Get()->Disconnect(wxEVT_CODELITE_ADD_WORKSPACE_TO_RECENT_LIST,
                                      wxCommandEventHandler(Manager::OnAddWorkspaceToRecentlyUsedList),
                                      NULL,
@@ -428,7 +428,7 @@ void Manager::CloseWorkspace()
 #ifdef __WXMSW__
     // Under Windows, and in order to avoid locking the directory set the working directory back to the start up
     // directory
-    wxSetWorkingDirectory(GetStarupDirectory());
+    wxSetWorkingDirectory(GetStartupDirectory());
 #endif
 
     /////////////////////////////////////////////////////////////////
@@ -709,8 +709,8 @@ void Manager::SetActiveProject(const wxString& name)
     WorkspaceST::Get()->SetActiveProject(name, true);
     clMainFrame::Get()->SelectBestEnvSet();
 
-    wxCommandEvent evt(wxEVT_ACTIVE_PROJECT_CHANGED);
-    evt.SetString(name);
+    clProjectSettingsEvent evt(wxEVT_ACTIVE_PROJECT_CHANGED);
+    evt.SetProjectName(name);
     EventNotifier::Get()->AddPendingEvent(evt);
 }
 
@@ -1913,7 +1913,11 @@ void Manager::GetDefaultAcceleratorMap(MenuItemDataMap& accelMap)
 #ifdef __WXGTK__
     wxString pluginsDir(PLUGINS_DIR, wxConvUTF8);
 #else
-    wxString pluginsDir(GetInstallDir() + wxT("/plugins"));
+#   ifdef USE_POSIX_LAYOUT
+        wxString pluginsDir(wxStandardPaths::Get().GetDataDir() + wxT( PLUGINS_DIR ));
+#   else
+        wxString pluginsDir(GetInstallDir() + wxT( "/plugins" ));
+#   endif
 #endif
 
     wxDir::GetAllFiles(pluginsDir + wxT("/resources/"), &files, wxT("*.accelerators"), wxDIR_FILES);
@@ -1941,7 +1945,11 @@ void Manager::DoGetAccelFiles(wxArrayString& files)
 #ifdef __WXGTK__
         wxString pluginsDir = wxString::From8BitData(PLUGINS_DIR);
 #else
-        wxString pluginsDir(GetInstallDir() + wxT("/plugins"));
+#   ifdef USE_POSIX_LAYOUT
+        wxString pluginsDir(wxStandardPaths::Get().GetDataDir() + wxT( PLUGINS_DIR ));
+#   else
+        wxString pluginsDir(GetInstallDir() + wxT( "/plugins" ));
+#   endif
 #endif
         // append the content of all '*.accelerators' from the plugins
         // resources table
@@ -3762,8 +3770,9 @@ DisplayVariableDlg* Manager::GetDebuggerTip()
     return m_watchDlg;
 }
 
-void Manager::OnProjectSettingsModified(wxCommandEvent& event)
+void Manager::OnProjectSettingsModified(clProjectSettingsEvent& event)
 {
+    event.Skip();
     // Get the project settings
     clMainFrame::Get()->SelectBestEnvSet();
 }
@@ -3790,14 +3799,7 @@ void Manager::GetActiveProjectAndConf(wxString& project, wxString& conf)
 
 void Manager::UpdatePreprocessorFile(LEditor* editor)
 {
-    // Sanity
-    if(!editor)
-        return;
-
-    if((TagsManagerST::Get()->GetCtagsOptions().GetCcColourFlags() & CC_COLOUR_MACRO_BLOCKS) == 0)
-        return;
-
-    CodeCompletionManager::Get().ProcessMacros(editor);
+    wxUnusedVar(editor);
 }
 
 BuildConfigPtr Manager::GetCurrentBuildConf()

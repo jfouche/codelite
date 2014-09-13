@@ -29,6 +29,9 @@
 
 clStandardPaths::clStandardPaths()
 {
+#ifdef USE_POSIX_LAYOUT
+    wxStandardPaths::Get().IgnoreAppSubDir("bin");
+#endif
 }
 
 clStandardPaths::~clStandardPaths()
@@ -77,8 +80,12 @@ wxString clStandardPaths::GetPluginsDirectory() const
 #ifdef __WXGTK__
     wxString pluginsDir = PLUGINS_DIR;
 #else
+#   ifdef USE_POSIX_LAYOUT
+    wxFileName path(GetDataDir() + wxT(PLUGINS_DIR), "");
+#   else
     wxFileName path(GetDataDir(), "");
     path.AppendDir("plugins");
+#   endif
     wxString pluginsDir = path.GetPath();
 #endif
     return pluginsDir;
@@ -107,8 +114,20 @@ wxString clStandardPaths::GetBinaryFullPath(const wxString& toolname) const
 
 wxString clStandardPaths::GetLexersDir() const
 {
+#ifdef USE_POSIX_LAYOUT
+    wxFileName fn(GetDataDir() + wxT(INSTALL_DIR), "");
+#else
     wxFileName fn(GetDataDir(), "");
+#endif
     fn.AppendDir("lexers");
+    return fn.GetPath();
+}
+
+wxString clStandardPaths::GetProjectTemplatesDir() const
+{
+    wxFileName fn(GetDataDir(), "");
+    fn.AppendDir("templates");
+    fn.AppendDir("projects");
     return fn.GetPath();
 }
 

@@ -144,13 +144,15 @@
 
 // Sent by the project settings dialogs to indicate that
 // the project configurations are saved
-// clientData is the project name (wxString*)
-// event.GetString() returns the selected configuration
+// Event type: clProjectSettingsEvent
 #define wxEVT_CMD_PROJ_SETTINGS_SAVED 3478
 
 // A user requested to execute the active project
+// Event type:
+// clExecuteEvent.
+// Get the target to run by using clExecuteEvent::GetTargetName
 #define wxEVT_CMD_EXECUTE_ACTIVE_PROJECT 3479
-    
+
 // A user requested to stop the previously executed program
 #define wxEVT_CMD_STOP_EXECUTED_PROGRAM 3480
     
@@ -417,9 +419,9 @@
 #define wxEVT_REBUILD_WORKSPACE_TREE 3529
     
 // Sent when user has changed the active project
-// call event.GetString() to get the name of the project
+// Event type: clProjectSettingsEvent
 #define wxEVT_ACTIVE_PROJECT_CHANGED 3530
-    
+
 // This event is fired by codelite when the find-bar is requested to be shown
 // the default for the find bar is not to be shown if it has no window associated with it
 // The Window is passed using the event.GetClientData()
@@ -614,6 +616,10 @@
 // User modified the colours and font of the IDE
 // event type: clCommandEvent
 #define wxEVT_CMD_COLOURS_FONTS_UPDATED  3640
+
+// File has been loaded into the IDE
+// User: clCommandEvnet::GetFileName() to get the file name
+#define wxEVT_FILE_LOADED 3700
 
 #endif // CODELITE_EVENTS_H
 
